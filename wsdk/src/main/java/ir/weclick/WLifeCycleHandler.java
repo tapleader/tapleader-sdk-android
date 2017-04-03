@@ -13,6 +13,8 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Created by mehdi akbarian on 2017-03-05.
@@ -26,7 +28,7 @@ class WLifeCycleHandler implements Application.ActivityLifecycleCallbacks {
     private static WLifeCycleObject lastWLO;
     private BufferedWriter writer;
     private int counter=0;
-    private final static int BUFFER_SIZE=5;
+    private final static int BUFFER_SIZE=30;
 
     private WLifeCycleHandler() {
     }
@@ -154,7 +156,7 @@ class WLifeCycleHandler implements Application.ActivityLifecycleCallbacks {
         if(counter++>=BUFFER_SIZE){
             try {
                 flush();
-            } catch (IOException e) {
+            } catch (Exception e) {
                 WLog.e(TAG,e.getMessage());
             }
         }
@@ -164,7 +166,7 @@ class WLifeCycleHandler implements Application.ActivityLifecycleCallbacks {
      * read data from file with name {@link WLifeCycleObject#FILE_NAME} and sed to server
      * @throws IOException if file is not accessible!
      */
-    private void flush() throws IOException {
+    private void flush() throws IOException, JSONException {
         final File log = new File(WPlugins.get().getCacheDir(), FILE_NAME);
         if(!log.exists()) {
             WLog.e(TAG, Constants.Exception.ACTIVITY_LOG_NOT_FOUND);
@@ -211,14 +213,31 @@ class WLifeCycleHandler implements Application.ActivityLifecycleCallbacks {
         return lines;
     }
 
-    private String getBody(JSONArray jsonArray){
+    private String getBody(JSONArray jsonArray) throws JSONException {
+        HashMap<String,Integer> map=new HashMap<String,Integer>();
+        for(int i=0;i<jsonArray.length();i++){
+            JSONObject object= new JSONObject(jsonArray.get(i).toString());
+            String name=object.getString("name");
+            if(map.containsKey(name)) {
+                map.put(name,map.get(name)+1);
+            }else {
+                map.put(name,new Integer(1));
+            }
+        }
+        JSONArray array=new JSONArray();
+        for(Map.Entry<String,Integer> e:map.entrySet()){
+            JSONObject temp=new JSONObject();
+            temp.put("name",e.getKey());
+            temp.put("count",e.getValue());
+            array.put(temp);
+        }
         JSONObject body=new JSONObject();
         String applicationId=WPlugins.get().applicationId();
         String clientKey=WPlugins.get().clientKey();
         try {
             body.put("applicationId",applicationId);
             body.put("clientKey",clientKey);
-            body.put("data",jsonArray);
+            body.put("data",array);
         } catch (JSONException e) {
             WLog.e(TAG,e.getMessage());
         }

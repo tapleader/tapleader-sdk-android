@@ -175,7 +175,7 @@ class WUtils {
         if(context instanceof Application)
             ((Application)context.getApplicationContext()).registerActivityLifecycleCallbacks(WLifeCycleHandler.getInstance());
         else
-            WLog.e("WUtils","cant start Activity Cycle Handler");
+            WLog.e(TAG,"can't start LifeCycleHandler");
     }
 
     static String getDateTime(){

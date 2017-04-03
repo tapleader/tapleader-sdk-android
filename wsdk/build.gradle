@@ -1,5 +1,6 @@
 apply plugin: 'com.android.library'
 
+
 android {
     compileSdkVersion 25
     buildToolsVersion "25.0.0"
@@ -15,11 +16,43 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+    lintOptions {
+        abortOnError false
+    }
 }
 
 dependencies {
     compile fileTree(include: ['*.jar'], dir: 'libs')
-    compile 'com.android.support:appcompat-v7:25.0.1'
-    compile 'com.squareup.okhttp3:okhttp:3.6.0'
-    compile 'com.google.code.gson:gson:2.8.0'
+
 }
+
+task deleteJar(type: Delete){
+    delete 'libs/weclick_sdk.jar'
+}
+
+task createJar(type: Copy){
+    from('build/intermediates/bundles/release/')
+    into('libs/')
+    include('classes.jar')
+    rename('class.jar','weclick_sdk.jar')
+}
+
+
+/*
+
+task fatJar(type: Jar) {
+    classifier = 'all'
+    from {
+        configurations.runtime.collect { it.isDirectory() ? it : zipTree(it) }
+    } {
+        exclude "META-INF*/
+/*.SF"
+        exclude "META-INF*/
+/*.DSA"
+        exclude "META-INF*/
+/*.RSA"
+    }
+}
+*/
+
+createJar.dependsOn(deleteJar,build)

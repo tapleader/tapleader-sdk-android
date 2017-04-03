@@ -1,6 +1,7 @@
 package ir.weclick;
 
 import android.content.Context;
+import android.util.Log;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -20,11 +21,13 @@ class OfflineStore implements NetworkObserver {
 
     private static final String FILE_NAME="offlineStore";
     private static final String TAG="OfflineStore";
-    private static OfflineStore mOfflineStore;
+    private static OfflineStore mOfflineStore=null;
     private static Context context;
-
+    private OfflineStore(){}
     private OfflineStore(Context context) {
         this.context=context;
+        NetworkManager.init(this);
+        Log.d(TAG,"constructed");
     }
 
     public static OfflineStore initialize(Context context){
@@ -119,7 +122,7 @@ class OfflineStore implements NetworkObserver {
     @Override
     public void onChange(boolean isConnected) {
         if(isConnected){
-
+            push();
         }
     }
 }

@@ -31,9 +31,13 @@ class ServiceHandler implements NetworkObserver {
        // handleRequest(Constants.Api.ACTIVITY_TRACKING,body,httpResponse);
     }
 
+    void crashReport(String body ,HttpResponse httpResponse){
+        handleRequest(Constants.Api.CRASH_REPORT,body,httpResponse);
+    }
+
     private static String urlGen(String api){
         URL server=Constants.server;
-        return server.getHost()+server.getPath()+"/"+api;
+        return server.toString()+"/"+api;
     }
 
     private void handleRequest(String url,String body,HttpResponse httpResponse){
@@ -42,7 +46,7 @@ class ServiceHandler implements NetworkObserver {
             httpRequest.execute(body);
         }else {
             // TODO: 2017-03-01 offline handler should be implemented here
-
+            offlineStore.store(url,body);
         }
     }
 

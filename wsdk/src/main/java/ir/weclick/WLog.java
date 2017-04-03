@@ -10,8 +10,18 @@ package ir.weclick;
 
 import android.util.Log;
 
-/** package */ class WLog {
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+
+class WLog {
   public static final int LOG_LEVEL_NONE = Integer.MAX_VALUE;
+  private static final String TAG ="WLog" ;
 
   private static int logLevel = Integer.MAX_VALUE;
 
@@ -53,43 +63,65 @@ import android.util.Log;
     }
   }
 
-  /* package */ static void v(String tag, String message, Throwable tr) {
+  static void v(String tag, String message, Throwable tr) {
     log(Log.VERBOSE, tag, message, tr);
   }
 
-  /* package */ static void v(String tag, String message) {
+  static void v(String tag, String message) {
     v(tag, message, null);
   }
 
-  /* package */ static void d(String tag, String message, Throwable tr) {
+  static void d(String tag, String message, Throwable tr) {
     log(Log.DEBUG, tag, message, tr);
   }
 
-  /* package */ static void d(String tag, String message) {
+  static void d(String tag, String message) {
     d(tag, message, null);
   }
 
-  /* package */ static void i(String tag, String message, Throwable tr) {
+  static void i(String tag, String message, Throwable tr) {
     log(Log.INFO, tag, message, tr);
   }
 
-  /* package */ static void i(String tag, String message) {
+  static void i(String tag, String message) {
     i(tag, message, null);
   }
 
-  /* package */ static void w(String tag, String message, Throwable tr) {
+  static void w(String tag, String message, Throwable tr) {
     log(Log.WARN, tag, message, tr);
   }
 
-  /* package */ static void w(String tag, String message) {
+  static void w(String tag, String message) {
     w(tag, message, null);
   }
 
-  /* package */ static void e(String tag, String message, Throwable tr) {
+  static void e(String tag, String message, Throwable tr) {
     log(Log.ERROR, tag, message, tr);
   }
 
-  /* package */ static void e(String tag, String message) {
+  static void e(String tag, String message) {
     e(tag, message, null);
+    JSONObject object=new JSONObject();
+
+    try {
+      object.put("tag",tag);
+      object.put("message",message);
+      object.put("date",WUtils.getDateTime());
+    } catch (JSONException e) {
+      //why do we fall?
+    }
+    ServiceHandler.init().crashReport(object.toString(), new HttpResponse() {
+      @Override
+      public void onServerResponse(JSONObject data) {
+        if(data!=null)
+          WLog.d(TAG,data.toString());
+      }
+
+      @Override
+      public void onServerError(String message, int code) {
+        if(message!=null)
+          WLog.d(TAG,message+" code: "+code);
+      }
+    });
   }
 }

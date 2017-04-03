@@ -41,6 +41,7 @@ class Constants {
     class Api{
         static final String NEW_INSTALL="install";
         static final String ACTIVITY_TRACKING="activityTracking";
+        static final String CRASH_REPORT="crash";
     }
 
 

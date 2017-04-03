@@ -1,1 +1,1 @@
-include ':wsdk'
+include ':wsdk', ':test'

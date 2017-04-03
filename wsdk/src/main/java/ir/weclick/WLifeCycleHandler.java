@@ -61,6 +61,14 @@ class WLifeCycleHandler implements Application.ActivityLifecycleCallbacks {
         public void setEndTime(String endTime) {
             this.endTime = endTime;
         }
+
+        public JSONObject getJson() throws JSONException {
+            JSONObject object=new JSONObject();
+            object.put("name",getName());
+            object.put("startTime",getStartTime());
+            object.put("endTime",getEndTime());
+            return object;
+        }
     }
 
     public static WLifeCycleHandler getInstance() {
@@ -121,7 +129,13 @@ class WLifeCycleHandler implements Application.ActivityLifecycleCallbacks {
 
     private void log(WLifeCycleObject lastWLO) {
         final File log = new File(WPlugins.get().getCacheDir(), FILE_NAME);
-        String data= WUtils.toJson(lastWLO);
+        String data= null;
+        try {
+            data = lastWLO.getJson().toString();
+        } catch (JSONException e) {
+            WLog.e(TAG,e.getMessage());
+            return;
+        }
         if (!log.exists()) {
             try {
                 log.createNewFile();

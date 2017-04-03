@@ -3,6 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/WeclickSDK.iml" filepath="$PROJECT_DIR$/WeclickSDK.iml" />
+      <module fileurl="file://$PROJECT_DIR$/test/test.iml" filepath="$PROJECT_DIR$/test/test.iml" />
       <module fileurl="file://$PROJECT_DIR$/wsdk/wsdk.iml" filepath="$PROJECT_DIR$/wsdk/wsdk.iml" />
     </modules>
   </component>

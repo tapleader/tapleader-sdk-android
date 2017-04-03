@@ -5,10 +5,16 @@ import android.content.Context;
 import android.os.Build;
 import android.telephony.TelephonyManager;
 
-import com.google.gson.Gson;
+
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.sql.Date;
 import java.sql.Time;
+
+import ir.weclick.weclicksdk.BuildConfig;
+
 
 /**
  * Created by mehdi akbarian on 2017-03-01.
@@ -16,16 +22,26 @@ import java.sql.Time;
  */
 
 class WUtils {
-    private static Gson gson=new Gson();
+    private static final String TAG="WUtils";
     static class WInstallObject {
         private String ApplicationId;
-        private String clientId;
+        private String clientKey;
+        private String packageName;
         private String androidId;
         private String deviceId;
         private String phoneModel;
         private String version;
         private String carrierName;
         private String simSerialNumber;
+        private String appVersion;
+
+        public String getPackageName() {
+            return packageName;
+        }
+
+        public void setPackageName(String packageName) {
+            this.packageName = packageName;
+        }
 
         public String getCarrierName() {
             return carrierName;
@@ -43,12 +59,12 @@ class WUtils {
             ApplicationId = applicationId;
         }
 
-        public String getClientId() {
-            return clientId;
+        public String getClientKey() {
+            return clientKey;
         }
 
-        public void setClientId(String clientId) {
-            this.clientId = clientId;
+        public void setClientKey(String clientKey) {
+            this.clientKey = clientKey;
         }
 
         public String getAndroidId() {
@@ -67,11 +83,11 @@ class WUtils {
             this.deviceId = deviceId;
         }
 
-        public String getPhoneModle() {
+        public String getPhoneModel() {
             return phoneModel;
         }
 
-        public void setPhoneModle(String phoneModle) {
+        public void setPhoneModel(String phoneModle) {
             this.phoneModel = phoneModle;
         }
 
@@ -90,6 +106,29 @@ class WUtils {
         public void setSimSerialNumber(String simSerialNumber) {
             this.simSerialNumber = simSerialNumber;
         }
+
+        public String getAppVersion() {
+            return appVersion;
+        }
+
+        public void setAppVersion(String appVersion) {
+            this.appVersion = appVersion;
+        }
+
+        public JSONObject getJson() throws JSONException {
+            JSONObject  object = new JSONObject();
+            object.put("androidId",getAndroidId());
+            object.put("applicationId",getApplicationId());
+            object.put("clientKey",getClientKey());
+            object.put("deviceId",getDeviceId());
+            object.put("packageName",getPackageName());
+            object.put("phoneModel",getPhoneModel());
+            object.put("version",getVersion());
+            object.put("simSerialNumber",getSimSerialNumber());
+            object.put("carrierName",getCarrierName());
+            object.put("appVersion",getAppVersion());
+            return object;
+        }
     }
 
     /**
@@ -99,28 +138,38 @@ class WUtils {
      */
     static String getClientDetails(){
         WInstallObject wObject=new WInstallObject();
+        JSONObject result=null;
         try{
             TelephonyManager tManager = (TelephonyManager)Weclick.getApplicationContext().getSystemService(Context.TELEPHONY_SERVICE);
             wObject.setAndroidId(android.provider.Settings.Secure.getString(Weclick.getApplicationContext().getContentResolver(), "android_id"));
+            wObject.setApplicationId(WPlugins.get().applicationId());
+            wObject.setClientKey(WPlugins.get().clientKey());
             wObject.setDeviceId(tManager.getDeviceId());
-            wObject.setPhoneModle(Build.MODEL);
+            wObject.setPackageName(Weclick.getApplicationContext().getPackageName());
+            wObject.setPhoneModel(Build.MODEL);
             wObject.setVersion(android.os.Build.VERSION.RELEASE);
             wObject.setSimSerialNumber(tManager.getSimSerialNumber());
             wObject.setCarrierName(tManager.getNetworkOperatorName());
+            wObject.setAppVersion(BuildConfig.VERSION_NAME);
+            result=wObject.getJson();
         }catch (Exception e){
-            e.printStackTrace();
+            WLog.e(TAG,e.getMessage());
         }
-        return toJson(wObject);
+        return result.toString();
     }
+/*
 
-    /**
+    */
+/**
      * conver object to string
-     * @param model
      * @return
-     */
+     *//*
+
     static String toJson(Object model){
-        return gson.toJson(model);
+        JSONObject object=new JSONObject(model);
+        return object.toString();
     }
+*/
 
     static void registerLifecycleHandler(Context context){
         if(context instanceof Application)

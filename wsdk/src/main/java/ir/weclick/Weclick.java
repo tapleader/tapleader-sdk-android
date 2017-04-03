@@ -127,18 +127,14 @@ public class Weclick{
         initializeNetwoekManager(configuration.context);
         serviceHandler=ServiceHandler.init();
 
-
         try {
             Constants.server = new URL(configuration.server);
         } catch (MalformedURLException ex) {
             throw new RuntimeException(ex);
         }
 
-        if (configuration.localDataStoreEnabled) {
-            offlineStore = OfflineStore.initialize(configuration.context);
-        } else {
-            WKeyValueCache.initialize(configuration.context);
-        }
+        offlineStore = OfflineStore.initialize(configuration.context);
+        WKeyValueCache.initialize(configuration.context);
 
         // Make sure the data on disk for Parse is for the current
         // application.
@@ -209,11 +205,11 @@ public class Weclick{
                         }
                     }
                 }else {
-                    WLog.d("Weclick","new Install");
                     serviceHandler.installNotifier(new HttpResponse() {
                         @Override
                         public void onServerResponse(JSONObject data) {
-                           WLog.d("Weclick","done");
+
+                            WLog.d("Weclick",data.toString());
                         }
 
                         @Override

@@ -2,11 +2,13 @@ package ir.weclick;
 
 import android.content.Context;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.telephony.TelephonyManager;
 import android.util.Log;
 
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.File;
@@ -26,7 +28,9 @@ import java.net.URL;
  */
 
 public class Weclick{
+    private static final String TAG="Weclick";
     private static final Object MUTEX = new Object();
+    private static final String PREFS_NAME = "App_info";
     private static OfflineStore offlineStore;
     private static ServiceHandler serviceHandler;
     private static final String WECLICK_APPLICATION_ID = "ir.weclick.APPLICATION_ID";
@@ -142,6 +146,37 @@ public class Weclick{
         // Make sure the data on disk for Parse is for the current
         // application.
         checkCacheApplicationId();
+        checkForNewInstallOrUpdate();
+
+    }
+
+    private static void checkForNewInstallOrUpdate() {
+        final SharedPreferences prefs=getApplicationContext().getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+        final String PARAMETER_NAME="newInstall";
+        if(prefs.getBoolean(PARAMETER_NAME,true)){
+            serviceHandler.installNotifier(new HttpResponse() {
+                @Override
+                public void onServerResponse(JSONObject data) {
+                    try {
+                        if(data.getString("Message").equals("success")){
+                            SharedPreferences.Editor editor = prefs.edit();
+                            editor.putBoolean(PARAMETER_NAME, false);
+                            editor.commit();
+                        }else
+                            WLog.d(TAG,"Cant notify server for new install");
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+                }
+
+                @Override
+                public void onServerError(String message, int code) {
+
+                }
+            });
+        }
+
+        //TODO:check for update
 
     }
 
@@ -206,19 +241,6 @@ public class Weclick{
                             // We're unable to delete the directy...
                         }
                     }
-                }else {
-                    serviceHandler.installNotifier(new HttpResponse() {
-                        @Override
-                        public void onServerResponse(JSONObject data) {
-
-                            WLog.d("Weclick",data.toString());
-                        }
-
-                        @Override
-                        public void onServerError(String message, int code) {
-
-                        }
-                    });
                 }
 
                 // Create the version file if needed.

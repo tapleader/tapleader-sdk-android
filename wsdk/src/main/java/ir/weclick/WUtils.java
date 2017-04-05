@@ -4,11 +4,16 @@ import android.app.Application;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.os.Build;
+import android.telephony.SubscriptionInfo;
+import android.telephony.SubscriptionManager;
 import android.telephony.TelephonyManager;
+
 import org.json.JSONException;
 import org.json.JSONObject;
+
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 
 import ir.weclick.weclicksdk.BuildConfig;
@@ -31,7 +36,16 @@ class WUtils {
         private String version;
         private String carrierName;
         private String simSerialNumber;
+        private String carrierName2;
         private String appVersion;
+
+        public String getCarrierName2() {
+            return carrierName2;
+        }
+
+        public void setCarrierName2(String carrierName2) {
+            this.carrierName2 = carrierName2;
+        }
 
         public String getPackageName() {
             return packageName;
@@ -124,7 +138,9 @@ class WUtils {
             object.put("version",getVersion());
             object.put("simSerialNumber",getSimSerialNumber());
             object.put("carrierName",getCarrierName());
+            object.put("carrierName2",getCarrierName2());
             object.put("appVersion",getAppVersion());
+
             return object;
         }
     }
@@ -137,6 +153,7 @@ class WUtils {
     static String getClientDetails(){
         WInstallObject wObject=new WInstallObject();
         JSONObject result=null;
+        boolean infoValidation=false;
         try{
             TelephonyManager tManager = (TelephonyManager)Weclick.getApplicationContext().getSystemService(Context.TELEPHONY_SERVICE);
             wObject.setAndroidId(android.provider.Settings.Secure.getString(Weclick.getApplicationContext().getContentResolver(), "android_id"));
@@ -146,9 +163,25 @@ class WUtils {
             wObject.setPackageName(Weclick.getApplicationContext().getPackageName());
             wObject.setPhoneModel(Build.MODEL);
             wObject.setVersion(android.os.Build.VERSION.RELEASE);
-            wObject.setSimSerialNumber(tManager.getSimSerialNumber());
-            wObject.setCarrierName(tManager.getNetworkOperatorName());
             wObject.setAppVersion(BuildConfig.VERSION_NAME);
+            wObject.setCarrierName2("Unknown");
+            if(android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP_MR1){
+                SubscriptionManager subscriptionManager=SubscriptionManager.from(Weclick.getApplicationContext());
+                ArrayList<SubscriptionInfo> list= (ArrayList<SubscriptionInfo>) subscriptionManager.getActiveSubscriptionInfoList();
+                infoValidation=true;
+                if(list.size()==0)
+                    infoValidation=false;
+                wObject.setSimSerialNumber(tManager.getSimSerialNumber());
+                wObject.setCarrierName(list.get(0).getCarrierName().toString());
+                if(list.size()>1){
+                    wObject.setCarrierName2(list.get(1).getCarrierName().toString());
+                }
+            }
+            if(!infoValidation) {
+                wObject.setSimSerialNumber(tManager.getSimSerialNumber());
+                wObject.setCarrierName(tManager.getNetworkOperatorName());
+            }
+
             result=wObject.getJson();
         }catch (Exception e){
             WLog.e(TAG,e.getMessage());

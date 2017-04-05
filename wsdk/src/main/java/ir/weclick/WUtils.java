@@ -5,10 +5,8 @@ import android.content.Context;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.telephony.TelephonyManager;
-
 import org.json.JSONException;
 import org.json.JSONObject;
-
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -157,19 +155,6 @@ class WUtils {
         }
         return result.toString();
     }
-/*
-
-    */
-/**
-     * conver object to string
-     * @return
-     *//*
-
-    static String toJson(Object model){
-        JSONObject object=new JSONObject(model);
-        return object.toString();
-    }
-*/
 
     static void registerLifecycleHandler(Context context){
         if(context instanceof Application)

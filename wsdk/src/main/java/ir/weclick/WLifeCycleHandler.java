@@ -5,7 +5,6 @@ import android.app.Application;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.util.Log;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -25,16 +24,16 @@ import java.util.Map;
  */
 
 class WLifeCycleHandler implements Application.ActivityLifecycleCallbacks {
-    private final static String TAG="WLifeCycleHandler";
     private final static String FILE_NAME="activityTrackingLog";
     private final static String PREFS_NAME = "BufferCounter";
     private final static String PARAMETER_NAME="counter";
+    private final static String TAG="WLifeCycleHandler";
+    private final static int BUFFER_SIZE=10;
     private static WLifeCycleHandler mWLifeCycleHandler;
     private static WLifeCycleObject lastWLO;
-    private BufferedWriter writer;
     private SharedPreferences prefs;
+    private BufferedWriter writer;
     private int counter=0;
-    private final static int BUFFER_SIZE=10;
 
     private WLifeCycleHandler() {
         this.prefs = Weclick.getApplicationContext().getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
@@ -47,7 +46,6 @@ class WLifeCycleHandler implements Application.ActivityLifecycleCallbacks {
         private String name;
         private String startTime;
         private String endTime;
-
 
         public String getName() {
             return name;
@@ -91,14 +89,14 @@ class WLifeCycleHandler implements Application.ActivityLifecycleCallbacks {
 
     @Override
     public void onActivityCreated(Activity activity, Bundle savedInstanceState) {
-        Log.d(TAG, "onActivityCreated" + activity.getComponentName().getClassName());
+        WLog.d(TAG, "onActivityCreated" + activity.getComponentName().getClassName());
 
 
     }
 
     @Override
     public void onActivityStarted(Activity activity) {
-        Log.d(TAG, "onActivityStarted" + activity.getComponentName().toString());
+        WLog.d(TAG, "onActivityStarted" + activity.getComponentName().toString());
         if (lastWLO == null) {
             lastWLO=new WLifeCycleObject();
             lastWLO.setName(activity.getComponentName().getClassName());
@@ -115,7 +113,7 @@ class WLifeCycleHandler implements Application.ActivityLifecycleCallbacks {
 
     @Override
     public void onActivityResumed(Activity activity) {
-        Log.d(TAG, "onActivityResumed" + activity.getComponentName().toString());
+        WLog.d(TAG, "onActivityResumed" + activity.getComponentName().toString());
     }
 
     @Override
@@ -227,22 +225,25 @@ class WLifeCycleHandler implements Application.ActivityLifecycleCallbacks {
         return lines;
     }
 
+    /**
+     * When I wrote this, only God and I understood what I was doing. Now, God only knows
+     * @param jsonArray
+     * @return
+     * @throws JSONException
+     */
     private String getBody(JSONArray jsonArray) throws JSONException {
         class Value{
             int count=0;
             long duration=0l;
-            String date;
-
-            public Value(int count, long duration,String date) {
+            //String date;
+            public Value(int count, long duration) {
                 this.count = count;
                 this.duration = duration;
-                this.date=date;
             }
         }
         class Key{
             String name;
             String date;
-
             public Key(String name, String date) {
                 this.name = name;
                 this.date = date;
@@ -265,7 +266,7 @@ class WLifeCycleHandler implements Application.ActivityLifecycleCallbacks {
                 return code.hashCode();
             }
         }
-        HashMap<Key,Value> counterMap=new HashMap<Key,Value>();
+        HashMap<Key,Value> logMap=new HashMap<Key,Value>();
         for(int i=0;i<jsonArray.length();i++){
             JSONObject object= new JSONObject(jsonArray.get(i).toString());
             String name=object.getString("name");
@@ -276,41 +277,41 @@ class WLifeCycleHandler implements Application.ActivityLifecycleCallbacks {
             String date=WUtils.getSimpleDate(endDate);
             long result=endDate.getTime()-startDate.getTime();
             Key key=new Key(name,date);
-            if(counterMap.containsKey(key)) {
-                Value temp=counterMap.get(key);
+            if(logMap.containsKey(key)) {
+                Value temp=logMap.get(key);
                 temp.count+=1;
                 temp.duration+=result;
-                counterMap.put(key,temp);
+                logMap.put(key,temp);
             }else {
-                counterMap.put(key,new Value(1,result,date));
+                logMap.put(key,new Value(1,result));
             }
         }
-        JSONArray array=new JSONArray();
-        String tempDate="";
-        JSONArray tempArray=new JSONArray();
-        for(Map.Entry<Key,Value> e:counterMap.entrySet()){
+        JSONArray dateArray=new JSONArray();
+        String currentDate="";
+        JSONArray innerLogArray=new JSONArray();
+        for(Map.Entry<Key,Value> e:logMap.entrySet()){
             JSONObject temp=new JSONObject();
             temp.put("name",e.getKey().name);
             temp.put("count",e.getValue().count);
             temp.put("duration",e.getValue().duration);
-            if(!tempDate.equals(e.getValue().date)) {
-                if(tempDate.length()!=0){
-                    JSONObject object=new JSONObject();
-                    object.put(tempDate,tempArray);
-                    array.put(object);
-                    tempArray=new JSONArray();
-                    tempDate=e.getValue().date;
+            if(!currentDate.equals(e.getKey().date)) {
+                if(!currentDate.isEmpty()){
+                    JSONObject logObject=new JSONObject();
+                    logObject.put(currentDate,innerLogArray);
+                    dateArray.put(logObject);
+                    innerLogArray=new JSONArray();
+                    currentDate=e.getKey().date;
                 }else {
-                    tempDate=e.getValue().date;
+                    currentDate=e.getKey().date;
                 }
             }
-            if(tempDate.equals(e.getValue().date)){
-                tempArray.put(temp);
+            if(currentDate.equals(e.getKey().date)){
+                innerLogArray.put(temp);
             }
         }
         JSONObject object=new JSONObject();
-        object.put(tempDate,tempArray);
-        array.put(object);
+        object.put(currentDate,innerLogArray);
+        dateArray.put(object);
         JSONObject body=new JSONObject();
         String applicationId=WPlugins.get().getApplicationId();
         String clientKey=WPlugins.get().getClientKey();
@@ -319,7 +320,7 @@ class WLifeCycleHandler implements Application.ActivityLifecycleCallbacks {
             body.put("getApplicationId",applicationId);
             body.put("getClientKey",clientKey);
             body.put("deviceId",deviceId);
-            body.put("data",array);
+            body.put("data",dateArray);
         } catch (JSONException e) {
             WLog.e(TAG,e.getMessage());
         }

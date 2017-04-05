@@ -9,15 +9,9 @@
 package ir.weclick;
 
 import android.util.Log;
-
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
 
 class WLog {
   public static final int LOG_LEVEL_NONE = Integer.MAX_VALUE;

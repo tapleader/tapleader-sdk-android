@@ -60,6 +60,8 @@ class OfflineStore implements NetworkObserver {
 
     public void push(){
         File localData=new File(WPlugins.get().getCacheDir(),FILE_NAME);
+        if(!localData.exists())
+            return;
         String data="";
         JSONObject result=null;
         try {

@@ -40,8 +40,12 @@ class Constants {
 
     class Api{
         static final String NEW_INSTALL="install";
-        static final String ACTIVITY_TRACKING="activityTracking";
+        static final String ACTIVITY_TRACKING="testpost";
         static final String CRASH_REPORT="crash";
+    }
+
+    class Permission{
+        static final String READ_PHONE_STATE="android.permission.READ_PHONE_STATE";
     }
 
 

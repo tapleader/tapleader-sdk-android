@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.telephony.TelephonyManager;
 import android.util.Log;
 
 import org.json.JSONObject;
@@ -28,7 +29,6 @@ public class Weclick{
     private static final Object MUTEX = new Object();
     private static OfflineStore offlineStore;
     private static ServiceHandler serviceHandler;
-    private Context context;
     private static final String WECLICK_APPLICATION_ID = "ir.weclick.APPLICATION_ID";
     private static final String WECLICK_CLIENT_KEY = "ir.weclick.CLIENT_KEY";
 
@@ -69,7 +69,7 @@ public class Weclick{
             /**
              * Set the client key to be used by Weclick.
              *
-             * This method is only required if you intend to use a different {@code clientKey} than
+             * This method is only required if you intend to use a different {@code getClientKey} than
              * is defined by {@code ir.weclick.CLIENT_KEY} in your {@code AndroidManifest.xml}.
              *
              * @param clientKey The client key to set.
@@ -122,7 +122,10 @@ public class Weclick{
     public static void initialize(Configuration configuration) {
         //TODO: remove this line for release
         WLog.setLogLevel(Log.VERBOSE);
-        WPlugins.Android.initialize(configuration.context, configuration.applicationId, configuration.clientKey);
+        String deviceId="PERMISSION_NOT_GRANTED";
+        if(WUtils.checkPermission(configuration.context,Constants.Permission.READ_PHONE_STATE))
+            deviceId = ((TelephonyManager)configuration.context.getSystemService(Context.TELEPHONY_SERVICE)).getDeviceId();
+        WPlugins.Android.initialize(configuration.context, configuration.applicationId, configuration.clientKey,deviceId);
         WUtils.registerLifecycleHandler(configuration.context);
         initializeNetwoekManager(configuration.context);
         serviceHandler=ServiceHandler.init();
@@ -173,12 +176,11 @@ public class Weclick{
 
     static void checkCacheApplicationId() {
         synchronized (MUTEX) {
-            String applicationId = WPlugins.get().applicationId();
+            String applicationId = WPlugins.get().getApplicationId();
             if (applicationId != null) {
                 File dir = Weclick.getWeclickCacheDir();
-
                 // Make sure the current version of the cache is for this application id.
-                File applicationIdFile = new File(dir, "applicationId");
+                File applicationIdFile = new File(dir, "getApplicationId");
                 if (applicationIdFile.exists()) {
                     // Read the file
                     boolean matches = false;
@@ -192,7 +194,7 @@ public class Weclick{
                     } catch (FileNotFoundException e) {
                         // Well, it existed a minute ago. Let's assume it doesn't match.
                     } catch (IOException e) {
-                        // Hmm, the applicationId file was malformed or something. Assume it
+                        // Hmm, the getApplicationId file was malformed or something. Assume it
                         // doesn't match.
                     }
 
@@ -220,7 +222,7 @@ public class Weclick{
                 }
 
                 // Create the version file if needed.
-                applicationIdFile = new File(dir, "applicationId");
+                applicationIdFile = new File(dir, "getApplicationId");
                 try {
                     FileOutputStream out = new FileOutputStream(applicationIdFile);
                     out.write(applicationId.getBytes("UTF-8"));

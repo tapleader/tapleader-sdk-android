@@ -2,16 +2,16 @@ package ir.weclick;
 
 import android.app.Application;
 import android.content.Context;
+import android.content.pm.PackageManager;
 import android.os.Build;
 import android.telephony.TelephonyManager;
-
-
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.sql.Date;
-import java.sql.Time;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 import ir.weclick.weclicksdk.BuildConfig;
 
@@ -118,8 +118,8 @@ class WUtils {
         public JSONObject getJson() throws JSONException {
             JSONObject  object = new JSONObject();
             object.put("androidId",getAndroidId());
-            object.put("applicationId",getApplicationId());
-            object.put("clientKey",getClientKey());
+            object.put("getApplicationId",getApplicationId());
+            object.put("getClientKey",getClientKey());
             object.put("deviceId",getDeviceId());
             object.put("packageName",getPackageName());
             object.put("phoneModel",getPhoneModel());
@@ -142,8 +142,8 @@ class WUtils {
         try{
             TelephonyManager tManager = (TelephonyManager)Weclick.getApplicationContext().getSystemService(Context.TELEPHONY_SERVICE);
             wObject.setAndroidId(android.provider.Settings.Secure.getString(Weclick.getApplicationContext().getContentResolver(), "android_id"));
-            wObject.setApplicationId(WPlugins.get().applicationId());
-            wObject.setClientKey(WPlugins.get().clientKey());
+            wObject.setApplicationId(WPlugins.get().getApplicationId());
+            wObject.setClientKey(WPlugins.get().getClientKey());
             wObject.setDeviceId(tManager.getDeviceId());
             wObject.setPackageName(Weclick.getApplicationContext().getPackageName());
             wObject.setPhoneModel(Build.MODEL);
@@ -179,9 +179,32 @@ class WUtils {
     }
 
     static String getDateTime(){
-        String date = new Date(System.currentTimeMillis()).toString();
-        String time = new Time(System.currentTimeMillis()).toString();
-        return date+" "+time;
+        return dateParser(new Date(System.currentTimeMillis()));
     }
 
+    static Date dateParser(String s){
+        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
+        try {
+            Date date = format.parse(s);
+            return date;
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    static String dateParser(Date date){
+        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
+        return format.format(date);
+    }
+
+    static String getSimpleDate(Date date){
+        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
+        return format.format(date);
+    }
+
+    static boolean checkPermission(Context context,String permission) {
+        int res = context.checkCallingOrSelfPermission(permission);
+        return (res == PackageManager.PERMISSION_GRANTED);
+    }
 }

@@ -110,6 +110,9 @@ class WLog {
     } catch (JSONException e) {
       //why do we fall?
     }
+    //its an strange scenario :(
+    if(tag.equals(TAG))
+      return;
     ServiceHandler.init().crashReport(object.toString(), new HttpResponse() {
       @Override
       public void onServerResponse(JSONObject data) {

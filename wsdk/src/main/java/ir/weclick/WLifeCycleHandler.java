@@ -2,6 +2,8 @@ package ir.weclick;
 
 import android.app.Activity;
 import android.app.Application;
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.Log;
 
@@ -13,6 +15,7 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -24,13 +27,18 @@ import java.util.Map;
 class WLifeCycleHandler implements Application.ActivityLifecycleCallbacks {
     private final static String TAG="WLifeCycleHandler";
     private final static String FILE_NAME="activityTrackingLog";
+    private final static String PREFS_NAME = "BufferCounter";
+    private final static String PARAMETER_NAME="counter";
     private static WLifeCycleHandler mWLifeCycleHandler;
     private static WLifeCycleObject lastWLO;
     private BufferedWriter writer;
+    private SharedPreferences prefs;
     private int counter=0;
-    private final static int BUFFER_SIZE=30;
+    private final static int BUFFER_SIZE=10;
 
     private WLifeCycleHandler() {
+        this.prefs = Weclick.getApplicationContext().getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+        this.counter=getLastCounter();
     }
     /**
      * should be static for security reason!
@@ -39,6 +47,7 @@ class WLifeCycleHandler implements Application.ActivityLifecycleCallbacks {
         private String name;
         private String startTime;
         private String endTime;
+
 
         public String getName() {
             return name;
@@ -74,8 +83,9 @@ class WLifeCycleHandler implements Application.ActivityLifecycleCallbacks {
     }
 
     public static WLifeCycleHandler getInstance() {
-        if (mWLifeCycleHandler == null)
+        if (mWLifeCycleHandler == null) {
             mWLifeCycleHandler = new WLifeCycleHandler();
+        }
         return mWLifeCycleHandler;
     }
 
@@ -159,6 +169,8 @@ class WLifeCycleHandler implements Application.ActivityLifecycleCallbacks {
             } catch (Exception e) {
                 WLog.e(TAG,e.getMessage());
             }
+        }else {
+            updateLastCounter(counter);
         }
     }
 
@@ -184,6 +196,8 @@ class WLifeCycleHandler implements Application.ActivityLifecycleCallbacks {
                     if(isSuccess){
                         try {
                             WFileUtils.forceDelete(log);
+                            counter=0;
+                            updateLastCounter(counter);
                         } catch (IOException e) {
                             WLog.e(TAG,e.getMessage());
                         }
@@ -214,34 +228,113 @@ class WLifeCycleHandler implements Application.ActivityLifecycleCallbacks {
     }
 
     private String getBody(JSONArray jsonArray) throws JSONException {
-        HashMap<String,Integer> map=new HashMap<String,Integer>();
+        class Value{
+            int count=0;
+            long duration=0l;
+            String date;
+
+            public Value(int count, long duration,String date) {
+                this.count = count;
+                this.duration = duration;
+                this.date=date;
+            }
+        }
+        class Key{
+            String name;
+            String date;
+
+            public Key(String name, String date) {
+                this.name = name;
+                this.date = date;
+            }
+
+            @Override
+            public boolean equals(Object obj) {
+                if(obj instanceof Key){
+                    if(((Key) obj).name.equals(this.name) && ((Key) obj).date.equals(this.date)){
+                        return true;
+                    }
+                }
+                return false;
+            }
+
+
+            @Override
+            public int hashCode() {
+                String code=name+date;
+                return code.hashCode();
+            }
+        }
+        HashMap<Key,Value> counterMap=new HashMap<Key,Value>();
         for(int i=0;i<jsonArray.length();i++){
             JSONObject object= new JSONObject(jsonArray.get(i).toString());
             String name=object.getString("name");
-            if(map.containsKey(name)) {
-                map.put(name,map.get(name)+1);
+            String end=object.getString("endTime");
+            String start=object.getString("startTime");
+            Date endDate=WUtils.dateParser(end);
+            Date startDate=WUtils.dateParser(start);
+            String date=WUtils.getSimpleDate(endDate);
+            long result=endDate.getTime()-startDate.getTime();
+            Key key=new Key(name,date);
+            if(counterMap.containsKey(key)) {
+                Value temp=counterMap.get(key);
+                temp.count+=1;
+                temp.duration+=result;
+                counterMap.put(key,temp);
             }else {
-                map.put(name,new Integer(1));
+                counterMap.put(key,new Value(1,result,date));
             }
         }
         JSONArray array=new JSONArray();
-        for(Map.Entry<String,Integer> e:map.entrySet()){
+        String tempDate="";
+        JSONArray tempArray=new JSONArray();
+        for(Map.Entry<Key,Value> e:counterMap.entrySet()){
             JSONObject temp=new JSONObject();
-            temp.put("name",e.getKey());
-            temp.put("count",e.getValue());
-            array.put(temp);
+            temp.put("name",e.getKey().name);
+            temp.put("count",e.getValue().count);
+            temp.put("duration",e.getValue().duration);
+            if(!tempDate.equals(e.getValue().date)) {
+                if(tempDate.length()!=0){
+                    JSONObject object=new JSONObject();
+                    object.put(tempDate,tempArray);
+                    array.put(object);
+                    tempArray=new JSONArray();
+                    tempDate=e.getValue().date;
+                }else {
+                    tempDate=e.getValue().date;
+                }
+            }
+            if(tempDate.equals(e.getValue().date)){
+                tempArray.put(temp);
+            }
         }
+        JSONObject object=new JSONObject();
+        object.put(tempDate,tempArray);
+        array.put(object);
         JSONObject body=new JSONObject();
-        String applicationId=WPlugins.get().applicationId();
-        String clientKey=WPlugins.get().clientKey();
+        String applicationId=WPlugins.get().getApplicationId();
+        String clientKey=WPlugins.get().getClientKey();
+        String deviceId=WPlugins.get().getDeviceId();
         try {
-            body.put("applicationId",applicationId);
-            body.put("clientKey",clientKey);
+            body.put("getApplicationId",applicationId);
+            body.put("getClientKey",clientKey);
+            body.put("deviceId",deviceId);
             body.put("data",array);
         } catch (JSONException e) {
             WLog.e(TAG,e.getMessage());
         }
         return body.toString();
+    }
+
+    private int getLastCounter(){
+        int id = prefs.getInt(PARAMETER_NAME, 0);
+        return id;
+    }
+
+    private void updateLastCounter(int id){
+        SharedPreferences.Editor editor = prefs.edit();
+        editor.putInt(PARAMETER_NAME, id);
+        editor.commit();
     }
 
 }

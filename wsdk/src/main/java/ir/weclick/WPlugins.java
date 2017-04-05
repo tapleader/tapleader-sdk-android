@@ -18,8 +18,8 @@ class WPlugins {
 
   // TODO(grantland): Move towards a Config/Builder parameter pattern to allow other configurations
   // such as path (disabled for Android), etc.
-  static void initialize(String applicationId, String clientKey) {
-    WPlugins.set(new WPlugins(applicationId, clientKey));
+  static void initialize(String applicationId, String clientKey,String deviceId) {
+    WPlugins.set(new WPlugins(applicationId, clientKey,deviceId));
   }
 
   static void set(WPlugins plugins) {
@@ -45,23 +45,30 @@ class WPlugins {
   final Object lock = new Object();
   private final String applicationId;
   private final String clientKey;
+  private final String deviceId;
 
   protected File weclickDir;
   protected File cacheDir;
   protected File filesDir;
 
-  private WPlugins(String applicationId, String clientKey) {
+  private WPlugins(String applicationId, String clientKey,String deviceId) {
     this.applicationId = applicationId;
     this.clientKey = clientKey;
+    this.deviceId=deviceId;
   }
 
-  String applicationId() {
+  String getApplicationId() {
     return applicationId;
   }
 
-  String clientKey() {
+  String getClientKey() {
     return clientKey;
   }
+
+  String getDeviceId(){
+    return deviceId;
+  }
+
 
 
   @Deprecated
@@ -78,8 +85,8 @@ class WPlugins {
   }
 
   static class Android extends WPlugins {
-    static void initialize(Context context, String applicationId, String clientKey) {
-      WPlugins.set(new Android(context, applicationId, clientKey));
+    static void initialize(Context context, String applicationId, String clientKey,String deviceId) {
+      WPlugins.set(new Android(context, applicationId, clientKey,deviceId));
     }
 
     static Android get() {
@@ -88,8 +95,8 @@ class WPlugins {
 
     private final Context applicationContext;
 
-    private Android(Context context, String applicationId, String clientKey) {
-      super(applicationId, clientKey);
+    private Android(Context context, String applicationId, String clientKey,String deviceId) {
+      super(applicationId, clientKey,deviceId);
       applicationContext = context.getApplicationContext();
     }
 

@@ -28,11 +28,11 @@ class ServiceHandler implements NetworkObserver {
     }
 
     void activityTracking(String body ,HttpResponse httpResponse){
-       // handleRequest(Constants.Api.ACTIVITY_TRACKING,body,httpResponse);
+        handleRequest(Constants.Api.ACTIVITY_TRACKING,body,httpResponse);
     }
 
     void crashReport(String body ,HttpResponse httpResponse){
-        handleRequest(Constants.Api.CRASH_REPORT,body,httpResponse);
+        //handleRequest(Constants.Api.CRASH_REPORT,body,httpResponse);
     }
 
     private static String urlGen(String api){

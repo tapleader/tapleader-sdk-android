@@ -16,15 +16,16 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
-    lintOptions {
+/*    lintOptions {
         abortOnError false
-    }
+    }*/
 }
 
 dependencies {
     compile fileTree(include: ['*.jar'], dir: 'libs')
 
 }
+/*
 
 task deleteJar(type: Delete){
     delete 'libs/weclick_sdk.jar'
@@ -38,21 +39,5 @@ task createJar(type: Copy){
 }
 
 
-/*
-
-task fatJar(type: Jar) {
-    classifier = 'all'
-    from {
-        configurations.runtime.collect { it.isDirectory() ? it : zipTree(it) }
-    } {
-        exclude "META-INF*/
-/*.SF"
-        exclude "META-INF*/
-/*.DSA"
-        exclude "META-INF*/
-/*.RSA"
-    }
-}
-*/
-
 createJar.dependsOn(deleteJar,build)
+*/

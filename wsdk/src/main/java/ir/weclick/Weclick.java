@@ -22,6 +22,8 @@ import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URL;
 
+import ir.weclick.weclicksdk.BuildConfig;
+
 /**
  * Created by mehdi akbarian on 2017-02-27.
  * profile: http://ir.linkedin.com/in/mehdiakbarian
@@ -48,7 +50,7 @@ public class Weclick{
             private Context context;
             private String applicationId;
             private String clientKey;
-            private String server = "http://e.weclick.ir/api/developer";
+            private String server = "http://tapleader.com/api/sdk/";
             private boolean localDataStoreEnabled;
 
             public Builder(Context context) {
@@ -152,21 +154,42 @@ public class Weclick{
 
     private static void checkForNewInstallOrUpdate() {
         final SharedPreferences prefs=getApplicationContext().getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
-        final String PARAMETER_NAME="newInstall";
-        if(prefs.getBoolean(PARAMETER_NAME,true)){
+        final String INSTALL_PARAMETER_NAME="n_install";
+        final String PACKAGE_VERSION_NAME="p_version_name";
+        final String PACKAGE_VERSION_CODE="p_version_code";
+        if(prefs.getBoolean(INSTALL_PARAMETER_NAME,true)){
             serviceHandler.installNotifier(new HttpResponse() {
                 @Override
                 public void onServerResponse(JSONObject data) {
                     try {
                         if(data.getString("Message").equals("success")){
                             SharedPreferences.Editor editor = prefs.edit();
-                            editor.putBoolean(PARAMETER_NAME, false);
+                            editor.putBoolean(INSTALL_PARAMETER_NAME, false);
+                            editor.putString(PACKAGE_VERSION_NAME, BuildConfig.VERSION_NAME);
+                            editor.putInt(PACKAGE_VERSION_CODE, BuildConfig.VERSION_CODE);
                             editor.commit();
                         }else
                             WLog.d(TAG,"Cant notify server for new install");
                     } catch (JSONException e) {
                         e.printStackTrace();
                     }
+                }
+
+                @Override
+                public void onServerError(String message, int code) {
+
+                }
+            });
+        }else if(!prefs.getString(PACKAGE_VERSION_NAME,"Unknown").equals(BuildConfig.VERSION_NAME)
+                || prefs.getInt(PACKAGE_VERSION_CODE,-1)!=BuildConfig.VERSION_CODE){
+            serviceHandler.packageUpdate(BuildConfig.VERSION_NAME, BuildConfig.VERSION_CODE, new HttpResponse() {
+                @Override
+                public void onServerResponse(JSONObject data) {
+                    //TODO:check data if request done then update prefs!
+                    SharedPreferences.Editor editor = prefs.edit();
+                    editor.putString(PACKAGE_VERSION_NAME, BuildConfig.VERSION_NAME);
+                    editor.putInt(PACKAGE_VERSION_CODE, BuildConfig.VERSION_CODE);
+                    editor.commit();
                 }
 
                 @Override

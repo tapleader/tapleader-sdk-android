@@ -1,5 +1,7 @@
 package ir.weclick;
 
+import org.json.JSONException;
+
 import java.net.URL;
 
 /**
@@ -8,6 +10,7 @@ import java.net.URL;
  */
 
 class ServiceHandler implements NetworkObserver {
+    private static final String TAG = "ServiceHandler";
     private static boolean isConnected=false;
     private static ServiceHandler mServiceHandler;
     private static OfflineStore offlineStore;
@@ -35,9 +38,20 @@ class ServiceHandler implements NetworkObserver {
         //handleRequest(Constants.Api.CRASH_REPORT,body,httpResponse);
     }
 
+    void packageUpdate(String versionName,int versionCode,HttpResponse httpResponse){
+        String body=null;
+        try {
+            body=new WModels.WUpdatePackageObject(versionName,versionCode).getJson().toString();
+        } catch (JSONException e) {
+            WLog.e(TAG,e.getMessage());
+            return;
+        }
+       // handleRequest(Constants.Api.PACKAGE_UPDATE,body,httpResponse);
+    }
+
     private static String urlGen(String api){
         URL server=Constants.server;
-        return server.toString()+"/"+api;
+        return server.toString()+api;
     }
 
     private void handleRequest(String url,String body,HttpResponse httpResponse){

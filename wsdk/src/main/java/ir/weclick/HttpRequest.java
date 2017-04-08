@@ -106,14 +106,12 @@ class HttpRequest extends AsyncTask<Object,Void,JSONObject> {
     private String sendPost(String url ,String body) throws IOException {
         URL obj = new URL(url);
         HttpURLConnection con = (HttpURLConnection) obj.openConnection();
-
         //add reuqest header
         con .setRequestMethod("POST");
         con.setRequestProperty("User-Agent", System.getProperty("http.agent"));
         con.setRequestProperty("Content-Type", "application/json; charset=utf-8");
-
-       // String urlParameters = "sn=C02G8416DRJM&cn=&locale=&caller=&num=12345";
-
+        con.setRequestProperty("Request-Date",WUtils.getDateTime());
+        con.setRequestProperty("Request-Key",WUtils.wSec(con.getRequestProperties().get("Request-Date")+WPlugins.get().getApplicationId()));
         // Send post request
         con.setDoOutput(true);
         DataOutputStream wr = new DataOutputStream(con.getOutputStream());

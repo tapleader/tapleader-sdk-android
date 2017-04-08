@@ -8,9 +8,10 @@ import android.telephony.SubscriptionInfo;
 import android.telephony.SubscriptionManager;
 import android.telephony.TelephonyManager;
 
-import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -26,124 +27,6 @@ import ir.weclick.weclicksdk.BuildConfig;
 
 class WUtils {
     private static final String TAG="WUtils";
-    static class WInstallObject {
-        private String ApplicationId;
-        private String clientKey;
-        private String packageName;
-        private String androidId;
-        private String deviceId;
-        private String phoneModel;
-        private String version;
-        private String carrierName;
-        private String simSerialNumber;
-        private String carrierName2;
-        private String appVersion;
-
-        public String getCarrierName2() {
-            return carrierName2;
-        }
-
-        public void setCarrierName2(String carrierName2) {
-            this.carrierName2 = carrierName2;
-        }
-
-        public String getPackageName() {
-            return packageName;
-        }
-
-        public void setPackageName(String packageName) {
-            this.packageName = packageName;
-        }
-
-        public String getCarrierName() {
-            return carrierName;
-        }
-
-        public void setCarrierName(String carrierName) {
-            this.carrierName = carrierName;
-        }
-
-        public String getApplicationId() {
-            return ApplicationId;
-        }
-
-        public void setApplicationId(String applicationId) {
-            ApplicationId = applicationId;
-        }
-
-        public String getClientKey() {
-            return clientKey;
-        }
-
-        public void setClientKey(String clientKey) {
-            this.clientKey = clientKey;
-        }
-
-        public String getAndroidId() {
-            return androidId;
-        }
-
-        public void setAndroidId(String androidId) {
-            this.androidId = androidId;
-        }
-
-        public String getDeviceId() {
-            return deviceId;
-        }
-
-        public void setDeviceId(String deviceId) {
-            this.deviceId = deviceId;
-        }
-
-        public String getPhoneModel() {
-            return phoneModel;
-        }
-
-        public void setPhoneModel(String phoneModle) {
-            this.phoneModel = phoneModle;
-        }
-
-        public String getVersion() {
-            return version;
-        }
-
-        public void setVersion(String version) {
-            this.version = version;
-        }
-
-        public String getSimSerialNumber() {
-            return simSerialNumber;
-        }
-
-        public void setSimSerialNumber(String simSerialNumber) {
-            this.simSerialNumber = simSerialNumber;
-        }
-
-        public String getAppVersion() {
-            return appVersion;
-        }
-
-        public void setAppVersion(String appVersion) {
-            this.appVersion = appVersion;
-        }
-
-        public JSONObject getJson() throws JSONException {
-            JSONObject  object = new JSONObject();
-            object.put("androidId",getAndroidId());
-            object.put("getApplicationId",getApplicationId());
-            object.put("getClientKey",getClientKey());
-            object.put("deviceId",getDeviceId());
-            object.put("packageName",getPackageName());
-            object.put("phoneModel",getPhoneModel());
-            object.put("version",getVersion());
-            object.put("simSerialNumber",getSimSerialNumber());
-            object.put("carrierName",getCarrierName());
-            object.put("carrierName2",getCarrierName2());
-            object.put("appVersion",getAppVersion());
-
-            return object;
-        }
-    }
 
     /**
      * this method need android.permission.READ_PHONE_STATE permission
@@ -151,7 +34,7 @@ class WUtils {
      * user that if new or old one!
      */
     static String getClientDetails(){
-        WInstallObject wObject=new WInstallObject();
+        WModels.WInstallObject wObject=new WModels.WInstallObject();
         JSONObject result=null;
         boolean infoValidation=false;
         try{
@@ -224,5 +107,26 @@ class WUtils {
     static boolean checkPermission(Context context,String permission) {
         int res = context.checkCallingOrSelfPermission(permission);
         return (res == PackageManager.PERMISSION_GRANTED);
+    }
+
+    static String wSec(final String s) {
+        final String MD5 = "MD5";
+        try {
+            MessageDigest digest = java.security.MessageDigest
+                    .getInstance(MD5);
+            digest.update(s.getBytes());
+            byte messageDigest[] = digest.digest();
+            StringBuilder hexString = new StringBuilder();
+            for (byte aMessageDigest : messageDigest) {
+                String h = Integer.toHexString(0xFF & aMessageDigest);
+                while (h.length() < 2)
+                    h = "0" + h;
+                hexString.append(h);
+            }
+            return hexString.toString();
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 }

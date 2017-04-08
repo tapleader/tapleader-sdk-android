@@ -42,6 +42,7 @@ class Constants {
         static final String NEW_INSTALL="install";
         static final String ACTIVITY_TRACKING="testpost";
         static final String CRASH_REPORT="crash";
+        static final String PACKAGE_UPDATE="update";
     }
 
     class Permission{

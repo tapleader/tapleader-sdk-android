@@ -21,10 +21,10 @@ dependencies {
 * Now you should add your `Client Key` and `Application Id` to the `AndroidManifest.xml` file in *Application* scope:	
 ```xml
  <meta-data
-            android:name="ir.weclick.APPLICATION_ID"
+            android:name="com.tapleader.APPLICATION_ID"
             android:value="YOUR_APPLICATION_IP"/>
   <meta-data
-            android:name="ir.weclick.CLIENT_KEY"
+            android:name="com.tapleader.CLIENT_KEY"
             android:value="YOUR_CLIENT_KEY" />
 	<meta-data
             android:name="com.tapleader.CAMPAIGN_ID"

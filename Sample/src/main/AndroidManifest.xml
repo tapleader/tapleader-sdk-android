@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.tapleader.test">
+
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
+    <application
+        android:allowBackup="true"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:supportsRtl="true"
+        android:theme="@style/AppTheme">
+        <activity android:name="com.tapleader.test.MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <meta-data
+            android:name="com.tapleader.APPLICATION_ID"
+            android:value="4" />
+        <meta-data
+            android:name="com.tapleader.CLIENT_KEY"
+            android:value="da55e2a4-991f-4050-8640-6979bdb7df7c" />
+        <meta-data
+            android:name="com.tapleader.CAMPAIGN_ID"
+            android:value="cff8" />
+
+        <activity android:name="com.tapleader.test.Main2Activity"></activity>
+    </application>
+
+</manifest>

@@ -1,1 +1,1 @@
-include ':wsdk', ':test'
+include ':Tapleader-SDK', ':Sample'

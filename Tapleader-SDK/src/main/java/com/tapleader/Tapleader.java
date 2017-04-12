@@ -66,7 +66,8 @@ public class Tapleader {
             throw new RuntimeException(Constants.Exception.CLIENTKEY_NOT_FOUND);
         }
         if (builder.campaignId == null) {
-            throw new RuntimeException(Constants.Exception.CAMPAIGN_ID_NOT_FOUND);
+            /**Optional**/
+            //throw new RuntimeException(Constants.Exception.CAMPAIGN_ID_NOT_FOUND);
         }
         initialize(builder.build());
     }

@@ -1,8 +1,6 @@
 # [Tapleader](http://tapleader.com) SDK 
 
-[![](https://jitpack.io/v/tapleader/tapleader-sdk-android.svg)](https://jitpack.io/#tapleader/tapleader-sdk-android)
-
-[![API](https://img.shields.io/badge/API-15%2B-blue.svg?style=flat)](https://android-arsenal.com/api?level=15)
+[![](https://jitpack.io/v/tapleader/tapleader-sdk-android.svg)](https://jitpack.io/#tapleader/tapleader-sdk-android) [![API](https://img.shields.io/badge/API-15%2B-blue.svg?style=flat)](https://android-arsenal.com/api?level=15)
 
 ## Free and unlimited app analytics
 

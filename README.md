@@ -8,7 +8,25 @@ The following tutorial will guide you to Install Tapleader SDK via *jar* file.
 
 ## Getting Started
 
-* First of all download latest version of sdk *jar* file from [release](https://github.com/tapleader/tapleader-sdk-android/releases) tab.
+* First of all download latest version of sdk *jar* file from [release](https://github.com/tapleader/tapleader-sdk-android/releases) tab or you can use dipendencies:
+
+Add it in your root build.gradle at the end of repositories:
+```gradle
+	allprojects {
+		repositories {
+			...
+			maven { url 'https://jitpack.io' }
+		}
+	}
+Copy
+```
+Then add the dependency
+```gradle
+	dependencies {
+	        compile 'com.github.tapleader:tapleader-sdk-android:V1.0'
+	}
+```
+
 * Move this file to */libs* folder of your project.
 * Add this following lines to your **app level module** `buil.gradle` file dependencies:
 

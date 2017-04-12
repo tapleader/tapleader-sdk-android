@@ -17,8 +17,7 @@ dependencies {
 }
 ```
 
-* Rr you can use dipendencies:
-
+* Or get Tapleader into your build:
 Add it in your root build.gradle at the end of repositories:
 ```gradle
 allprojects {

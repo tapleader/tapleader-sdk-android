@@ -27,7 +27,7 @@ dependencies {
             android:name="com.tapleader.CLIENT_KEY"
             android:value="YOUR_CLIENT_KEY" />
 	<meta-data
-            android:name="com.tapleader.CAMPAIGN_ID"
+            android:name="com.tapleader.CAMPAIGN_CODE"
             android:value="YOUR_CAMPAIGN_CODE" />
  ```
 * Add following lines for permissions(before *Application* scope):
@@ -79,4 +79,11 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 }
+```
+
+But if your target API is below 23 just add this line in your starting method ( `onCreate`  ) of Activity:
+
+```java
+    Tapleader.initialize(getApplicationContext());
+
 ```

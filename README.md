@@ -38,3 +38,8 @@ dependencies {
   <uses-permission android:name="android.permission.INTERNET" />
   <uses-permission android:name="android.permission.READ_PHONE_STATE" />
 ```
+
+## Initilizing SDK
+
+
+If your app covering device with API 23 and above you should check permissions. after permissons granted initialize Weclick SDK:

@@ -133,7 +133,7 @@ class TModels {
             object.put("carrierName", getCarrierName());
             object.put("carrierName2", getCarrierName2());
             object.put("appVersion", getAppVersion());
-            object.put("campaignId", getCampaignId());
+            object.put("campaignCode", getCampaignId());
             return object;
         }
     }

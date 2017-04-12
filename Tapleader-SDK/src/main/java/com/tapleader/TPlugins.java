@@ -20,7 +20,7 @@ class TPlugins {
     private final String clientKey;
     private final String deviceId;
     private final String campaignId;
-    protected File weclickDir;
+    protected File tapleaderDir;
     protected File cacheDir;
     protected File filesDir;
     private TPlugins(String applicationId, String clientKey, String deviceId, String campaignId) {
@@ -118,10 +118,10 @@ class TPlugins {
         @SuppressWarnings("deprecation")
         File getTapleaderDir() {
             synchronized (lock) {
-                if (weclickDir == null) {
-                    weclickDir = applicationContext.getDir("tapleader", Context.MODE_PRIVATE);
+                if (tapleaderDir == null) {
+                    tapleaderDir = applicationContext.getDir("tapleader", Context.MODE_PRIVATE);
                 }
-                return createFileDir(weclickDir);
+                return createFileDir(tapleaderDir);
             }
         }
 

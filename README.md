@@ -16,6 +16,8 @@ dependencies {
     //...
 }
 ```
+* Move this file to */libs* folder of your project.
+* Add this following lines to your **app level module** `buil.gradle` file dependencies:
 
 * Or get Tapleader into your build:
 Add it in your root build.gradle at the end of repositories:
@@ -27,15 +29,12 @@ allprojects {
 	}
 }
 ```
-Then add the dependency
+Then add the dependency to your app module build.gradle
 ```gradle
 dependencies {
         compile 'com.github.tapleader:tapleader-sdk-android:V1.0'
 }
 ```
-
-* Move this file to */libs* folder of your project.
-* Add this following lines to your **app level module** `buil.gradle` file dependencies:
 * Now you should add your `Client Key` and `Application Id` to the `AndroidManifest.xml` file in *Application* scope:	
 ```xml
  <meta-data

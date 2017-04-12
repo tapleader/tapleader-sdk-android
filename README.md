@@ -2,6 +2,8 @@
 
 [![](https://jitpack.io/v/tapleader/tapleader-sdk-android.svg)](https://jitpack.io/#tapleader/tapleader-sdk-android)
 
+
+
 ## Free and unlimited app analytics
 
 [Tapleader Analytics](http://tapleader.com) provides free, unlimited reporting on up to some installs per day. Tapleader is a powerful in-app analytics platform that allows you to monitor the performance of your app install sources in real time, determining the performance of each marketing channel from a single interface. Never install another tracking SDK again.
@@ -49,6 +51,7 @@ dependencies {
             android:name="com.tapleader.CAMPAIGN_CODE"
             android:value="YOUR_CAMPAIGN_CODE" />
  ```
+ Campaign_Code is optional. Usually you shouldn't provide campaign code in manifest file. Just in case you want to [Tracking Without Campaign Link](https://tapleader.com/docs/no-link-tracking)
 * Add following lines for permissions(before *Application* scope):
 
 ```xml

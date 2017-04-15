@@ -2,12 +2,11 @@ package com.tapleader;
 
 import android.app.Application;
 import android.content.Context;
+import android.content.pm.PackageManager;
 import android.os.Build;
 import android.telephony.SubscriptionInfo;
 import android.telephony.SubscriptionManager;
 import android.telephony.TelephonyManager;
-
-import com.tapleader.weclicksdk.BuildConfig;
 
 import org.json.JSONObject;
 
@@ -25,7 +24,10 @@ import java.util.Date;
  */
 
 class TUtils {
+    private static final Object lock = new Object();
     private static final String TAG = "TUtils";
+    private static String versionName = null;
+    private static int versionCode = -1;
 
     /**
      * this method need android.permission.READ_PHONE_STATE permission
@@ -46,18 +48,20 @@ class TUtils {
             wObject.setPackageName(Tapleader.getApplicationContext().getPackageName());
             wObject.setPhoneModel(Build.MODEL);
             wObject.setVersion(android.os.Build.VERSION.RELEASE);
-            wObject.setAppVersion(BuildConfig.VERSION_NAME);
+            wObject.setAppVersion(getVersionName());
             wObject.setCampaignId(TPlugins.get().getCampaignId());
             wObject.setCarrierName2("Unknown");
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP_MR1) {
                 SubscriptionManager subscriptionManager = SubscriptionManager.from(Tapleader.getApplicationContext());
                 ArrayList<SubscriptionInfo> list = (ArrayList<SubscriptionInfo>) subscriptionManager.getActiveSubscriptionInfoList();
                 infoValidation = true;
-                if (list.size() == 0)
+                if(list==null)
+                    infoValidation = false;
+                else if (list.size() == 0)
                     infoValidation = false;
                 wObject.setSimSerialNumber(tManager.getSimSerialNumber());
                 wObject.setCarrierName(list.get(0).getCarrierName().toString());
-                if (list.size() > 1) {
+                if (list!=null && list.size() > 1) {
                     wObject.setCarrierName2(list.get(1).getCarrierName().toString());
                 }
             }
@@ -133,5 +137,46 @@ class TUtils {
         } catch (ClassNotFoundException e) {
             return false;
         }
+    }
+
+    static int getVersionCode() {
+        synchronized (lock) {
+            if (versionCode == -1) {
+                try {
+                    versionCode = getPackageManager().getPackageInfo(getContext().getPackageName(), 0).versionCode;
+                } catch (PackageManager.NameNotFoundException e) {
+                    TLog.e(TAG, "Couldn't find info about own package", e);
+                }
+            }
+        }
+
+        return versionCode;
+    }
+
+    static Context getContext() {
+        return Tapleader.getApplicationContext();
+    }
+
+    static PackageManager getPackageManager() {
+        return getContext().getPackageManager();
+    }
+
+
+    /**
+     * Returns the version name for this app, as specified by the android:versionName attribute in the
+     * <manifest> element of the manifest.
+     */
+    static String getVersionName() {
+        synchronized (lock) {
+            if (versionName == null) {
+                try {
+                    versionName = getPackageManager().getPackageInfo(getContext().getPackageName(), 0).versionName;
+                } catch (PackageManager.NameNotFoundException e) {
+                    TLog.e(TAG, "Couldn't find info about own package", e);
+                }
+            }
+        }
+
+        return versionName;
     }
 }

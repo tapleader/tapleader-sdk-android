@@ -10,7 +10,7 @@ import android.os.Bundle;
 import android.telephony.TelephonyManager;
 import android.util.Log;
 
-import com.tapleader.weclicksdk.BuildConfig;
+
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -168,8 +168,8 @@ public class Tapleader {
                         if (data.getInt("Status") == Constants.Code.REQUEST_SUCCESS) {
                             SharedPreferences.Editor editor = prefs.edit();
                             editor.putBoolean(INSTALL_PARAMETER_NAME, false);
-                            editor.putString(PACKAGE_VERSION_NAME, BuildConfig.VERSION_NAME);
-                            editor.putInt(PACKAGE_VERSION_CODE, BuildConfig.VERSION_CODE);
+                          //m  editor.putString(PACKAGE_VERSION_NAME, BuildConfig.VERSION_NAME);
+                        //m    editor.putInt(PACKAGE_VERSION_CODE, BuildConfig.VERSION_CODE);
                             editor.putString(USER_INSTALLATION_ID, data.getString("InstallationId"));
                             editor.apply();
                         } else
@@ -184,14 +184,14 @@ public class Tapleader {
 
                 }
             });
-        } else if (!prefs.getString(PACKAGE_VERSION_NAME, "Unknown").equals(BuildConfig.VERSION_NAME)
-                || prefs.getInt(PACKAGE_VERSION_CODE, -1) != BuildConfig.VERSION_CODE) {
+        } else if (!prefs.getString(PACKAGE_VERSION_NAME, "Unknown").equals(TUtils.getVersionName())
+                || prefs.getInt(PACKAGE_VERSION_CODE, -1) != TUtils.getVersionCode()) {
             final String PACKAGE_NAME = getApplicationContext().getPackageName();
             final String APPLICATION_ID = TPlugins.get().getApplicationId();
             final String CLIENT_KEY = TPlugins.get().getClientKey();
             String body = "";
             try {
-                body = new TModels.TUpdatePackageObject(BuildConfig.VERSION_NAME, BuildConfig.VERSION_CODE, PACKAGE_NAME, APPLICATION_ID, CLIENT_KEY).getJson().toString();
+                body = new TModels.TUpdatePackageObject(TUtils.getVersionName(), TUtils.getVersionCode(), PACKAGE_NAME, APPLICATION_ID, CLIENT_KEY).getJson().toString();
             } catch (JSONException e) {
                 TLog.e(TAG, e.getMessage());
             }
@@ -200,8 +200,8 @@ public class Tapleader {
                 public void onServerResponse(JSONObject data) {
                     //TODO:check data if request done then update prefs!
                     SharedPreferences.Editor editor = prefs.edit();
-                    editor.putString(PACKAGE_VERSION_NAME, BuildConfig.VERSION_NAME);
-                    editor.putInt(PACKAGE_VERSION_CODE, BuildConfig.VERSION_CODE);
+                    editor.putString(PACKAGE_VERSION_NAME, TUtils.getVersionName());
+                    editor.putInt(PACKAGE_VERSION_CODE, TUtils.getVersionCode());
                     editor.apply();
                 }
 

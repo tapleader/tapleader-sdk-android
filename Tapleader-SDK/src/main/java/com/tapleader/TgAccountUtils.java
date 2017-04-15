@@ -30,7 +30,7 @@ class TgAccountUtils {
             if (mTgAccountUtils == null) {
                 mTgAccountUtils = new TgAccountUtils(accounts);
             } else {
-                throw new ExceptionInInitializerError(Constants.Exception.REIITILIZE_NOT_ALLOWED);
+                //throw new ExceptionInInitializerError(Constants.Exception.REIITILIZE_NOT_ALLOWED);
             }
         }
     }

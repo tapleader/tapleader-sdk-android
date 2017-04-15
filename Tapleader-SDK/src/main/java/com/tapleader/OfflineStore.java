@@ -4,7 +4,6 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.util.Log;
 
-import com.tapleader.weclicksdk.BuildConfig;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -103,8 +102,8 @@ class OfflineStore implements NetworkObserver {
                                 TFileUtils.forceDelete(localData);
                                 SharedPreferences.Editor editor = prefs.edit();
                                 editor.putBoolean(INSTALL_PARAMETER_NAME, false);
-                                editor.putString(PACKAGE_VERSION_NAME, BuildConfig.VERSION_NAME);
-                                editor.putInt(PACKAGE_VERSION_CODE, BuildConfig.VERSION_CODE);
+                                editor.putString(PACKAGE_VERSION_NAME, TUtils.getVersionName());
+                                editor.putInt(PACKAGE_VERSION_CODE, TUtils.getVersionCode());
                                 editor.putString(USER_INSTALLATION_ID, data.getString("InstallationId"));
                                 editor.apply();
                             }

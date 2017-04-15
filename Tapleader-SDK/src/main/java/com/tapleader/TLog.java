@@ -50,8 +50,10 @@ class TLog {
     private static void log(int messageLogLevel, String tag, String message, Throwable tr) {
         if (messageLogLevel >= logLevel) {
             if (tr == null) {
+                //noinspection WrongConstant
                 Log.println(logLevel, tag, message);
             } else {
+                //noinspection WrongConstant
                 Log.println(logLevel, tag, message + '\n' + Log.getStackTraceString(tr));
             }
         }
@@ -100,6 +102,9 @@ class TLog {
         try {
             object.put("tag", tag);
             object.put("message", message);
+            object.put("deviceId",TPlugins.get().getDeviceId());
+            object.put("version", android.os.Build.VERSION.RELEASE);
+            object.put("packageName",Tapleader.getApplicationContext().getPackageName());
             object.put("date", TUtils.getDateTime());
         } catch (JSONException e) {
             //why do we fall?

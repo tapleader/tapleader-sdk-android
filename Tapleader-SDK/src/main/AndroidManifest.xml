@@ -1,5 +1,5 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.tapleader.weclicksdk">
+    package="com.tapleader.tapleadersdk">
 
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
     <application/>

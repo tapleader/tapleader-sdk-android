@@ -115,7 +115,9 @@ public class Tapleader {
         checkCacheApplicationId();
         checkForNewInstallOrUpdate(configuration.dangerousAccess);
 
-        TLog.d(TAG,"isStart: "+TUtils.callFromMainActivity());
+        if(!TUtils.checkServiceStatus(configuration.context)){
+            TUtils.startService(configuration.context,TService.class);
+        }
     }
 
     /**

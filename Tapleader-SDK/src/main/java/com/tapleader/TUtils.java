@@ -1,5 +1,6 @@
 package com.tapleader;
 
+import android.app.ActivityManager;
 import android.app.Application;
 import android.content.Context;
 import android.content.Intent;
@@ -195,6 +196,19 @@ class TUtils {
                 return true;
         }
         return false;
+    }
+
+    static boolean checkServiceStatus(Context context) {
+        ActivityManager manager = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
+        for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
+            if (TService.class.getName().equals(service.service.getClassName()))
+                return true;
+        }
+        return false;
+    }
+    static void startService(Context context,Class service){
+        Intent startServiceIntent = new Intent(context, service);
+        context.startService(startServiceIntent);
     }
 
 }

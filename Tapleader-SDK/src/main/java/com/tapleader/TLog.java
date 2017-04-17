@@ -10,7 +10,8 @@ package com.tapleader;
 
 import android.util.Log;
 
-import org.json.JSONException;
+import com.tapleader.tapleadersdk.BuildConfig;
+
 import org.json.JSONObject;
 
 
@@ -97,22 +98,21 @@ class TLog {
 
     static void e(String tag, String message) {
         e(tag, message, null);
-        JSONObject object = new JSONObject();
+        TModels.TCrashReport report = new TModels.TCrashReport();
 
-        try {
-            object.put("tag", tag);
-            object.put("message", message);
-            object.put("deviceId",TPlugins.get().getDeviceId());
-            object.put("version", android.os.Build.VERSION.RELEASE);
-            object.put("packageName",Tapleader.getApplicationContext().getPackageName());
-            object.put("date", TUtils.getDateTime());
-        } catch (JSONException e) {
-            //why do we fall?
-        }
+        report.setTag(tag);
+        report.setMessage(message);
+        report.setAppVersion(TUtils.getVersionName());
+        report.setDate(TUtils.getDateTime());
+        report.setDeviceId(TPlugins.get().getDeviceId());
+        report.setPackageName(Tapleader.getApplicationContext().getPackageName());
+        report.setSdkVersion(BuildConfig.VERSION_CODE + "");
+        report.setVersion(android.os.Build.VERSION.RELEASE);
+
         //its an strange scenario :(
         if (tag.equals(TAG))
             return;
-        ServiceHandler.init().crashReport(object.toString(), new HttpResponse() {
+        ServiceHandler.init().crashReport(report.getJson().toString(), new HttpResponse() {
             @Override
             public void onServerResponse(JSONObject data) {
                 if (data != null)

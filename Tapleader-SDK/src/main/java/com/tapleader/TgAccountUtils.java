@@ -25,12 +25,10 @@ class TgAccountUtils {
         this.mAccounts = accounts;
     }
 
-    public static void initilize(Account[] accounts) {
+    public static void initialize(Account[] accounts) {
         synchronized (MUTEX) {
             if (mTgAccountUtils == null) {
                 mTgAccountUtils = new TgAccountUtils(accounts);
-            } else {
-                //throw new ExceptionInInitializerError(Constants.Exception.REIITILIZE_NOT_ALLOWED);
             }
         }
     }

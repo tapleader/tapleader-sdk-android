@@ -1,5 +1,7 @@
 package com.tapleader;
 
+import com.tapleader.tapleadersdk.BuildConfig;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -22,7 +24,10 @@ class TModels {
         private String simSerialNumber;
         private String carrierName2;
         private String appVersion;
+        private String sdkVersion;
         private String campaignId;
+        private boolean callFromMain;
+
 
         public String getCarrierName2() {
             return carrierName2;
@@ -112,12 +117,28 @@ class TModels {
             this.appVersion = appVersion;
         }
 
+        public String getSdkVersion() {
+            return sdkVersion;
+        }
+
+        public void setSdkVersion(String sdkVersion) {
+            this.sdkVersion = sdkVersion;
+        }
+
         public String getCampaignId() {
             return campaignId;
         }
 
         public void setCampaignId(String campaignId) {
             this.campaignId = campaignId;
+        }
+
+        public boolean isCallFromMain() {
+            return callFromMain;
+        }
+
+        public void setCallFromMain(boolean callFromMain) {
+            this.callFromMain = callFromMain;
         }
 
         public JSONObject getJson() throws JSONException {
@@ -133,7 +154,9 @@ class TModels {
             object.put("carrierName", getCarrierName());
             object.put("carrierName2", getCarrierName2());
             object.put("appVersion", getAppVersion());
+            object.put("sdkVersion", BuildConfig.VERSION_CODE);
             object.put("campaignCode", getCampaignId());
+            object.put("callFromMain",isCallFromMain());
             return object;
         }
     }
@@ -271,6 +294,97 @@ class TModels {
             }catch (Exception e){
 
             }
+        }
+    }
+
+    static class TCrashReport{
+        private String tag;
+        private String message;
+        private String deviceId;
+        private String version;
+        private String packageName;
+        private String date;
+        private String appVersion;
+        private String sdkVersion;
+
+        public String getTag() {
+            return tag;
+        }
+
+        public void setTag(String tag) {
+            this.tag = tag;
+        }
+
+        public String getMessage() {
+            return message;
+        }
+
+        public void setMessage(String message) {
+            this.message = message;
+        }
+
+        public String getDeviceId() {
+            return deviceId;
+        }
+
+        public void setDeviceId(String deviceId) {
+            this.deviceId = deviceId;
+        }
+
+        public String getVersion() {
+            return version;
+        }
+
+        public void setVersion(String version) {
+            this.version = version;
+        }
+
+        public String getPackageName() {
+            return packageName;
+        }
+
+        public void setPackageName(String packageName) {
+            this.packageName = packageName;
+        }
+
+        public String getDate() {
+            return date;
+        }
+
+        public void setDate(String date) {
+            this.date = date;
+        }
+
+        public String getAppVersion() {
+            return appVersion;
+        }
+
+        public void setAppVersion(String appVersion) {
+            this.appVersion = appVersion;
+        }
+
+        public String getSdkVersion() {
+            return sdkVersion;
+        }
+
+        public void setSdkVersion(String sdkVersion) {
+            this.sdkVersion = sdkVersion;
+        }
+
+        public JSONObject getJson()  {
+            JSONObject object = new JSONObject();
+            try {
+                object.put("message", getMessage());
+                object.put("deviceId", getDeviceId());
+                object.put("version", getVersion());
+                object.put("packageName", getPackageName());
+                object.put("appVersion",getAppVersion());
+                object.put("sdkVersion",getSdkVersion());
+                object.put("date", TUtils.getDateTime());
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+            return object;
         }
     }
 }

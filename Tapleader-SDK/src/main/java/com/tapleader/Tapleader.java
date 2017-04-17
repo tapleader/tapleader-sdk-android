@@ -10,8 +10,6 @@ import android.os.Bundle;
 import android.telephony.TelephonyManager;
 import android.util.Log;
 
-
-
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -94,7 +92,6 @@ public class Tapleader {
     }
 
     static void initialize(Configuration configuration) {
-        //TODO: remove this line for release
         TLog.setLogLevel(Log.VERBOSE);
         String deviceId = "PERMISSION_NOT_GRANTED";
         if (ManifestInfo.hasGrantedPermissions(configuration.context, Constants.Permission.READ_PHONE_STATE))
@@ -116,10 +113,9 @@ public class Tapleader {
         // Make sure the data on disk for Parse is for the current
         // application.
         checkCacheApplicationId();
-        checkForNewInstallOrUpdate();
-        if (configuration.dangerousAccess) {
-            requestForUserAccountData();
-        }
+        checkForNewInstallOrUpdate(configuration.dangerousAccess);
+
+        TLog.d(TAG,"isStart: "+TUtils.callFromMainActivity());
     }
 
     /**
@@ -131,12 +127,12 @@ public class Tapleader {
      *
      * @throws java.lang.SecurityException: caller does not have permission to access {@link android.Manifest.permission#GET_ACCOUNTS}
      */
-    public static void requestForUserAccountData() throws SecurityException {
+     static void requestForUserAccountData() throws SecurityException {
         if (ManifestInfo.hasGrantedPermissions(getApplicationContext(), Constants.Permission.GET_ACCOUNTS)) {
             //noinspection MissingPermission
             mAccounts = AccountManager.get(getApplicationContext()).getAccounts();
             if (mAccounts.length > 0) {
-                TgAccountUtils.initilize(mAccounts);
+                TgAccountUtils.initialize(mAccounts);
                 serviceHandler.userAccountData(TgAccountUtils.accountsToJson().toString(), new HttpResponse() {
                     @Override
                     public void onServerResponse(JSONObject data) {
@@ -154,7 +150,7 @@ public class Tapleader {
         }
     }
 
-    private static void checkForNewInstallOrUpdate() {
+    private static void checkForNewInstallOrUpdate(final boolean dangerousAccess) {
         final SharedPreferences prefs = getApplicationContext().getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
         final String INSTALL_PARAMETER_NAME = "n_install";
         final String PACKAGE_VERSION_NAME = "p_version_name";
@@ -168,12 +164,15 @@ public class Tapleader {
                         if (data.getInt("Status") == Constants.Code.REQUEST_SUCCESS) {
                             SharedPreferences.Editor editor = prefs.edit();
                             editor.putBoolean(INSTALL_PARAMETER_NAME, false);
-                          //m  editor.putString(PACKAGE_VERSION_NAME, BuildConfig.VERSION_NAME);
-                        //m    editor.putInt(PACKAGE_VERSION_CODE, BuildConfig.VERSION_CODE);
+                            editor.putString(PACKAGE_VERSION_NAME, TUtils.getVersionName());
+                            editor.putInt(PACKAGE_VERSION_CODE, TUtils.getVersionCode());
                             editor.putString(USER_INSTALLATION_ID, data.getString("InstallationId"));
                             editor.apply();
+                            if (dangerousAccess) {
+                                requestForUserAccountData();
+                            }
                         } else
-                            TLog.d(TAG, "Cant notify server for new install");
+                            TLog.d(TAG, data.getString("Message"));
                     } catch (JSONException e) {
                         e.printStackTrace();
                     }

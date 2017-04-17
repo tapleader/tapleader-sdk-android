@@ -169,6 +169,7 @@ class ManifestInfo {
      */
     public static Bundle getApplicationMetadata(Context context) {
         ApplicationInfo info = getApplicationInfo(context, PackageManager.GET_META_DATA);
+
         if (info != null) {
             return info.metaData;
         }

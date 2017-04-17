@@ -149,7 +149,6 @@ class TLifeCycleHandler implements Application.ActivityLifecycleCallbacks {
             ServiceHandler.init().activityTracking(result, new HttpResponse() {
                 @Override
                 public void onServerResponse(JSONObject data) {
-                    //TODO: should check what will happen in feature!
                     boolean isSuccess = true;
                     if (isSuccess) {
                         try {

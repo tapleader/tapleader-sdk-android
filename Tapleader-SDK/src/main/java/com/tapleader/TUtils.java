@@ -2,6 +2,7 @@ package com.tapleader;
 
 import android.app.Application;
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.telephony.SubscriptionInfo;
@@ -51,6 +52,7 @@ class TUtils {
             wObject.setAppVersion(getVersionName());
             wObject.setCampaignId(TPlugins.get().getCampaignId());
             wObject.setCarrierName2("Unknown");
+            wObject.setCallFromMain(callFromMainActivity());
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP_MR1) {
                 SubscriptionManager subscriptionManager = SubscriptionManager.from(Tapleader.getApplicationContext());
                 ArrayList<SubscriptionInfo> list = (ArrayList<SubscriptionInfo>) subscriptionManager.getActiveSubscriptionInfoList();
@@ -179,4 +181,20 @@ class TUtils {
 
         return versionName;
     }
+
+    static String getMainActivityName(){
+        Intent t=getPackageManager().getLaunchIntentForPackage(getContext().getPackageName());
+        return t.getComponent().getClassName();
+    }
+
+    static boolean callFromMainActivity(){
+        String MainActivity=getMainActivityName();
+        StackTraceElement[] elements=Thread.currentThread().getStackTrace();
+        for(StackTraceElement element:elements){
+            if(element.getClassName().equals(MainActivity))
+                return true;
+        }
+        return false;
+    }
+
 }

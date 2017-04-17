@@ -13,6 +13,7 @@ class Constants {
 
     class Messages {
         static final String REQUEST_TIMEOUT = "Request is timed out locally!";
+        static final String OFFLINE="no access to internet!request is recorded and will commit after connecting!";
     }
 
     class Code {
@@ -21,6 +22,7 @@ class Constants {
         static final int REQUEST_ERROR = -100;
         static final int WRONG_CAMPAIGN_ID = -1;
         static final int NOT_COMPATIBLE_APPLICATION_ID_AND_CLIENT_KEY = -2;
+        static final int OFFILNE=-99;
     }
 
     class Exception {

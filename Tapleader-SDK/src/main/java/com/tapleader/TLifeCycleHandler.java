@@ -150,14 +150,18 @@ class TLifeCycleHandler implements Application.ActivityLifecycleCallbacks {
                 @Override
                 public void onServerResponse(JSONObject data) {
                     boolean isSuccess = true;
-                    if (isSuccess) {
-                        try {
-                            TFileUtils.forceDelete(log);
-                            counter = 0;
-                            updateLastCounter(counter);
-                        } catch (IOException e) {
-                            TLog.e(TAG, e.getMessage());
+                    try {
+                        if (data.getInt("Status") == Constants.Code.REQUEST_SUCCESS) {
+                            try {
+                                TFileUtils.forceDelete(log);
+                                counter = 0;
+                                updateLastCounter(counter);
+                            } catch (IOException e) {
+                                TLog.e(TAG, e.getMessage());
+                            }
                         }
+                    } catch (JSONException e) {
+                        e.printStackTrace();
                     }
                 }
 
@@ -166,8 +170,6 @@ class TLifeCycleHandler implements Application.ActivityLifecycleCallbacks {
                     TLog.e(TAG, message + "error code: " + code);
                 }
             });
-        } else {
-            //what can we do if we can't access to file?hum?
         }
     }
 

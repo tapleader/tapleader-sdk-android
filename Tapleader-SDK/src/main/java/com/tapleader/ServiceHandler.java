@@ -56,6 +56,7 @@ class ServiceHandler implements NetworkObserver {
         } else {
             // TODO: 2017-03-01 offline handler should be implemented here
             offlineStore.store(url, body);
+            httpResponse.onServerError(Constants.Messages.OFFLINE,Constants.Code.OFFILNE);
         }
     }
 

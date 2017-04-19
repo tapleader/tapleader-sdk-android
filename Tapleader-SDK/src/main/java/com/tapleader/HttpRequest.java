@@ -29,8 +29,8 @@ class HttpRequest extends AsyncTask<Object, Void, JSONObject> {
     private HttpResponse httpResponse;
     private String url;
 
-    public HttpRequest(String url, Boolean carshReportEnable, HttpResponse httpResponse) {
-        this.carshReportEnable = carshReportEnable;
+    public HttpRequest(String url, Boolean crashReportEnable, HttpResponse httpResponse) {
+        this.carshReportEnable = crashReportEnable;
         this.httpResponse = httpResponse;
         this.url = url;
     }
@@ -117,7 +117,6 @@ class HttpRequest extends AsyncTask<Object, Void, JSONObject> {
             response.append(inputLine);
         }
         in.close();
-
         return response.toString();
     }
 

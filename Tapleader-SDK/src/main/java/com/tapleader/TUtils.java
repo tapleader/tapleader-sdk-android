@@ -10,6 +10,8 @@ import android.telephony.SubscriptionInfo;
 import android.telephony.SubscriptionManager;
 import android.telephony.TelephonyManager;
 
+import com.tapleader.tapleadersdk.BuildConfig;
+
 import org.json.JSONObject;
 
 import java.security.MessageDigest;
@@ -51,6 +53,8 @@ class TUtils {
             wObject.setPhoneModel(Build.MODEL);
             wObject.setVersion(android.os.Build.VERSION.RELEASE);
             wObject.setAppVersion(getVersionName());
+            wObject.setSdkVersion(BuildConfig.VERSION_CODE+"");
+            wObject.setCallFromMain(TUtils.callFromMainActivity());
             wObject.setCampaignId(TPlugins.get().getCampaignId());
             wObject.setCarrierName2("Unknown");
             wObject.setCallFromMain(callFromMainActivity());

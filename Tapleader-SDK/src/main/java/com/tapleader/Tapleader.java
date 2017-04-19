@@ -36,6 +36,7 @@ public class Tapleader {
     private static final String PREFS_NAME = "App_info";
     private static final Object MUTEX = new Object();
     private static final String TAG = "Tapleader";
+    private static TLock lock=new TLock();
     private static ServiceHandler serviceHandler;
     private static OfflineStore offlineStore;
     private static Account[] mAccounts;
@@ -63,15 +64,11 @@ public class Tapleader {
         if (builder.clientKey == null) {
             throw new RuntimeException(Constants.Exception.CLIENTKEY_NOT_FOUND);
         }
-        if (builder.campaignId == null) {
-            /**Optional**/
-            //throw new RuntimeException(Constants.Exception.CAMPAIGN_ID_NOT_FOUND);
-        }
         initialize(builder.build());
     }
 
     public static void initialize(Context context, String applicationId, String clientKey) {
-        initialize(context,applicationId,clientKey,"");
+        initialize(context, applicationId, clientKey, "");
     }
 
     public static void initialize(Context context, String applicationId, String clientKey, Boolean dangerousAccess) {
@@ -91,8 +88,12 @@ public class Tapleader {
         );
     }
 
-    static void initialize(Configuration configuration) {
+    synchronized static void initialize(Configuration configuration) {
         TLog.setLogLevel(Log.VERBOSE);
+        if (lock.isLocked())
+            return;
+        lock.lock();
+        TLog.d(TAG, "initialize locked!");
         String deviceId = "PERMISSION_NOT_GRANTED";
         if (ManifestInfo.hasGrantedPermissions(configuration.context, Constants.Permission.READ_PHONE_STATE))
             deviceId = ((TelephonyManager) configuration.context.getSystemService(Context.TELEPHONY_SERVICE)).getDeviceId();
@@ -110,26 +111,28 @@ public class Tapleader {
         offlineStore = OfflineStore.initialize(configuration.context);
         TKeyValueCache.initialize(configuration.context);
 
-        // Make sure the data on disk for Parse is for the current
+        // Make sure the data on disk for Tapleader is for the current
         // application.
         checkCacheApplicationId();
+
         checkForNewInstallOrUpdate(configuration.dangerousAccess);
 
-        if(!TUtils.checkServiceStatus(configuration.context)){
-            TUtils.startService(configuration.context,TService.class);
+        if (!TUtils.checkServiceStatus(configuration.context)) {
+            TUtils.startService(configuration.context, TService.class);
         }
+        TLog.d(TAG, "initialize req END! but still trying!");
     }
 
     /**
      * Get lists all accounts of any type registered on the device and
-     * send it to your Tapleade panel!
+     * send it to your Tapleader panel!
      * if you want to get user accounts data you must add {@link android.Manifest.permission#GET_ACCOUNTS}
      * and for API 23 and above must grant permission at RunTime!
      * check docs for more information!
      *
      * @throws java.lang.SecurityException: caller does not have permission to access {@link android.Manifest.permission#GET_ACCOUNTS}
      */
-     static void requestForUserAccountData() throws SecurityException {
+    static void requestForUserAccountData() throws SecurityException {
         if (ManifestInfo.hasGrantedPermissions(getApplicationContext(), Constants.Permission.GET_ACCOUNTS)) {
             //noinspection MissingPermission
             mAccounts = AccountManager.get(getApplicationContext()).getAccounts();
@@ -177,6 +180,9 @@ public class Tapleader {
                             TLog.d(TAG, data.getString("Message"));
                     } catch (JSONException e) {
                         e.printStackTrace();
+                    } finally {
+                        lock.unlock();
+                        TLog.d(TAG, "initialize done and unlocked!");
                     }
                 }
 
@@ -199,11 +205,20 @@ public class Tapleader {
             serviceHandler.packageUpdate(body, new HttpResponse() {
                 @Override
                 public void onServerResponse(JSONObject data) {
-                    //TODO:check data if request done then update prefs!
-                    SharedPreferences.Editor editor = prefs.edit();
-                    editor.putString(PACKAGE_VERSION_NAME, TUtils.getVersionName());
-                    editor.putInt(PACKAGE_VERSION_CODE, TUtils.getVersionCode());
-                    editor.apply();
+                    try {
+                        if (data.getInt("Status") == Constants.Code.REQUEST_SUCCESS) {
+                            SharedPreferences.Editor editor = prefs.edit();
+                            editor.putString(PACKAGE_VERSION_NAME, TUtils.getVersionName());
+                            editor.putInt(PACKAGE_VERSION_CODE, TUtils.getVersionCode());
+                            editor.apply();
+                        } else
+                            TLog.d(TAG, data.getString("Message"));
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    } finally {
+                        lock.unlock();
+                        TLog.d(TAG, "initialize done and unlocked!");
+                    }
                 }
 
                 @Override
@@ -262,7 +277,7 @@ public class Tapleader {
                             TFileUtils.deleteDirectory(dir);
                         } catch (IOException e) {
                             // We're unable to delete the directy...
-                            TLog.e(TAG,e.getMessage());
+                            TLog.e(TAG, e.getMessage());
                         }
                     }
                 }
@@ -406,8 +421,8 @@ public class Tapleader {
                         /**
                          * {@link Bundle#getString(String)} returns null if all characters in value field of metadata are numerical!
                          */
-                        if(campaignId==null){
-                            campaignId= String.valueOf(metaData.getInt(TAPLEADER_CAMPAIGN_ID));
+                        if (campaignId == null) {
+                            campaignId = String.valueOf(metaData.getInt(TAPLEADER_CAMPAIGN_ID));
                         }
 
                     }

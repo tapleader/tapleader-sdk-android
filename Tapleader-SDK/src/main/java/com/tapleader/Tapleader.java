@@ -226,6 +226,9 @@ public class Tapleader {
 
                 }
             });
+        }else {
+            lock.unlock();
+            TLog.d(TAG, "initialize done and unlocked!");
         }
     }
 

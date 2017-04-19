@@ -36,7 +36,7 @@ class TLifeCycleHandler implements Application.ActivityLifecycleCallbacks {
     private int counter = 0;
 
     private TLifeCycleHandler() {
-        this.prefs = Tapleader.getApplicationContext().getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+        this.prefs = TUtils.getContext().getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
         this.counter = getLastCounter();
     }
 

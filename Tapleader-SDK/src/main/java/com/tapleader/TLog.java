@@ -105,7 +105,7 @@ class TLog {
         report.setAppVersion(TUtils.getVersionName());
         report.setDate(TUtils.getDateTime());
         report.setDeviceId(TPlugins.get().getDeviceId());
-        report.setPackageName(Tapleader.getApplicationContext().getPackageName());
+        report.setPackageName(TUtils.getContext().getPackageName());
         report.setSdkVersion(BuildConfig.VERSION_CODE + "");
         report.setVersion(android.os.Build.VERSION.RELEASE);
 

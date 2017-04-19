@@ -5,7 +5,7 @@ import android.content.Intent;
 import android.os.Binder;
 import android.os.IBinder;
 
-public class TService extends Service {
+class TService extends Service {
     private final static String TAG="TService";
     private TBinder binder;
 

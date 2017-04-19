@@ -149,7 +149,7 @@ class ManifestInfo {
     }
 
     private static Context getContext() {
-        return Tapleader.getApplicationContext();
+        return TPlugins.Android.get().applicationContext();
     }
 
     private static PackageManager getPackageManager() {

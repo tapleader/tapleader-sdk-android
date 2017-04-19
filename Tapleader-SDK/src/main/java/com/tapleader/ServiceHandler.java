@@ -15,7 +15,7 @@ class ServiceHandler implements NetworkObserver {
 
     private ServiceHandler() {
         NetworkManager.init(this);
-        offlineStore = OfflineStore.initialize(Tapleader.getApplicationContext());
+        offlineStore = OfflineStore.initialize(TUtils.getContext());
     }
 
     static ServiceHandler init() {

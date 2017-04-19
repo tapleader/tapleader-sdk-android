@@ -34,7 +34,8 @@ class OfflineStore implements NetworkObserver {
             mOfflineStore = new OfflineStore(context);
         return mOfflineStore;
     }
-
+    //TODO: use SqlLite bro! be wise!!!
+    @Deprecated()
     public void store(String url, String body) {
         File localData = new File(TPlugins.get().getCacheDir(), FILE_NAME);
         String data = getData(url, body);
@@ -131,6 +132,7 @@ class OfflineStore implements NetworkObserver {
     @Override
     public void onChange(boolean isConnected) {
         if (isConnected) {
+            //TODO: service should handle this part
             push();
         }
     }

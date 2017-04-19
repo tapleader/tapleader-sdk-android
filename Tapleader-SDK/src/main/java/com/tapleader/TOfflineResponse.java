@@ -8,9 +8,9 @@ import org.json.JSONObject;
  * profile: http://ir.linkedin.com/in/mehdiakbarian
  */
 
-public class TOfflineResponse {
+class TOfflineResponse {
     private static final String TAG = "TOfflineResponse";
-    
+
     static HttpResponse installResponse=new HttpResponse() {
         @Override
         public void onServerResponse(JSONObject data) {

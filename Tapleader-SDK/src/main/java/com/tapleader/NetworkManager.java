@@ -33,7 +33,7 @@ class NetworkManager extends BroadcastReceiver {
             networkObservers = new ArrayList<>();
         }
         networkObservers.add(networkObserver);
-        networkObserver.onChange(checkInstantly(Tapleader.getApplicationContext()));
+        networkObserver.onChange(checkInstantly(TUtils.getContext()));
     }
 
     static void destroy(NetworkObserver networkObserver) {

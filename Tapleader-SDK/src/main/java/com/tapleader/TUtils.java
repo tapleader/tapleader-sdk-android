@@ -45,22 +45,21 @@ class TUtils {
         JSONObject result = null;
         boolean infoValidation = false;
         try {
-            TelephonyManager tManager = (TelephonyManager) Tapleader.getApplicationContext().getSystemService(Context.TELEPHONY_SERVICE);
-            wObject.setAndroidId(android.provider.Settings.Secure.getString(Tapleader.getApplicationContext().getContentResolver(), "android_id"));
+            TelephonyManager tManager = (TelephonyManager) getContext().getSystemService(Context.TELEPHONY_SERVICE);
+            wObject.setAndroidId(android.provider.Settings.Secure.getString(getContext().getContentResolver(), "android_id"));
             wObject.setApplicationId(TPlugins.get().getApplicationId());
             wObject.setClientKey(TPlugins.get().getClientKey());
             wObject.setDeviceId(tManager.getDeviceId());
-            wObject.setPackageName(Tapleader.getApplicationContext().getPackageName());
+            wObject.setPackageName(getContext().getPackageName());
             wObject.setPhoneModel(Build.MODEL);
             wObject.setVersion(android.os.Build.VERSION.RELEASE);
             wObject.setAppVersion(getVersionName());
             wObject.setSdkVersion(BuildConfig.VERSION_CODE+"");
-            wObject.setCallFromMain(TUtils.callFromMainActivity());
+            wObject.setCallFromMain(callFromMainActivity());
             wObject.setCampaignId(TPlugins.get().getCampaignId());
             wObject.setCarrierName2("Unknown");
-            wObject.setCallFromMain(callFromMainActivity());
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP_MR1) {
-                SubscriptionManager subscriptionManager = SubscriptionManager.from(Tapleader.getApplicationContext());
+                SubscriptionManager subscriptionManager = SubscriptionManager.from(getContext());
                 ArrayList<SubscriptionInfo> list = (ArrayList<SubscriptionInfo>) subscriptionManager.getActiveSubscriptionInfoList();
                 infoValidation = true;
                 if(list==null)

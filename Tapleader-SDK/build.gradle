@@ -40,5 +40,4 @@ task createJar(type: Copy){
     rename('class.jar','tapleader_android_sdk.jar')
 }
 
-
 createJar.dependsOn(deleteJar,build)

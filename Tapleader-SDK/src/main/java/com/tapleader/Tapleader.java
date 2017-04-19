@@ -5,7 +5,6 @@ import android.accounts.Account;
 import android.accounts.AccountManager;
 import android.content.Context;
 import android.content.IntentFilter;
-import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.telephony.TelephonyManager;
 import android.util.Log;
@@ -156,23 +155,13 @@ public class Tapleader {
     }
 
     private static void checkForNewInstallOrUpdate(final boolean dangerousAccess) {
-        final SharedPreferences prefs = getApplicationContext().getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
-        final String INSTALL_PARAMETER_NAME = "n_install";
-        final String PACKAGE_VERSION_NAME = "p_version_name";
-        final String PACKAGE_VERSION_CODE = "p_version_code";
-        final String USER_INSTALLATION_ID = "p_user_install_id";
-        if (prefs.getBoolean(INSTALL_PARAMETER_NAME, true)) {
+        if (TUtils.shouldNotifyInstall()) {
             serviceHandler.installNotifier(TUtils.getClientDetails(), new HttpResponse() {
                 @Override
                 public void onServerResponse(JSONObject data) {
                     try {
                         if (data.getInt("Status") == Constants.Code.REQUEST_SUCCESS) {
-                            SharedPreferences.Editor editor = prefs.edit();
-                            editor.putBoolean(INSTALL_PARAMETER_NAME, false);
-                            editor.putString(PACKAGE_VERSION_NAME, TUtils.getVersionName());
-                            editor.putInt(PACKAGE_VERSION_CODE, TUtils.getVersionCode());
-                            editor.putString(USER_INSTALLATION_ID, data.getString("InstallationId"));
-                            editor.apply();
+                            TUtils.saveInstallData(data.getString("InstallationId"));
                             if (dangerousAccess) {
                                 requestForUserAccountData();
                             }
@@ -191,8 +180,7 @@ public class Tapleader {
 
                 }
             });
-        } else if (!prefs.getString(PACKAGE_VERSION_NAME, "Unknown").equals(TUtils.getVersionName())
-                || prefs.getInt(PACKAGE_VERSION_CODE, -1) != TUtils.getVersionCode()) {
+        } else if (TUtils.shouldNotifyUpdatePackage()) {
             final String PACKAGE_NAME = getApplicationContext().getPackageName();
             final String APPLICATION_ID = TPlugins.get().getApplicationId();
             final String CLIENT_KEY = TPlugins.get().getClientKey();
@@ -207,10 +195,7 @@ public class Tapleader {
                 public void onServerResponse(JSONObject data) {
                     try {
                         if (data.getInt("Status") == Constants.Code.REQUEST_SUCCESS) {
-                            SharedPreferences.Editor editor = prefs.edit();
-                            editor.putString(PACKAGE_VERSION_NAME, TUtils.getVersionName());
-                            editor.putInt(PACKAGE_VERSION_CODE, TUtils.getVersionCode());
-                            editor.apply();
+                            TUtils.saveUpdateData();
                         } else
                             TLog.d(TAG, data.getString("Message"));
                     } catch (JSONException e) {

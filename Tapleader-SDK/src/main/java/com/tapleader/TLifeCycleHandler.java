@@ -30,7 +30,7 @@ class TLifeCycleHandler implements Application.ActivityLifecycleCallbacks {
     private final static String TAG = "TLifeCycleHandler";
     private final static int BUFFER_SIZE = 10;
     private static TLifeCycleHandler mTLifeCycleHandler;
-    private static WLifeCycleObject lastWLO;
+    private static TModels.TLifeCycleObject lastWLO;
     private SharedPreferences prefs;
     private BufferedWriter writer;
     private int counter = 0;
@@ -58,14 +58,14 @@ class TLifeCycleHandler implements Application.ActivityLifecycleCallbacks {
     public void onActivityStarted(Activity activity) {
         TLog.d(TAG, "onActivityStarted" + activity.getComponentName().toString());
         if (lastWLO == null) {
-            lastWLO = new WLifeCycleObject();
+            lastWLO = new TModels.TLifeCycleObject();
             lastWLO.setName(activity.getComponentName().getClassName());
             lastWLO.setStartTime(TUtils.getDateTime());
         } else {
             String current = TUtils.getDateTime();
             lastWLO.setEndTime(current);
             log(lastWLO);
-            lastWLO = new WLifeCycleObject();
+            lastWLO = new TModels.TLifeCycleObject();
             lastWLO.setName(activity.getComponentName().getClassName());
             lastWLO.setStartTime(current);
         }
@@ -96,11 +96,11 @@ class TLifeCycleHandler implements Application.ActivityLifecycleCallbacks {
 
     }
 
-    private void log(WLifeCycleObject lastWLO) {
+    private void log(TModels.TLifeCycleObject lastTLO) {
         final File log = new File(TPlugins.get().getCacheDir(), FILE_NAME);
         String data = null;
         try {
-            data = lastWLO.getJson().toString();
+            data = lastTLO.getJson().toString();
         } catch (JSONException e) {
             TLog.e(TAG, e.getMessage());
             return;
@@ -132,7 +132,7 @@ class TLifeCycleHandler implements Application.ActivityLifecycleCallbacks {
     }
 
     /**
-     * read data from file with name {@link WLifeCycleObject#FILE_NAME} and sed to server
+     * read data from file with name {@link TLifeCycleHandler#FILE_NAME} and sed to server
      *
      * @throws IOException if file is not accessible!
      */
@@ -143,7 +143,7 @@ class TLifeCycleHandler implements Application.ActivityLifecycleCallbacks {
             return;
         } else if (log.canRead()) {
             String body = TFileUtils.readFileToString(log, "UTF-8");
-            String[] data = parsFile(body);
+            String[] data = TFileUtils.splitFileLines(body);
             JSONArray array = getJsonArray(data);
             String result = getBody(array);
             ServiceHandler.init().activityTracking(result, new HttpResponse() {
@@ -197,7 +197,6 @@ class TLifeCycleHandler implements Application.ActivityLifecycleCallbacks {
             int count = 0;
             long duration = 0l;
 
-            //String date;
             public Value(int count, long duration) {
                 this.count = count;
                 this.duration = duration;
@@ -214,14 +213,11 @@ class TLifeCycleHandler implements Application.ActivityLifecycleCallbacks {
 
             @Override
             public boolean equals(Object obj) {
-                if (obj instanceof Key) {
-                    if (((Key) obj).name.equals(this.name) && ((Key) obj).date.equals(this.date)) {
+                if (obj instanceof Key)
+                    if (((Key) obj).name.equals(this.name) && ((Key) obj).date.equals(this.date))
                         return true;
-                    }
-                }
                 return false;
             }
-
 
             @Override
             public int hashCode() {
@@ -280,9 +276,9 @@ class TLifeCycleHandler implements Application.ActivityLifecycleCallbacks {
         String clientKey = TPlugins.get().getClientKey();
         String deviceId = TPlugins.get().getDeviceId();
         try {
-            body.put("getApplicationId", applicationId);
-            body.put("getClientKey", clientKey);
+            body.put("clientKey", clientKey);
             body.put("deviceId", deviceId);
+            body.put("packageName",TUtils.getContext().getPackageName());
             body.put("data", dateArray);
         } catch (JSONException e) {
             TLog.e(TAG, e.getMessage());
@@ -301,45 +297,6 @@ class TLifeCycleHandler implements Application.ActivityLifecycleCallbacks {
         editor.commit();
     }
 
-    /**
-     * should be static for security reason!
-     */
-    static class WLifeCycleObject {
-        private String name;
-        private String startTime;
-        private String endTime;
 
-        public String getName() {
-            return name;
-        }
-
-        public void setName(String name) {
-            this.name = name;
-        }
-
-        public String getStartTime() {
-            return startTime;
-        }
-
-        public void setStartTime(String startTime) {
-            this.startTime = startTime;
-        }
-
-        public String getEndTime() {
-            return endTime;
-        }
-
-        public void setEndTime(String endTime) {
-            this.endTime = endTime;
-        }
-
-        public JSONObject getJson() throws JSONException {
-            JSONObject object = new JSONObject();
-            object.put("name", getName());
-            object.put("startTime", getStartTime());
-            object.put("endTime", getEndTime());
-            return object;
-        }
-    }
 
 }

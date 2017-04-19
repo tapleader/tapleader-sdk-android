@@ -4,6 +4,7 @@ import android.app.ActivityManager;
 import android.app.Application;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.telephony.SubscriptionInfo;
@@ -179,7 +180,7 @@ class TUtils {
                 try {
                     versionName = getPackageManager().getPackageInfo(getContext().getPackageName(), 0).versionName;
                 } catch (PackageManager.NameNotFoundException e) {
-                    TLog.e(TAG, "Couldn't find info about own package", e);
+                    TLog.e(TAG,e.getMessage());
                 }
             }
         }
@@ -213,6 +214,38 @@ class TUtils {
     static void startService(Context context,Class service){
         Intent startServiceIntent = new Intent(context, service);
         context.startService(startServiceIntent);
+    }
+
+    static void saveInstallData(String installationId){
+        SharedPreferences prefs = getContext() .getSharedPreferences(Constants.Preferences.PREFS_NAME, Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = prefs.edit();
+        editor.putBoolean(Constants.Preferences.INSTALL_PARAMETER_NAME, false);
+        editor.putString(Constants.Preferences.PACKAGE_VERSION_NAME, TUtils.getVersionName());
+        editor.putInt(Constants.Preferences.PACKAGE_VERSION_CODE, TUtils.getVersionCode());
+        editor.putString(Constants.Preferences.USER_INSTALLATION_ID, installationId);
+        editor.apply();
+    }
+
+    static void saveUpdateData(){
+        SharedPreferences prefs = getContext() .getSharedPreferences(Constants.Preferences.PREFS_NAME, Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = prefs.edit();
+        editor.putString(Constants.Preferences.PACKAGE_VERSION_NAME, TUtils.getVersionName());
+        editor.putInt(Constants.Preferences.PACKAGE_VERSION_CODE, TUtils.getVersionCode());
+        editor.apply();
+    }
+
+    static boolean shouldNotifyInstall(){
+        SharedPreferences prefs = getContext() .getSharedPreferences(Constants.Preferences.PREFS_NAME, Context.MODE_PRIVATE);
+        return prefs.getBoolean(Constants.Preferences.INSTALL_PARAMETER_NAME, true);
+    }
+
+    static boolean shouldNotifyUpdatePackage(){
+        SharedPreferences prefs = getContext() .getSharedPreferences(Constants.Preferences.PREFS_NAME, Context.MODE_PRIVATE);
+        if(!prefs.getString(Constants.Preferences.PACKAGE_VERSION_NAME, "Unknown").equals(TUtils.getVersionName())
+                || prefs.getInt(Constants.Preferences.PACKAGE_VERSION_CODE, -1) != TUtils.getVersionCode()){
+            return true;
+        }
+        return false;
     }
 
 }

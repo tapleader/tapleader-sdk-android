@@ -30,15 +30,15 @@ class ServiceHandler implements NetworkObserver {
     }
 
     void installNotifier(String body, HttpResponse httpResponse) {
-        handleRequest(Constants.Api.NEW_INSTALL, body,true, httpResponse);
+        handleRequest(Constants.Api.NEW_INSTALL, body,true,true, httpResponse);
     }
 
     void activityTracking(String body, HttpResponse httpResponse) {
-        //handleRequest(Constants.Api.ACTIVITY_TRACKING,body,httpResponse);
+        handleRequest(Constants.Api.ACTIVITY_TRACKING,body,true,true,httpResponse);
     }
 
     void crashReport(String body, HttpResponse httpResponse) {
-        handleRequest(Constants.Api.CRASH_REPORT, body,false, httpResponse);
+        handleRequest(Constants.Api.CRASH_REPORT, body,false,false, httpResponse);
     }
 
     void packageUpdate(String body, HttpResponse httpResponse) {
@@ -49,11 +49,11 @@ class ServiceHandler implements NetworkObserver {
         //handleRequest(Constants.Api.USER_ACCOUNT_DATA,body,httpResponse);
     }
 
-    private void handleRequest(String url, String body,Boolean crashReporter, HttpResponse httpResponse) {
+    private void handleRequest(String url, String body,Boolean crashReporter,boolean supportOfilne, HttpResponse httpResponse) {
         if (isConnected) {
             HttpRequest httpRequest = new HttpRequest(urlGen(url),crashReporter, httpResponse);
             httpRequest.execute(body);
-        } else {
+        } else if(supportOfilne) {
             // TODO: 2017-03-01 offline handler should be implemented here
             offlineStore.store(url, body);
             httpResponse.onServerError(Constants.Messages.OFFLINE,Constants.Code.OFFILNE);

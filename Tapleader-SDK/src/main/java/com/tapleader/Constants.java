@@ -63,5 +63,13 @@ class Constants {
         static final String GET_ACCOUNTS = "android.permission.GET_ACCOUNTS";
     }
 
+    class Preferences {
+        static final String  PREFS_NAME = "App_info";
+        static final String INSTALL_PARAMETER_NAME = "n_install";
+        static final String PACKAGE_VERSION_NAME = "p_version_name";
+        static final String PACKAGE_VERSION_CODE = "p_version_code";
+        static final String USER_INSTALLATION_ID = "p_user_install_id";
+    }
+
 
 }

@@ -367,6 +367,11 @@ class TFileUtils {
         }
     }
 
+    static String[] splitFileLines(String body) {
+        String[] lines = body.split("\\r?\\n");
+        return lines;
+    }
+
     /**
      * Deletes a file, never throwing an exception. If file is a directory, delete it and all sub-directories.
      * <p>

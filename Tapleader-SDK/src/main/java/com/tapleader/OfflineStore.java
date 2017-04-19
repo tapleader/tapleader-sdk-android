@@ -1,10 +1,8 @@
 package com.tapleader;
 
 import android.content.Context;
-import android.content.SharedPreferences;
-import android.util.Log;
 
-
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -26,13 +24,9 @@ class OfflineStore implements NetworkObserver {
     private static OfflineStore mOfflineStore = null;
     private static Context context;
 
-    private OfflineStore() {
-    }
-
     private OfflineStore(Context context) {
         this.context = context;
         NetworkManager.init(this);
-        Log.d(TAG, "constructed");
     }
 
     public static OfflineStore initialize(Context context) {
@@ -67,65 +61,49 @@ class OfflineStore implements NetworkObserver {
         File localData = new File(TPlugins.get().getCacheDir(), FILE_NAME);
         if (!localData.exists())
             return;
-        String data = "";
-        JSONObject result = null;
+        JSONArray requests;
         try {
-            data = TFileUtils.readFileToString(localData, "UTF-8");
-            result = parsData(data);
+            String data = TFileUtils.readFileToString(localData, "UTF-8");
+            String[] lines=TFileUtils.splitFileLines(data);
+            requests=getJsonArray(lines);
         } catch (IOException e) {
             TLog.e(TAG, e.getMessage());
             return;
         }
-        String path = null;
-        try {
-            path = result.getString("path");
-        } catch (JSONException e) {
-            TLog.e(TAG, e.getMessage());
-            return;
-        }
-        if (path != null && path.equals(Constants.Api.NEW_INSTALL)) {
-            final String INSTALL_PARAMETER_NAME = "n_install";
-            final String PACKAGE_VERSION_NAME = "p_version_name";
-            final String PACKAGE_VERSION_CODE = "p_version_code";
-            final String USER_INSTALLATION_ID = "p_user_install_id";
-            final String PREFS_NAME = "App_info";
-            final SharedPreferences prefs = Tapleader.getApplicationContext().getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
-            if (prefs.getBoolean(INSTALL_PARAMETER_NAME, true)) {
-                ServiceHandler.init().installNotifier(TUtils.getClientDetails(), new HttpResponse() {
-                    @Override
-                    public void onServerResponse(JSONObject data) {
-                        TLog.d(TAG, data.toString());
-                        try {
-                            if (data.getInt("Status") == Constants.Code.REQUEST_SUCCESS) {
-                                File localData = new File(TPlugins.get().getCacheDir(), FILE_NAME);
-                                //TODO:it just for new install!
-                                TFileUtils.forceDelete(localData);
-                                SharedPreferences.Editor editor = prefs.edit();
-                                editor.putBoolean(INSTALL_PARAMETER_NAME, false);
-                                editor.putString(PACKAGE_VERSION_NAME, TUtils.getVersionName());
-                                editor.putInt(PACKAGE_VERSION_CODE, TUtils.getVersionCode());
-                                editor.putString(USER_INSTALLATION_ID, data.getString("InstallationId"));
-                                editor.apply();
-                            }
-                        } catch (Exception e) {
-                            TLog.e(TAG, e.getMessage());
-                        }
-                    }
+        handleRequests(requests);
+        TFileUtils.deleteQuietly(localData);
+    }
 
-                    @Override
-                    public void onServerError(String message, int code) {
-
-                    }
-                });
-            }else {
-                //TODO:it just for new install!
-                try {
-                    TFileUtils.forceDelete(localData);
-                } catch (IOException e) {
-                    TLog.e(TAG,e.getMessage());
+    private void handleRequests(JSONArray requests) {
+        for(int i=0;i<requests.length();i++){
+            String path = null;
+            String body= null;
+            try {
+                JSONObject result=requests.getJSONObject(i);
+                path = result.getString("path");
+                body=result.getString("body");
+            } catch (JSONException e) {
+                TLog.e(TAG, e.getMessage());
+                continue;
+            }
+            if(path==null)
+                continue;
+            if (path.equals(Constants.Api.NEW_INSTALL)) {
+                if (TUtils.shouldNotifyInstall()) {
+                    ServiceHandler.init().installNotifier(TUtils.getClientDetails(),TOfflineResponse.installResponse);
                 }
+            }else if(path.equals(Constants.Api.ACTIVITY_TRACKING)) {
+                ServiceHandler.init().activityTracking(body,TOfflineResponse.activityTrackingResponse);
+
             }
         }
+    }
+
+    private JSONArray getJsonArray(String[] data) {
+        JSONArray array = new JSONArray();
+        for (int i = 0; i < data.length; i++)
+            array.put(data[i]);
+        return array;
     }
 
     private String getData(String url, String body) {

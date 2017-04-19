@@ -7,7 +7,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * profile: http://ir.linkedin.com/in/mehdiakbarian
  */
 
-public class TLock {
+class TLock {
         private AtomicBoolean isLocked = new AtomicBoolean(false);
         public synchronized void lock(){
             isLocked.set(true);

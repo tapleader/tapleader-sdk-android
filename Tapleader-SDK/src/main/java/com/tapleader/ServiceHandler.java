@@ -1,5 +1,7 @@
 package com.tapleader;
 
+import android.content.Context;
+
 import java.net.URL;
 
 /**
@@ -10,17 +12,20 @@ import java.net.URL;
 class ServiceHandler implements NetworkObserver {
     private static final String TAG = "ServiceHandler";
     private static boolean isConnected = false;
+    private static Context context;
     private static ServiceHandler mServiceHandler;
     private static OfflineStore offlineStore;
 
-    private ServiceHandler() {
-        NetworkManager.init(this);
+    private ServiceHandler(Context context) {
+        this.context=context;
+        this.isConnected=false;
+        TBroadcastManager.registerNetworkObserver(this);
         offlineStore = OfflineStore.initialize(TUtils.getContext());
     }
 
-    static ServiceHandler init() {
+    static ServiceHandler init(Context context) {
         if (mServiceHandler == null)
-            mServiceHandler = new ServiceHandler();
+            mServiceHandler = new ServiceHandler(context);
         return mServiceHandler;
     }
 
@@ -49,11 +54,15 @@ class ServiceHandler implements NetworkObserver {
         //handleRequest(Constants.Api.USER_ACCOUNT_DATA,body,httpResponse);
     }
 
-    private void handleRequest(String url, String body,Boolean crashReporter,boolean supportOfilne, HttpResponse httpResponse) {
+    void pingPong(HttpResponse httpResponse){
+        handleRequest(Constants.Api.PING_PONG,null,false,false,httpResponse);
+    }
+
+    private void handleRequest(String url, String body,Boolean crashReporter,boolean supportOffilne, HttpResponse httpResponse) {
         if (isConnected) {
             HttpRequest httpRequest = new HttpRequest(urlGen(url),crashReporter, httpResponse);
             httpRequest.execute(body);
-        } else if(supportOfilne) {
+        } else if(supportOffilne) {
             // TODO: 2017-03-01 offline handler should be implemented here
             offlineStore.store(url, body);
             httpResponse.onServerError(Constants.Messages.OFFLINE,Constants.Code.OFFILNE);
@@ -63,5 +72,11 @@ class ServiceHandler implements NetworkObserver {
     @Override
     public void onChange(boolean isConnected) {
         this.isConnected = isConnected;
+    }
+
+    @Override
+    protected void finalize() throws Throwable {
+        super.finalize();
+        TBroadcastManager.destroyNetworkObserver(this);
     }
 }

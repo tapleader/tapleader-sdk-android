@@ -11,13 +11,6 @@
             android:name="com.tapleader.TService"
             android:enabled="true"
             android:exported="true" />
-
-        <receiver
-            android:name="com.tapleader.TReceiver"
-            android:enabled="true"
-            android:exported="true">
-            <action android:name="android.net.conn.CONNECTIVITY_CHANGE"/>
-        </receiver>
     </application>
 
 </manifest>

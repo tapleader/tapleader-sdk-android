@@ -102,14 +102,14 @@ class TLifeCycleHandler implements Application.ActivityLifecycleCallbacks {
         try {
             data = lastTLO.getJson().toString();
         } catch (JSONException e) {
-            TLog.e(TAG, e.getMessage());
+            TLog.e(TAG, e);
             return;
         }
         if (!log.exists()) {
             try {
                 log.createNewFile();
             } catch (IOException e) {
-                TLog.e(TAG, e.getMessage());
+                TLog.e(TAG, e);
                 return;
             }
         }
@@ -118,13 +118,13 @@ class TLifeCycleHandler implements Application.ActivityLifecycleCallbacks {
             writer.write(data + "\r\n");
             writer.flush();
         } catch (IOException e) {
-            TLog.e(TAG, e.getMessage());
+            TLog.e(TAG, e);
         }
         if (counter++ >= BUFFER_SIZE) {
             try {
                 flush();
             } catch (Exception e) {
-                TLog.e(TAG, e.getMessage());
+                TLog.e(TAG, e);
             }
         } else {
             updateLastCounter(counter);
@@ -139,14 +139,14 @@ class TLifeCycleHandler implements Application.ActivityLifecycleCallbacks {
     private void flush() throws IOException, JSONException {
         final File log = new File(TPlugins.get().getCacheDir(), FILE_NAME);
         if (!log.exists()) {
-            TLog.e(TAG, Constants.Exception.ACTIVITY_LOG_NOT_FOUND);
+            TLog.e(TAG, new Exception(Constants.Exception.ACTIVITY_LOG_NOT_FOUND));
             return;
         } else if (log.canRead()) {
             String body = TFileUtils.readFileToString(log, "UTF-8");
             String[] data = TFileUtils.splitFileLines(body);
             JSONArray array = getJsonArray(data);
             String result = getBody(array);
-            ServiceHandler.init().activityTracking(result, new HttpResponse() {
+            ServiceHandler.init(TUtils.getContext()).activityTracking(result, new HttpResponse() {
                 @Override
                 public void onServerResponse(JSONObject data) {
                     boolean isSuccess = true;
@@ -157,7 +157,7 @@ class TLifeCycleHandler implements Application.ActivityLifecycleCallbacks {
                                 counter = 0;
                                 updateLastCounter(counter);
                             } catch (IOException e) {
-                                TLog.e(TAG, e.getMessage());
+                                TLog.e(TAG, e);
                             }
                         }
                     } catch (JSONException e) {
@@ -167,7 +167,7 @@ class TLifeCycleHandler implements Application.ActivityLifecycleCallbacks {
 
                 @Override
                 public void onServerError(String message, int code) {
-                    TLog.e(TAG, message + "error code: " + code);
+                    TLog.e(TAG, new Exception(message + "error code: " + code));
                 }
             });
         }
@@ -281,7 +281,7 @@ class TLifeCycleHandler implements Application.ActivityLifecycleCallbacks {
             body.put("packageName",TUtils.getContext().getPackageName());
             body.put("data", dateArray);
         } catch (JSONException e) {
-            TLog.e(TAG, e.getMessage());
+            TLog.e(TAG, e);
         }
         return body.toString();
     }

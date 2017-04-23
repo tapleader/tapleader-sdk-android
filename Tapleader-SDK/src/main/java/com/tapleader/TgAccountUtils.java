@@ -62,7 +62,7 @@ class TgAccountUtils {
                             account.put("gender", "Unknown");
                         }
                     } catch (JSONException e) {
-                        TLog.e(TAG, e.getMessage());
+                        TLog.e(TAG, e);
                         continue;
                     }
                     array.put(account);

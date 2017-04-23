@@ -79,7 +79,7 @@ class TUtils {
 
             result = wObject.getJson();
         } catch (Exception e) {
-            TLog.e(TAG, e.getMessage());
+            TLog.e(TAG, e);
         }
         return result.toString();
     }
@@ -88,7 +88,7 @@ class TUtils {
         if (context instanceof Application)
             ((Application) context.getApplicationContext()).registerActivityLifecycleCallbacks(TLifeCycleHandler.getInstance());
         else
-            TLog.e(TAG, "can't start LifeCycleHandler");
+            TLog.e(TAG, new Exception("can't start LifeCycleHandler"));
     }
 
     static String getDateTime() {
@@ -152,7 +152,7 @@ class TUtils {
                 try {
                     versionCode = getPackageManager().getPackageInfo(getContext().getPackageName(), 0).versionCode;
                 } catch (PackageManager.NameNotFoundException e) {
-                    TLog.e(TAG, "Couldn't find info about own package", e);
+                    TLog.e(TAG,e);
                 }
             }
         }
@@ -179,7 +179,7 @@ class TUtils {
                 try {
                     versionName = getPackageManager().getPackageInfo(getContext().getPackageName(), 0).versionName;
                 } catch (PackageManager.NameNotFoundException e) {
-                    TLog.e(TAG,e.getMessage());
+                    TLog.e(TAG,e);
                 }
             }
         }

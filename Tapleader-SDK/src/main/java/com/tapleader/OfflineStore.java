@@ -10,6 +10,7 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.ArrayList;
 
 
 /**
@@ -17,7 +18,7 @@ import java.io.IOException;
  * profile: http://ir.linkedin.com/in/mehdiakbarian
  */
 
-class OfflineStore implements NetworkObserver {
+class OfflineStore{
 
     private static final String FILE_NAME = "t_offlineStore";
     private static final String TAG = "OfflineStore";
@@ -26,7 +27,6 @@ class OfflineStore implements NetworkObserver {
 
     private OfflineStore(Context context) {
         this.context = context;
-        NetworkManager.init(this);
     }
 
     public static OfflineStore initialize(Context context) {
@@ -34,7 +34,12 @@ class OfflineStore implements NetworkObserver {
             mOfflineStore = new OfflineStore(context);
         return mOfflineStore;
     }
-    //TODO: use SqlLite bro! be wise!!!
+
+    /**
+     * use {@link OfflineStore#store(TModels.TOfflineRecord)}
+     * @param url
+     * @param body
+     */
     @Deprecated()
     public void store(String url, String body) {
         File localData = new File(TPlugins.get().getCacheDir(), FILE_NAME);
@@ -43,7 +48,7 @@ class OfflineStore implements NetworkObserver {
             try {
                 localData.createNewFile();
             } catch (IOException e) {
-                TLog.e(TAG, e.getMessage());
+                TLog.e(TAG, e);
                 return;
             }
         }
@@ -52,54 +57,83 @@ class OfflineStore implements NetworkObserver {
             writer.write(data + "\r\n");
             writer.flush();
         } catch (IOException e) {
-            TLog.e(TAG, e.getMessage());
+            TLog.e(TAG, e);
         }
-
-
     }
 
-    public void push() {
+    /**
+     *
+     * @param record
+     * @return the row ID of the newly inserted row, or -1 if an error occurred
+     * @since version 1.1.4
+     */
+    public long store(TModels.TOfflineRecord record){
+        TSQLHelper helper=new TSQLHelper(context);
+        if(record!=null)
+            return helper.insertNewOfflineRecord(record);
+        return -1l;
+    }
+
+    /**
+     * get list of requests that saved in file!
+     * use {@link OfflineStore#getAllRequests()}
+     * @return
+     */
+    @Deprecated
+    JSONArray getRequests() {
         File localData = new File(TPlugins.get().getCacheDir(), FILE_NAME);
         if (!localData.exists())
-            return;
+            return null;
         JSONArray requests;
         try {
             String data = TFileUtils.readFileToString(localData, "UTF-8");
             String[] lines=TFileUtils.splitFileLines(data);
             requests=getJsonArray(lines);
         } catch (IOException e) {
-            TLog.e(TAG, e.getMessage());
-            return;
+            TLog.e(TAG, e);
+            return null;
         }
-        handleRequests(requests);
-        TFileUtils.deleteQuietly(localData);
+        return requests;
     }
 
-    private void handleRequests(JSONArray requests) {
-        for(int i=0;i<requests.length();i++){
-            String path = null;
-            String body= null;
-            try {
-                JSONObject result=requests.getJSONObject(i);
-                path = result.getString("path");
-                body=result.getString("body");
-            } catch (JSONException e) {
-                TLog.e(TAG, e.getMessage());
-                continue;
-            }
-            if(path==null)
-                continue;
-            if (path.equals(Constants.Api.NEW_INSTALL)) {
-                if (TUtils.shouldNotifyInstall()) {
-                    ServiceHandler.init().installNotifier(TUtils.getClientDetails(),TOfflineResponse.installResponse);
-                }
-            }else if(path.equals(Constants.Api.ACTIVITY_TRACKING)) {
-                ServiceHandler.init().activityTracking(body,TOfflineResponse.activityTrackingResponse);
-
-            }
-        }
+    /**
+     * get list of {@link com.tapleader.TModels.TOfflineRecord}
+     * @return list of requests in database
+     * @since version 1.1.4
+     */
+    ArrayList<TModels.TOfflineRecord> getAllRequests(){
+        ArrayList<TModels.TOfflineRecord> list=new ArrayList<>();
+        TSQLHelper helper=new TSQLHelper(context);
+        list.addAll(helper.getOfflineRecords(Constants.Api.NEW_INSTALL));
+        list.addAll(helper.getOfflineRecords(Constants.Api.ACTIVITY_TRACKING));
+        return list;
     }
 
+    /**
+     * delete file of offline requests!
+     * use {@link OfflineStore#deleteRequest(long)}
+     * @return true if delete file successfully!
+     */
+    @Deprecated
+    boolean deleteRequests(){
+        File localData = new File(TPlugins.get().getCacheDir(), FILE_NAME);
+        if (!localData.exists())
+            return false;
+        return TFileUtils.deleteQuietly(localData);
+    }
+
+    /**
+     * delete each request by id
+     * @param id
+     * @return true if delete successfully!
+     * @since version 1.1.4
+     */
+    boolean deleteRequest(long id){
+        TSQLHelper helper=new TSQLHelper(context);
+        return helper.deletOfflineRecord(id);
+    }
+
+    @Deprecated
     private JSONArray getJsonArray(String[] data) {
         JSONArray array = new JSONArray();
         for (int i = 0; i < data.length; i++)
@@ -107,6 +141,7 @@ class OfflineStore implements NetworkObserver {
         return array;
     }
 
+    @Deprecated
     private String getData(String url, String body) {
         JSONObject object = new JSONObject();
         try {
@@ -114,26 +149,19 @@ class OfflineStore implements NetworkObserver {
             object.put("body", body);
             object.put("date", TUtils.getDateTime());
         } catch (JSONException e) {
-            TLog.e(TAG, e.getMessage());
+            TLog.e(TAG, e);
         }
         return object.toString();
     }
 
+    @Deprecated
     private JSONObject parsData(String data) {
         JSONObject object = null;
         try {
             object = new JSONObject(data);
         } catch (JSONException e) {
-            TLog.e(TAG, e.getMessage());
+            TLog.e(TAG, e);
         }
         return object;
-    }
-
-    @Override
-    public void onChange(boolean isConnected) {
-        if (isConnected) {
-            //TODO: service should handle this part
-            push();
-        }
     }
 }

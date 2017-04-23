@@ -17,12 +17,11 @@ class TOfflineResponse {
             try {
                 if (data.getInt("Status") == Constants.Code.REQUEST_SUCCESS) {
                     TUtils.saveUpdateData();
+                    //TODO: remove install record from db
                 } else
                     TLog.d(TAG, data.getString("Message"));
             } catch (JSONException e) {
                 e.printStackTrace();
-            } finally {
-                TLog.d(TAG, "initialize done and unlocked!");
             }
         }
 

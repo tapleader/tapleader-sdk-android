@@ -56,6 +56,7 @@ class Constants {
         static final String PACKAGE_UPDATE = "update";
         static final String NEW_INSTALL = "install";
         static final String CRASH_REPORT = "crash";
+        static final String PING_PONG="ping";
     }
 
     class Permission {
@@ -69,6 +70,11 @@ class Constants {
         static final String PACKAGE_VERSION_NAME = "p_version_name";
         static final String PACKAGE_VERSION_CODE = "p_version_code";
         static final String USER_INSTALLATION_ID = "p_user_install_id";
+    }
+
+    class Action{
+        static final String ACTION_RESTART_SERVICE = "com.tapleader.START_TAPLEADER_SERVICE";
+
     }
 
 

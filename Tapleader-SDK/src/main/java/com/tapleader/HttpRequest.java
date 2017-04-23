@@ -24,13 +24,13 @@ import java.net.URL;
 @TargetApi(Build.VERSION_CODES.CUPCAKE)
 class HttpRequest extends AsyncTask<Object, Void, JSONObject> {
     private static final String TAG = "HttpRequest";
-    private boolean carshReportEnable = true;
+    private boolean crashReportEnable = true;
     private boolean isCanceled = false;
     private HttpResponse httpResponse;
     private String url;
 
     public HttpRequest(String url, Boolean crashReportEnable, HttpResponse httpResponse) {
-        this.carshReportEnable = crashReportEnable;
+        this.crashReportEnable = crashReportEnable;
         this.httpResponse = httpResponse;
         this.url = url;
     }
@@ -60,8 +60,8 @@ class HttpRequest extends AsyncTask<Object, Void, JSONObject> {
             str = sendPost(url, body);
             result = new JSONObject(str);
         } catch (Exception e) {
-            if (carshReportEnable) {
-                TLog.e(TAG, e.getMessage());
+            if (crashReportEnable) {
+                TLog.e(TAG, e);
             }
             result = new JSONObject();
             try {

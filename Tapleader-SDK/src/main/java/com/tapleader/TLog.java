@@ -92,16 +92,16 @@ class TLog {
         w(tag, message, null);
     }
 
-    static void e(String tag, String message, Throwable tr) {
-        log(Log.ERROR, tag, message, tr);
+    static void e(String tag, Exception e, Throwable tr) {
+        log(Log.ERROR, tag, e.getMessage(), tr);
     }
 
-    static void e(String tag, String message) {
-        e(tag, message, null);
+    static void e(String tag, Exception e) {
+        e(tag, e, null);
         TModels.TCrashReport report = new TModels.TCrashReport();
 
         report.setTag(tag);
-        report.setMessage(message);
+        report.setMessage(e.getMessage()+"\n"+e.getStackTrace());
         report.setAppVersion(TUtils.getVersionName());
         report.setDate(TUtils.getDateTime());
         report.setDeviceId(TPlugins.get().getDeviceId());
@@ -112,7 +112,7 @@ class TLog {
         //its an strange scenario :(
         if (tag.equals(TAG))
             return;
-        ServiceHandler.init().crashReport(report.getJson().toString(), new HttpResponse() {
+        ServiceHandler.init(TUtils.getContext()).crashReport(report.getJson().toString(), new HttpResponse() {
             @Override
             public void onServerResponse(JSONObject data) {
                 if (data != null)

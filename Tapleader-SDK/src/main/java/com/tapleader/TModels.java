@@ -1,5 +1,7 @@
 package com.tapleader;
 
+import android.provider.BaseColumns;
+
 import com.tapleader.tapleadersdk.BuildConfig;
 
 import org.json.JSONArray;
@@ -423,6 +425,71 @@ class TModels {
             object.put("startTime", getStartTime());
             object.put("endTime", getEndTime());
             return object;
+        }
+    }
+
+    static class TOfflineRecord{
+        private long id;
+        private String body;
+        private String path;
+        private String date;
+
+        public long getId() {
+            return id;
+        }
+
+        public void setId(long id) {
+            this.id = id;
+        }
+
+        public String getBody() {
+            return body;
+        }
+
+        public void setBody(String body) {
+            this.body = body;
+        }
+
+        public String getPath() {
+            return path;
+        }
+
+        public void setPath(String path) {
+            this.path = path;
+        }
+
+        public String getDate() {
+            return date;
+        }
+
+        public void setDate(String date) {
+            this.date = date;
+        }
+
+        private String getJson() {
+            JSONObject object = new JSONObject();
+            try {
+                object.put("path", path);
+                object.put("body", body);
+                object.put("date", TUtils.getDateTime());
+            } catch (JSONException e) {
+                TLog.e(getClass().getSimpleName(), e);
+            }
+            return object.toString();
+        }
+
+        /**
+         * By implementing the BaseColumns interface,
+         * your inner class can inherit a primary key field called _ID that some
+         * Android classes such as cursor adaptors will expect it to have. It's not required,
+         * but this can help your database work harmoniously with the Android framework.
+         */
+        static class TOfflineRecordEntity implements BaseColumns{
+            public static final String TABLE_NAME = "offline_rec";
+            public static final String COLUMN_NAME_PATH="path";
+            public static final String COLUMN_NAME_BODY="body";
+            public static final String COLUMN_NAME_DATE="date";
+
         }
     }
 }

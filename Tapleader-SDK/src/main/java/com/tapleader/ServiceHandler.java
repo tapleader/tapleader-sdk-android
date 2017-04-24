@@ -2,8 +2,6 @@ package com.tapleader;
 
 import android.content.Context;
 
-import java.net.URL;
-
 /**
  * Created by mehdi akbarian on 2017-02-27.
  * profile: http://ir.linkedin.com/in/mehdiakbarian
@@ -12,26 +10,26 @@ import java.net.URL;
 class ServiceHandler implements NetworkObserver {
     private static final String TAG = "ServiceHandler";
     private static boolean isConnected = false;
-    private static Context context;
     private static ServiceHandler mServiceHandler;
     private static OfflineStore offlineStore;
+    private static Context context;
 
     private ServiceHandler(Context context) {
-        this.context=context;
         this.isConnected=false;
+        this.context=context;
         TBroadcastManager.registerNetworkObserver(this);
-        offlineStore = OfflineStore.initialize(TUtils.getContext());
+        offlineStore = OfflineStore.initialize(context);
     }
 
     static ServiceHandler init(Context context) {
         if (mServiceHandler == null)
             mServiceHandler = new ServiceHandler(context);
+        TLog.d(TAG,"init");
         return mServiceHandler;
     }
 
     private static String urlGen(String api) {
-        URL server = Constants.server;
-        return server.toString() + api;
+        return Constants.server + api;
     }
 
     void installNotifier(String body, HttpResponse httpResponse) {
@@ -55,7 +53,8 @@ class ServiceHandler implements NetworkObserver {
     }
 
     void pingPong(HttpResponse httpResponse){
-        handleRequest(Constants.Api.PING_PONG,null,false,false,httpResponse);
+        HttpRequest httpRequest = new HttpRequest(urlGen(Constants.Api.PING_PONG),false, httpResponse);
+        httpRequest.execute();
     }
 
     private void handleRequest(String url, String body,Boolean crashReporter,boolean supportOffilne, HttpResponse httpResponse) {
@@ -64,7 +63,12 @@ class ServiceHandler implements NetworkObserver {
             httpRequest.execute(body);
         } else if(supportOffilne) {
             // TODO: 2017-03-01 offline handler should be implemented here
-            offlineStore.store(url, body);
+            //offlineStore.store(url, body);
+            TModels.TOfflineRecord record=new TModels.TOfflineRecord();
+            record.setDate(TUtils.getDateTime());
+            record.setPath(url);
+            record.setBody(body);
+            long id=offlineStore.store(record);
             httpResponse.onServerError(Constants.Messages.OFFLINE,Constants.Code.OFFILNE);
         }
     }

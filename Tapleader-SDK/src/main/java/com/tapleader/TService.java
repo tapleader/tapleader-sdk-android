@@ -4,15 +4,12 @@ import android.app.Service;
 import android.content.Intent;
 import android.os.Binder;
 import android.os.IBinder;
-
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
+import android.util.Log;
 
 import java.util.ArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-class TService extends Service implements NetworkObserver {
+public class TService extends Service implements NetworkObserver {
     private static AtomicBoolean isConnectedToNet=new AtomicBoolean(false);
     private static ServiceHandler mServiceHandler;
     private static OfflineStore mOfflineStore;
@@ -22,19 +19,27 @@ class TService extends Service implements NetworkObserver {
     @Override
     public void onCreate() {
         super.onCreate();
+        Log.d(TAG,"onCreate");
+        mServiceHandler=ServiceHandler.init(this);
+        //if(getApplicationContext()!=null)
+        mOfflineStore=OfflineStore.initialize(this);
         this.binder = new TBinder();
         TBroadcastManager.registerNetworkObserver(this);
-        mServiceHandler=ServiceHandler.init(getApplicationContext());
-        mOfflineStore=OfflineStore.initialize(getApplicationContext());
+        Log.d(TAG,"mServiceHandler: "+(mServiceHandler==null));
+        Log.d(TAG,"mOfflineStore: "+(mOfflineStore==null));
+        Tapleader.initializeTBroadcastReceiver(this);
+        Log.d(TAG,"initializeTBroadcastReceiver");
     }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+        Log.d(TAG,"onStartCommand");
         return START_STICKY;
     }
 
     @Override
     public void onTaskRemoved(Intent rootIntent) {
+        Log.d(TAG,"onTaskRemoved");
         restart();
     }
 
@@ -43,6 +48,7 @@ class TService extends Service implements NetworkObserver {
     @Override
     public void onDestroy() {
         super.onDestroy();
+        Log.d(TAG,"onDestroy");
         TBroadcastManager.destroyNetworkObserver(this);
         restart();
 
@@ -50,6 +56,7 @@ class TService extends Service implements NetworkObserver {
 
     private void restart(){
         if (FORCE_RESTART) {
+            Log.d(TAG,"restart");
             Intent intent = new Intent(Constants.Action.ACTION_RESTART_SERVICE);
             sendBroadcast(intent);
         }
@@ -62,45 +69,15 @@ class TService extends Service implements NetworkObserver {
 
     @Override
     public void onChange(boolean isConnected) {
+        Log.d(TAG,"onChange");
         isConnectedToNet.set(isConnected);
-        if(isConnected){
+        if(isConnected && mOfflineStore!=null){
             binder.handleRequests(mOfflineStore.getAllRequests());
         }
     }
 
 
     public class TBinder extends Binder {
-        /**
-         * use {@link TBinder#handleRequests(ArrayList)}
-         * @param requests
-         */
-        @Deprecated
-        public void handleRequests(JSONArray requests) {
-            if(requests==null)
-                return;
-            for(int i=0;i<requests.length();i++){
-                String path = null;
-                String body= null;
-                try {
-                    JSONObject result=requests.getJSONObject(i);
-                    path = result.getString("path");
-                    body=result.getString("body");
-                } catch (JSONException e) {
-                    TLog.e(TAG, e);
-                    continue;
-                }
-                if(path==null)
-                    continue;
-                if (path.equals(Constants.Api.NEW_INSTALL)) {
-                    if (TUtils.shouldNotifyInstall()) {
-                        mServiceHandler.installNotifier(TUtils.getClientDetails(),TOfflineResponse.installResponse);
-                    }
-                }else if(path.equals(Constants.Api.ACTIVITY_TRACKING)) {
-                    mServiceHandler.activityTracking(body,TOfflineResponse.activityTrackingResponse);
-
-                }
-            }
-        }
 
         /**
          * push offline Request to server
@@ -108,19 +85,22 @@ class TService extends Service implements NetworkObserver {
          * @since version 1.1.4
          */
         public void handleRequests(ArrayList<TModels.TOfflineRecord> records){
+            Log.d(TAG,"handleRequests");
             if(records==null)
                 return;
             else if(records.size()==0)
-                return;
+                Log.d(TAG,"record list size= 0");
             else {
                 for(TModels.TOfflineRecord record:records){
                     if(record!=null){
+                        TLog.d(TAG,record.toString());
                         switch (record.getPath()){
                             case Constants.Api.NEW_INSTALL:
-                                mServiceHandler.installNotifier(record.getBody(),TOfflineResponse.installResponse);
+                                if(TUtils.shouldNotifyInstall())
+                                    mServiceHandler.installNotifier(record.getBody(),TOfflineResponse.initialize(record.getId()).getInstallResponse());
                                 break;
                             case Constants.Api.ACTIVITY_TRACKING:
-                                mServiceHandler.activityTracking(record.getBody(),TOfflineResponse.activityTrackingResponse);
+                                mServiceHandler.activityTracking(record.getBody(),TOfflineResponse.initialize(record.getId()).getActivityTrackingResponse());
                                 break;
                         }
                     }

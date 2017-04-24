@@ -11,6 +11,7 @@ import android.content.Intent;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Build;
+import android.util.Log;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -26,16 +27,26 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * profile: http://ir.linkedin.com/in/mehdiakbarian
  */
 
-class TBroadcastManager extends BroadcastReceiver {
+public class TBroadcastManager extends BroadcastReceiver {
     private static List<NetworkObserver> networkObservers;
     private static final String TAG = "TBroadcastManager";
     private static final boolean SHOULD_PINGPONG=true;
+    private static final boolean SHOULD_NOTIFY_INSTANTLY=false;
     private static AtomicBoolean isConnected=new AtomicBoolean(false);
     private static NetworkInfo activeNetInfo;
     private static NetworkInfo activeNetwork;
     private static Object MUTEX=new Object();
     private static final long MAX_LAT=120000;
     private static final long MIN_LAT=60000;
+    private static Context context;
+
+    public TBroadcastManager(){
+
+    }
+    public TBroadcastManager(Context context) {
+        this.context=context;
+        doPingPong();
+    }
 
     private static boolean checkInstantly(Context context) {
         ConnectivityManager connectivityManager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
@@ -52,8 +63,10 @@ class TBroadcastManager extends BroadcastReceiver {
         if (networkObservers == null) {
             networkObservers = new ArrayList<>();
         }
+        Log.d(TAG,"registerNetworkObserver");
         networkObservers.add(networkObserver);
-        networkObserver.onChange(checkInstantly(TUtils.getContext()));
+        if(SHOULD_NOTIFY_INSTANTLY)
+            networkObserver.onChange(checkInstantly(TUtils.getContext()));
     }
 
     static void destroyNetworkObserver(NetworkObserver networkObserver) {
@@ -86,34 +99,43 @@ class TBroadcastManager extends BroadcastReceiver {
                 broadcastAll(state);
                 isConnected.set(state);
             }else if (state == true) {
-                ServiceHandler.init(TUtils.getContext()).pingPong(new HttpResponse() {
-                    @Override
-                    public void onServerResponse(JSONObject data) {
-                        try {
-                            if (data.getInt("Status") == Constants.Code.REQUEST_SUCCESS) {
-                                broadcastAll(true);
-                                isConnected.set(true);
-                            }else {
-                                TLog.d(TAG,"response state is not success!");
-                                scheduleJob();
-                            }
-                        } catch (JSONException e) {
-                           scheduleJob();
-                        }
-                    }
-
-                    @Override
-                    public void onServerError(String message, int code) {
-                        TLog.d(TAG,"TBroadcastManager connection is true but cant access ping pong! message: "+message+" code: "+code);
-                        scheduleJob();
-                    }
-                });
+                doPingPong();
             }else {
                 broadcastAll(state);
                 isConnected.set(false);
             }
         }
 
+    }
+
+    private void doPingPong() {
+        Log.d(TAG,"do pingpong");
+        if(context==null){
+            Log.d(TAG,"Context is null");
+            return;
+        }
+        ServiceHandler.init(context).pingPong(new HttpResponse() {
+            @Override
+            public void onServerResponse(JSONObject data) {
+                try {
+                    if (data.getInt("Status") == Constants.Code.REQUEST_SUCCESS) {
+                        broadcastAll(true);
+                        isConnected.set(true);
+                    }else {
+                        Log.d(TAG,"response state is not success!");
+                        scheduleJob();
+                    }
+                } catch (JSONException e) {
+                    scheduleJob();
+                }
+            }
+
+            @Override
+            public void onServerError(String message, int code) {
+                Log.d(TAG,"TBroadcastManager connection is true but cant access ping pong! message: "+message+" code: "+code);
+                scheduleJob();
+            }
+        });
     }
 
     private void broadcastAll(boolean b) {
@@ -128,7 +150,8 @@ class TBroadcastManager extends BroadcastReceiver {
 
 
     void scheduleJob(){
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+        //TODO: remove false!
+        if (false && Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             class TJS extends JobService{
 
                 @Override

@@ -478,6 +478,13 @@ class TModels {
             return object.toString();
         }
 
+        @Override
+        public String toString() {
+            return "path: "+getPath()
+                    +"body: "+getBody()
+                    +"date: "+getDate();
+        }
+
         /**
          * By implementing the BaseColumns interface,
          * your inner class can inherit a primary key field called _ID that some

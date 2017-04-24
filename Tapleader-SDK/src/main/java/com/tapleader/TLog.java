@@ -110,7 +110,7 @@ class TLog {
         report.setVersion(android.os.Build.VERSION.RELEASE);
 
         //its an strange scenario :(
-        if (tag.equals(TAG))
+        if (tag.equals(TAG) || TUtils.getContext()==null)
             return;
         ServiceHandler.init(TUtils.getContext()).crashReport(report.getJson().toString(), new HttpResponse() {
             @Override

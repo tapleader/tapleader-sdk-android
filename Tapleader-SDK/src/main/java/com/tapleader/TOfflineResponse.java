@@ -1,6 +1,5 @@
 package com.tapleader;
 
-import org.json.JSONException;
 import org.json.JSONObject;
 
 /**
@@ -10,17 +9,22 @@ import org.json.JSONObject;
 
 class TOfflineResponse {
     private static final String TAG = "TOfflineResponse";
-
-    static HttpResponse installResponse=new HttpResponse() {
+    private long id;
+    private HttpResponse installResponse=new HttpResponse() {
         @Override
         public void onServerResponse(JSONObject data) {
             try {
-                if (data.getInt("Status") == Constants.Code.REQUEST_SUCCESS) {
-                    TUtils.saveUpdateData();
-                    //TODO: remove install record from db
-                } else
+                int status=data.getInt("Status");
+                if (status == Constants.Code.REQUEST_SUCCESS) {
+                    TUtils.saveInstallData(data.getString("InstallationId"));
+                    OfflineStore.initialize(TUtils.getContext()).deleteInstallRecords();
+                } else if(status == Constants.Code.NOT_COMPATIBLE_APPLICATION_ID_AND_CLIENT_KEY){
                     TLog.d(TAG, data.getString("Message"));
-            } catch (JSONException e) {
+                    OfflineStore.initialize(TUtils.getContext()).deleteRequest(id);
+                }else {
+                    //do nothing
+                }
+            } catch (Exception e) {
                 e.printStackTrace();
             }
         }
@@ -30,10 +34,20 @@ class TOfflineResponse {
 
         }
     };
-    static HttpResponse activityTrackingResponse=new HttpResponse() {
+
+    private HttpResponse activityTrackingResponse=new HttpResponse() {
         @Override
         public void onServerResponse(JSONObject data) {
-
+            try {
+                int status=data.getInt("Status");
+                if (status == Constants.Code.REQUEST_SUCCESS) {
+                    OfflineStore.initialize(TUtils.getContext()).deleteRequest(id);
+                } else {
+                    //do nothing
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
 
         @Override
@@ -41,4 +55,22 @@ class TOfflineResponse {
 
         }
     };
+
+    private TOfflineResponse(long recordId){
+        this.id=recordId;
+    }
+
+    static TOfflineResponse initialize(long recordId){
+        return new TOfflineResponse(recordId);
+    }
+
+    HttpResponse getActivityTrackingResponse(){
+        return activityTrackingResponse;
+    }
+
+    HttpResponse getInstallResponse(){
+        return installResponse;
+    }
+
+
 }

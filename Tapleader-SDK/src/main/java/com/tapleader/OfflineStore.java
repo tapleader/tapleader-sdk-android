@@ -32,6 +32,7 @@ class OfflineStore{
     public static OfflineStore initialize(Context context) {
         if (mOfflineStore == null)
             mOfflineStore = new OfflineStore(context);
+        TLog.d(TAG,"initialize");
         return mOfflineStore;
     }
 
@@ -67,11 +68,36 @@ class OfflineStore{
      * @return the row ID of the newly inserted row, or -1 if an error occurred
      * @since version 1.1.4
      */
-    public long store(TModels.TOfflineRecord record){
+    long store(TModels.TOfflineRecord record){
         TSQLHelper helper=new TSQLHelper(context);
-        if(record!=null)
-            return helper.insertNewOfflineRecord(record);
-        return -1l;
+        long id=-1l;
+        if(record!=null) {
+            switch (record.getPath()){
+                case Constants.Api.NEW_INSTALL:
+                    TModels.TOfflineRecord old=isInstallRecordExist();
+                    if(old!=null){
+                        id=old.getId();
+                        helper.updateOfflineRecordId(record,id);
+                    }else {
+                        id = helper.insertNewOfflineRecord(record);
+                    }
+                    break;
+                case Constants.Api.ACTIVITY_TRACKING:
+                    id = helper.insertNewOfflineRecord(record);
+                    break;
+            }
+        }
+        return id;
+    }
+
+    TModels.TOfflineRecord isInstallRecordExist(){
+        ArrayList<TModels.TOfflineRecord> list=getAllRequests();
+        for(TModels.TOfflineRecord record:list){
+            if(record.getPath()==Constants.Api.NEW_INSTALL){
+                return record;
+            }
+        }
+        return null;
     }
 
     /**
@@ -106,6 +132,7 @@ class OfflineStore{
         TSQLHelper helper=new TSQLHelper(context);
         list.addAll(helper.getOfflineRecords(Constants.Api.NEW_INSTALL));
         list.addAll(helper.getOfflineRecords(Constants.Api.ACTIVITY_TRACKING));
+        helper.close();
         return list;
     }
 
@@ -130,7 +157,20 @@ class OfflineStore{
      */
     boolean deleteRequest(long id){
         TSQLHelper helper=new TSQLHelper(context);
-        return helper.deletOfflineRecord(id);
+        return helper.deleteOfflineRecord(id);
+    }
+
+    boolean deleteInstallRecords(){
+        TSQLHelper helper=new TSQLHelper(context);
+        ArrayList<TModels.TOfflineRecord> list=new ArrayList<>();
+        list.addAll(helper.getOfflineRecords(Constants.Api.NEW_INSTALL));
+        helper.close();
+        if(list.size()==0)
+            return false;
+        for(TModels.TOfflineRecord record:list){
+            deleteRequest(record.getId());
+        }
+        return true;
     }
 
     @Deprecated

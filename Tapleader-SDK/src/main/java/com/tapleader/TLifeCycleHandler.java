@@ -137,6 +137,10 @@ class TLifeCycleHandler implements Application.ActivityLifecycleCallbacks {
      * @throws IOException if file is not accessible!
      */
     private void flush() throws IOException, JSONException {
+        if(TUtils.getContext()==null) {
+            TLog.d(TAG,"context is null");
+            return;
+        }
         final File log = new File(TPlugins.get().getCacheDir(), FILE_NAME);
         if (!log.exists()) {
             TLog.e(TAG, new Exception(Constants.Exception.ACTIVITY_LOG_NOT_FOUND));

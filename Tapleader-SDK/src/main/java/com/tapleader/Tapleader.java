@@ -18,8 +18,6 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.RandomAccessFile;
-import java.net.MalformedURLException;
-import java.net.URL;
 
 /**
  * Created by mehdi akbarian on 2017-02-27.
@@ -93,14 +91,8 @@ public class Tapleader {
             deviceId = ((TelephonyManager) configuration.context.getSystemService(Context.TELEPHONY_SERVICE)).getDeviceId();
         TPlugins.Android.initialize(configuration.context, configuration.applicationId, configuration.clientKey, deviceId, configuration.campaignId);
         TUtils.registerLifecycleHandler(configuration.context);
-        initializeNetworkManager(configuration.context);
+        initializeTBroadcastReceiver(configuration.context);
         serviceHandler = ServiceHandler.init(configuration.context);
-
-        try {
-            Constants.server = new URL(configuration.server);
-        } catch (MalformedURLException e) {
-            TLog.e(TAG,e);
-        }
         TKeyValueCache.initialize(configuration.context);
         checkCacheApplicationId();
         checkForNewInstallOrUpdate(configuration.dangerousAccess);
@@ -215,13 +207,13 @@ public class Tapleader {
         }
     }
 
-    static void initializeNetworkManager(Context context) {
+    static void initializeTBroadcastReceiver(Context context) {
         final String ACTION_CONNECTIVITY_CHANGE = "android.net.conn.CONNECTIVITY_CHANGE";
         final String ACTION_RESTART_SERVICE = "com.tapleader.START_TAPLEADER_SERVICE";
         IntentFilter filter = new IntentFilter();
         filter.addAction(ACTION_CONNECTIVITY_CHANGE);
         filter.addAction(ACTION_RESTART_SERVICE);
-        context.registerReceiver(new TBroadcastManager(), filter);
+        context.registerReceiver(new TBroadcastManager(context), filter);
     }
 
     static void checkCacheApplicationId() {
@@ -377,7 +369,7 @@ public class Tapleader {
                 this.context = context;
                 this.dangerousAccess = dangerousAccess;
                 if (context != null) {
-                    localDataStoreEnabled = !TBroadcastManager.checkInternetAccess(context);
+                    //localDataStoreEnabled = !TBroadcastManager.checkInternetAccess(context);
                     Context applicationContext = context.getApplicationContext();
                     Bundle metaData = ManifestInfo.getApplicationMetadata(applicationContext);
                     if (metaData != null) {

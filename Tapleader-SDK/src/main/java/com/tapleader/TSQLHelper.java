@@ -73,7 +73,7 @@ class TSQLHelper extends SQLiteOpenHelper {
         return newRowId;
     }
 
-    boolean deletOfflineRecord(long id){
+    boolean deleteOfflineRecord(long id){
         SQLiteDatabase db =null;
         try{
             db= this.getWritableDatabase();
@@ -121,6 +121,7 @@ class TSQLHelper extends SQLiteOpenHelper {
                 record.setPath(cursor.getString(pathIndex));
                 record.setDate(cursor.getString(dateIndex));
                 record.setId(cursor.getLong(idIndex));
+                list.add(record);
             }
         }catch (Exception e){
             TLog.e(TAG,e);
@@ -129,5 +130,26 @@ class TSQLHelper extends SQLiteOpenHelper {
                 cursor.close();
         }
         return list;
+    }
+
+    int updateOfflineRecordId(TModels.TOfflineRecord record,long id){
+        Cursor cursor=null;
+        SQLiteDatabase db=null;
+        int count=0;
+        try {
+            db = this.getReadableDatabase();
+            ContentValues values = new ContentValues();
+            values.put(TModels.TOfflineRecord.TOfflineRecordEntity.COLUMN_NAME_BODY, record.getBody());
+            String selection = TModels.TOfflineRecord.TOfflineRecordEntity._ID + " = ?";
+            String[] selectionArgs = { String.valueOf(id) };
+            count = db.update(
+                    TModels.TOfflineRecord.TOfflineRecordEntity.TABLE_NAME,
+                    values,
+                    selection,
+                    selectionArgs);
+        }catch (SQLException e){
+            TLog.e(TAG,e);
+        }
+        return count;
     }
 }

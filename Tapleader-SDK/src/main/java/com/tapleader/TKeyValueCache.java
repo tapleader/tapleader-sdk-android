@@ -222,7 +222,7 @@ class TKeyValueCache {
                 f.close();
                 return new String(bytes, "UTF-8");
             } catch (IOException e) {
-                TLog.e(TAG, "error reading from cache", e);
+                TLog.e(TAG,  e);
                 return null;
             }
         }
@@ -238,7 +238,7 @@ class TKeyValueCache {
         try {
             return new JSONObject(raw);
         } catch (JSONException e) {
-            TLog.e(TAG, "corrupted cache for " + key, e);
+            TLog.e(TAG, e);
             clearFromKeyValueCache(key);
             return null;
         }

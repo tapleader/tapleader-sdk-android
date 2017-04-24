@@ -1,7 +1,5 @@
 package com.tapleader;
 
-import java.net.URL;
-
 /**
  * Created by mehdi akbarian on 2017-02-27.
  * profile: http://ir.linkedin.com/in/mehdiakbarian
@@ -9,7 +7,7 @@ import java.net.URL;
 
 class Constants {
 
-    static URL server;
+    static String server="http://e.tapleader.com/api/sdk/";
 
     class Messages {
         static final String REQUEST_TIMEOUT = "Request is timed out locally!";

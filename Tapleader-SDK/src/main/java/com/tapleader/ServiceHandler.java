@@ -37,7 +37,7 @@ class ServiceHandler implements NetworkObserver {
     }
 
     void activityTracking(String body, HttpResponse httpResponse) {
-        handleRequest(Constants.Api.ACTIVITY_TRACKING,body,true,true,httpResponse);
+        //handleRequest(Constants.Api.ACTIVITY_TRACKING,body,true,true,httpResponse);
     }
 
     void crashReport(String body, HttpResponse httpResponse) {

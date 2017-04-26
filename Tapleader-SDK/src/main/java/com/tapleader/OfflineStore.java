@@ -93,7 +93,7 @@ class OfflineStore{
     TModels.TOfflineRecord isInstallRecordExist(){
         ArrayList<TModels.TOfflineRecord> list=getAllRequests();
         for(TModels.TOfflineRecord record:list){
-            if(record.getPath()==Constants.Api.NEW_INSTALL){
+            if(record.getPath().equals(Constants.Api.NEW_INSTALL)){
                 return record;
             }
         }

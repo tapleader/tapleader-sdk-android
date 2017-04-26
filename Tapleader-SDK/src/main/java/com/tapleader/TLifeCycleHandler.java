@@ -5,6 +5,7 @@ import android.app.Application;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.util.Log;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -136,6 +137,7 @@ class TLifeCycleHandler implements Application.ActivityLifecycleCallbacks {
      *
      * @throws IOException if file is not accessible!
      */
+    //TODO://
     private void flush() throws IOException, JSONException {
         if(TUtils.getContext()==null) {
             TLog.d(TAG,"context is null");
@@ -157,6 +159,7 @@ class TLifeCycleHandler implements Application.ActivityLifecycleCallbacks {
                     try {
                         if (data.getInt("Status") == Constants.Code.REQUEST_SUCCESS) {
                             try {
+                                Log.d(TAG,data.toString());
                                 TFileUtils.forceDelete(log);
                                 counter = 0;
                                 updateLastCounter(counter);
@@ -171,7 +174,6 @@ class TLifeCycleHandler implements Application.ActivityLifecycleCallbacks {
 
                 @Override
                 public void onServerError(String message, int code) {
-                    TLog.e(TAG, new Exception(message + "error code: " + code));
                 }
             });
         }

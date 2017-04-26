@@ -4,9 +4,11 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.DatabaseErrorHandler;
+import android.database.DatabaseUtils;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.util.Log;
 
 import java.util.ArrayList;
 
@@ -26,7 +28,26 @@ class TSQLHelper extends SQLiteOpenHelper {
                     TModels.TOfflineRecord.TOfflineRecordEntity.COLUMN_NAME_PATH + " TEXT," +
                     TModels.TOfflineRecord.TOfflineRecordEntity.COLUMN_NAME_DATE + " TEXT," +
                     TModels.TOfflineRecord.TOfflineRecordEntity.COLUMN_NAME_BODY + " TEXT)";
+
     private static final String SQL_DELETE_OFFLINE_RECORD_TABLE =
+            "DROP TABLE IF EXISTS " + TModels.TOfflineRecord.TOfflineRecordEntity.TABLE_NAME;
+
+    private static final  String SQL_CREATE_SETTINGS_TABLE=
+            "CREATE TABLE " + TModels.TInstallObject.TInstallEntity.TABLE_NAME + " (" +
+                    TModels.TInstallObject.TInstallEntity._ID + " INTEGER PRIMARY KEY," +
+                    TModels.TInstallObject.TInstallEntity.COLUMN_NAME_ANDROID_ID + " TEXT," +
+                    TModels.TInstallObject.TInstallEntity.COLUMN_NAME_ANDROID_VERSION + " TEXT," +
+                    TModels.TInstallObject.TInstallEntity.COLUMN_NAME_APP_ID + " TEXT," +
+                    TModels.TInstallObject.TInstallEntity.COLUMN_NAME_APP_VERSION + " TEXT," +
+                    TModels.TInstallObject.TInstallEntity.COLUMN_NAME_CALL_FROM_MAIN + " TEXT," +
+                    TModels.TInstallObject.TInstallEntity.COLUMN_NAME_CLIENT_KEY + " TEXT," +
+                    TModels.TInstallObject.TInstallEntity.COLUMN_NAME_CARRIER_ONE + " TEXT," +
+                    TModels.TInstallObject.TInstallEntity.COLUMN_NAME_CARRIER_TWO + " TEXT," +
+                    TModels.TInstallObject.TInstallEntity.COLUMN_NAME_SIM_SERIAL + " TEXT," +
+                    TModels.TInstallObject.TInstallEntity.COLUMN_NAME_PHONE_NAME + " TEXT," +
+                    TModels.TInstallObject.TInstallEntity.COLUMN_NAME_PCKG_NAME + " TEXT," +
+                    TModels.TInstallObject.TInstallEntity.COLUMN_NAME_DEVICE_ID + " TEXT)";
+    private static final String SQL_DELETE_SETTINGS_TABLE =
             "DROP TABLE IF EXISTS " + TModels.TOfflineRecord.TOfflineRecordEntity.TABLE_NAME;
 
     TSQLHelper(Context context) {
@@ -43,11 +64,13 @@ class TSQLHelper extends SQLiteOpenHelper {
     @Override
     public void onCreate(SQLiteDatabase db) {
         db.execSQL(SQL_CREATE_OFFLINE_RECORD_TABLE);
+        db.execSQL(SQL_CREATE_SETTINGS_TABLE);
     }
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
         db.execSQL(SQL_DELETE_OFFLINE_RECORD_TABLE);
+        db.execSQL(SQL_DELETE_SETTINGS_TABLE);
         onCreate(db);
     }
 
@@ -150,6 +173,62 @@ class TSQLHelper extends SQLiteOpenHelper {
         }catch (SQLException e){
             TLog.e(TAG,e);
         }
+        Log.d(TAG," update row count = "+count);
         return count;
+    }
+
+    long setSettings(TModels.TInstallObject installObject){
+        SQLiteDatabase db =null;
+        try{
+            db= this.getWritableDatabase();
+        }catch (SQLException e){
+            TLog.e(TAG,e);
+            return -1l;
+        }
+        ContentValues values = new ContentValues();
+        values.put(TModels.TInstallObject.TInstallEntity.COLUMN_NAME_CLIENT_KEY,installObject.getClientKey());
+        values.put(TModels.TInstallObject.TInstallEntity.COLUMN_NAME_ANDROID_ID,installObject.getAndroidId());
+        values.put(TModels.TInstallObject.TInstallEntity.COLUMN_NAME_ANDROID_VERSION,installObject.getVersion());
+        values.put(TModels.TInstallObject.TInstallEntity.COLUMN_NAME_APP_ID,installObject.getApplicationId());
+        values.put(TModels.TInstallObject.TInstallEntity.COLUMN_NAME_APP_VERSION,installObject.getAppVersion());
+        values.put(TModels.TInstallObject.TInstallEntity.COLUMN_NAME_CALL_FROM_MAIN,installObject.isCallFromMain());
+        values.put(TModels.TInstallObject.TInstallEntity.COLUMN_NAME_CARRIER_ONE,installObject.getCarrierName());
+        values.put(TModels.TInstallObject.TInstallEntity.COLUMN_NAME_CARRIER_TWO,installObject.getCarrierName2());
+        values.put(TModels.TInstallObject.TInstallEntity.COLUMN_NAME_DEVICE_ID,installObject.getDeviceId());
+        values.put(TModels.TInstallObject.TInstallEntity.COLUMN_NAME_PCKG_NAME,installObject.getPackageName());
+        values.put(TModels.TInstallObject.TInstallEntity.COLUMN_NAME_PHONE_NAME,installObject.getPhoneModel());
+        values.put(TModels.TInstallObject.TInstallEntity.COLUMN_NAME_SIM_SERIAL,installObject.getSimSerialNumber());
+        long newRowId = db.insert(TModels.TInstallObject.TInstallEntity.TABLE_NAME, null, values);
+        db.close();
+        return newRowId;
+    }
+
+    String getSetting(String colName){
+        String result="";
+        Cursor cursor=null;
+        SQLiteDatabase db=null;
+        try {
+            db = this.getReadableDatabase();
+            cursor=db.rawQuery("SELECT * from "+ TModels.TInstallObject.TInstallEntity.TABLE_NAME,null);
+            while (cursor.moveToNext()){
+                result=cursor.getString(cursor.getColumnIndex(colName));
+            }
+        }catch (SQLException e){
+            TLog.e(TAG,e);
+            return result;
+        }
+        return result;
+    }
+
+    boolean isSettingExist(){
+        long cnt=0l;
+        try {
+            SQLiteDatabase db = this.getReadableDatabase();
+            cnt  = DatabaseUtils.queryNumEntries(db, TModels.TInstallObject.TInstallEntity.TABLE_NAME);
+            db.close();
+        }catch (Exception e){
+            TLog.e(TAG,e);
+        }
+        return cnt == 0l ? false:true;
     }
 }

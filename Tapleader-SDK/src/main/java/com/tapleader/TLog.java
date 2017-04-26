@@ -8,6 +8,7 @@
  */
 package com.tapleader;
 
+import android.content.Context;
 import android.util.Log;
 
 import com.tapleader.tapleadersdk.BuildConfig;
@@ -97,20 +98,28 @@ class TLog {
     }
 
     static void e(String tag, Exception e) {
-        e(tag, e, null);
+        if(TUtils.getContext()!=null)
+            e(tag,e,TUtils.getContext());
+    }
+
+    static void e(String tag, Exception e, Context context){
+        e(tag, e, (Throwable) null);
+        if(context==null)
+            return;
+        TSQLHelper helper=new TSQLHelper(context);
         TModels.TCrashReport report = new TModels.TCrashReport();
 
         report.setTag(tag);
         report.setMessage(e.getMessage()+"\n"+e.getStackTrace());
-        report.setAppVersion(TUtils.getVersionName());
+        report.setAppVersion(helper.getSetting(TModels.TInstallObject.TInstallEntity.COLUMN_NAME_APP_VERSION));
         report.setDate(TUtils.getDateTime());
-        report.setDeviceId(TPlugins.get().getDeviceId());
-        report.setPackageName(TUtils.getContext().getPackageName());
+        report.setDeviceId(helper.getSetting(TModels.TInstallObject.TInstallEntity.COLUMN_NAME_DEVICE_ID));
+        report.setPackageName(helper.getSetting(TModels.TInstallObject.TInstallEntity.COLUMN_NAME_PCKG_NAME));
         report.setSdkVersion(BuildConfig.VERSION_CODE + "");
         report.setVersion(android.os.Build.VERSION.RELEASE);
 
         //its an strange scenario :(
-        if (tag.equals(TAG) || TUtils.getContext()==null)
+        if (tag.equals(TAG) || context==null)
             return;
         ServiceHandler.init(TUtils.getContext()).crashReport(report.getJson().toString(), new HttpResponse() {
             @Override

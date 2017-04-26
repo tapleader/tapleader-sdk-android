@@ -50,7 +50,7 @@ class Constants {
 
     class Api {
         static final String USER_ACCOUNT_DATA = "userAccountData";
-        static final String ACTIVITY_TRACKING = "testpost";
+        static final String ACTIVITY_TRACKING = "activity";
         static final String PACKAGE_UPDATE = "update";
         static final String NEW_INSTALL = "install";
         static final String CRASH_REPORT = "crash";

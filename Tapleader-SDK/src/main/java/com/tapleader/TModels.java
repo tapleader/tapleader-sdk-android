@@ -161,6 +161,22 @@ class TModels {
             object.put("callFromMain",isCallFromMain());
             return object;
         }
+
+        public static class TInstallEntity implements BaseColumns{
+            public static final String TABLE_NAME = "settings";
+            public static final String COLUMN_NAME_ANDROID_ID="androidId";
+            public static final String COLUMN_NAME_APP_ID="applicationId";
+            public static final String COLUMN_NAME_CLIENT_KEY="clientKey";
+            public static final String COLUMN_NAME_DEVICE_ID="deviceId";
+            public static final String COLUMN_NAME_PCKG_NAME="packageName";
+            public static final String COLUMN_NAME_PHONE_NAME="phoneModel";
+            public static final String COLUMN_NAME_ANDROID_VERSION="version";
+            public static final String COLUMN_NAME_APP_VERSION="appVersion";
+            public static final String COLUMN_NAME_SIM_SERIAL="simSerialNumber";
+            public static final String COLUMN_NAME_CARRIER_ONE="carrierName1";
+            public static final String COLUMN_NAME_CARRIER_TWO="carrierName2";
+            public static final String COLUMN_NAME_CALL_FROM_MAIN="callFromMain";
+        }
     }
 
     static class TUpdatePackageObject {

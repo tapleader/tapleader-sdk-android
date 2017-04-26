@@ -10,18 +10,19 @@ import java.util.ArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class TService extends Service implements NetworkObserver {
+
     private static AtomicBoolean isConnectedToNet=new AtomicBoolean(false);
     private static ServiceHandler mServiceHandler;
     private static OfflineStore mOfflineStore;
     private final static String TAG="TService";
     private final static boolean FORCE_RESTART = true;
     private TBinder binder;
+
     @Override
     public void onCreate() {
         super.onCreate();
         Log.d(TAG,"onCreate");
         mServiceHandler=ServiceHandler.init(this);
-        //if(getApplicationContext()!=null)
         mOfflineStore=OfflineStore.initialize(this);
         this.binder = new TBinder();
         TBroadcastManager.registerNetworkObserver(this);
@@ -40,6 +41,7 @@ public class TService extends Service implements NetworkObserver {
     @Override
     public void onTaskRemoved(Intent rootIntent) {
         Log.d(TAG,"onTaskRemoved");
+        TBroadcastManager.destroyNetworkObserver(this);
         restart();
     }
 
@@ -78,7 +80,6 @@ public class TService extends Service implements NetworkObserver {
 
 
     public class TBinder extends Binder {
-
         /**
          * push offline Request to server
          * @param records
@@ -91,16 +92,19 @@ public class TService extends Service implements NetworkObserver {
             else if(records.size()==0)
                 Log.d(TAG,"record list size= 0");
             else {
+                AtomicBoolean installNotifyTry=new AtomicBoolean(false);
                 for(TModels.TOfflineRecord record:records){
                     if(record!=null){
-                        TLog.d(TAG,record.toString());
+                        Log.d(TAG,record.toString());
                         switch (record.getPath()){
                             case Constants.Api.NEW_INSTALL:
-                                if(TUtils.shouldNotifyInstall())
-                                    mServiceHandler.installNotifier(record.getBody(),TOfflineResponse.initialize(record.getId()).getInstallResponse());
+                                if(TUtils.shouldNotifyInstall(TService.this) && !installNotifyTry.get()) {
+                                    installNotifyTry.set(true);
+                                    mServiceHandler.installNotifier(record.getBody(), TOfflineResponse.initialize(record.getId(), TService.this).getInstallResponse());
+                                }
                                 break;
                             case Constants.Api.ACTIVITY_TRACKING:
-                                mServiceHandler.activityTracking(record.getBody(),TOfflineResponse.initialize(record.getId()).getActivityTrackingResponse());
+                                mServiceHandler.activityTracking(record.getBody(),TOfflineResponse.initialize(record.getId(),TService.this).getActivityTrackingResponse());
                                 break;
                         }
                     }

@@ -10,6 +10,7 @@ import android.os.Build;
 import android.telephony.SubscriptionInfo;
 import android.telephony.SubscriptionManager;
 import android.telephony.TelephonyManager;
+import android.util.Log;
 
 import com.tapleader.tapleadersdk.BuildConfig;
 
@@ -40,26 +41,26 @@ class TUtils {
      * @return return details about phone to identify
      * user that if new or old one!
      */
-    static String getClientDetails() {
+    static TModels.TInstallObject getClientDetails(Context context) {
         TModels.TInstallObject wObject = new TModels.TInstallObject();
         JSONObject result = null;
         boolean infoValidation = false;
         try {
-            TelephonyManager tManager = (TelephonyManager) getContext().getSystemService(Context.TELEPHONY_SERVICE);
-            wObject.setAndroidId(android.provider.Settings.Secure.getString(getContext().getContentResolver(), "android_id"));
+            TelephonyManager tManager = (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
+            wObject.setAndroidId(android.provider.Settings.Secure.getString(context.getContentResolver(), "android_id"));
             wObject.setApplicationId(TPlugins.get().getApplicationId());
             wObject.setClientKey(TPlugins.get().getClientKey());
             wObject.setDeviceId(tManager.getDeviceId());
-            wObject.setPackageName(getContext().getPackageName());
+            wObject.setPackageName(context.getPackageName());
             wObject.setPhoneModel(Build.MODEL);
             wObject.setVersion(android.os.Build.VERSION.RELEASE);
-            wObject.setAppVersion(getVersionName());
+            wObject.setAppVersion(getVersionName(context));
             wObject.setSdkVersion(BuildConfig.VERSION_CODE+"");
-            wObject.setCallFromMain(callFromMainActivity());
+            wObject.setCallFromMain(callFromMainActivity(context));
             wObject.setCampaignId(TPlugins.get().getCampaignId());
             wObject.setCarrierName2("Unknown");
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP_MR1) {
-                SubscriptionManager subscriptionManager = SubscriptionManager.from(getContext());
+                SubscriptionManager subscriptionManager = SubscriptionManager.from(context);
                 ArrayList<SubscriptionInfo> list = (ArrayList<SubscriptionInfo>) subscriptionManager.getActiveSubscriptionInfoList();
                 infoValidation = true;
                 if(list==null)
@@ -76,12 +77,10 @@ class TUtils {
                 wObject.setSimSerialNumber(tManager.getSimSerialNumber());
                 wObject.setCarrierName(tManager.getNetworkOperatorName());
             }
-
-            result = wObject.getJson();
         } catch (Exception e) {
             TLog.e(TAG, e);
         }
-        return result.toString();
+        return wObject;
     }
 
     static void registerLifecycleHandler(Context context) {
@@ -146,11 +145,11 @@ class TUtils {
         }
     }
 
-    static int getVersionCode() {
+    static int getVersionCode(Context context) {
         synchronized (lock) {
             if (versionCode == -1) {
                 try {
-                    versionCode = getPackageManager().getPackageInfo(getContext().getPackageName(), 0).versionCode;
+                    versionCode = context.getPackageManager().getPackageInfo(context.getPackageName(), 0).versionCode;
                 } catch (PackageManager.NameNotFoundException e) {
                     TLog.e(TAG,e);
                 }
@@ -164,8 +163,8 @@ class TUtils {
         return Tapleader.getApplicationContext();
     }
 
-    static PackageManager getPackageManager() {
-        return getContext().getPackageManager();
+    static PackageManager getPackageManager(Context context) {
+        return context.getPackageManager();
     }
 
 
@@ -173,11 +172,11 @@ class TUtils {
      * Returns the version name for this app, as specified by the android:versionName attribute in the
      * <manifest> element of the manifest.
      */
-    static String getVersionName() {
+    static String getVersionName(Context context) {
         synchronized (lock) {
             if (versionName == null) {
                 try {
-                    versionName = getPackageManager().getPackageInfo(getContext().getPackageName(), 0).versionName;
+                    versionName = context.getPackageManager().getPackageInfo(context.getPackageName(), 0).versionName;
                 } catch (PackageManager.NameNotFoundException e) {
                     TLog.e(TAG,e);
                 }
@@ -187,13 +186,19 @@ class TUtils {
         return versionName;
     }
 
-    static String getMainActivityName(){
-        Intent t=getPackageManager().getLaunchIntentForPackage(getContext().getPackageName());
-        return t.getComponent().getClassName();
+    static String getMainActivityName(Context context){
+        String activityName="Unknown";
+        try {
+            Intent t=context.getPackageManager().getLaunchIntentForPackage(context.getPackageName());
+            activityName=t.getComponent().getClassName();
+        }catch (Exception e){
+            TLog.e(TAG,e);
+        }
+        return activityName;
     }
 
-    static boolean callFromMainActivity(){
-        String MainActivity=getMainActivityName();
+    static boolean callFromMainActivity(Context context){
+        String MainActivity=getMainActivityName(context);
         StackTraceElement[] elements=Thread.currentThread().getStackTrace();
         for(StackTraceElement element:elements){
             if(element.getClassName().equals(MainActivity))
@@ -215,33 +220,38 @@ class TUtils {
         context.startService(startServiceIntent);
     }
 
-    static void saveInstallData(String installationId){
-        SharedPreferences prefs = getContext() .getSharedPreferences(Constants.Preferences.PREFS_NAME, Context.MODE_PRIVATE);
+    static void saveInstallData(String installationId,Context context){
+        Log.d(TAG,"saveInstallData");
+        SharedPreferences prefs = context.getSharedPreferences(Constants.Preferences.PREFS_NAME, Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = prefs.edit();
         editor.putBoolean(Constants.Preferences.INSTALL_PARAMETER_NAME, false);
-        editor.putString(Constants.Preferences.PACKAGE_VERSION_NAME, TUtils.getVersionName());
-        editor.putInt(Constants.Preferences.PACKAGE_VERSION_CODE, TUtils.getVersionCode());
+        editor.putString(Constants.Preferences.PACKAGE_VERSION_NAME, TUtils.getVersionName(context));
+        editor.putInt(Constants.Preferences.PACKAGE_VERSION_CODE, TUtils.getVersionCode(context));
         editor.putString(Constants.Preferences.USER_INSTALLATION_ID, installationId);
-        editor.apply();
+        editor.commit();
     }
 
-    static void saveUpdateData(){
-        SharedPreferences prefs = getContext() .getSharedPreferences(Constants.Preferences.PREFS_NAME, Context.MODE_PRIVATE);
+    static void saveUpdateData(Context context){
+        SharedPreferences prefs = context.getSharedPreferences(Constants.Preferences.PREFS_NAME, Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = prefs.edit();
-        editor.putString(Constants.Preferences.PACKAGE_VERSION_NAME, TUtils.getVersionName());
-        editor.putInt(Constants.Preferences.PACKAGE_VERSION_CODE, TUtils.getVersionCode());
+        editor.putString(Constants.Preferences.PACKAGE_VERSION_NAME, TUtils.getVersionName(context));
+        editor.putInt(Constants.Preferences.PACKAGE_VERSION_CODE, TUtils.getVersionCode(context));
         editor.apply();
     }
 
-    static boolean shouldNotifyInstall(){
-        SharedPreferences prefs = getContext() .getSharedPreferences(Constants.Preferences.PREFS_NAME, Context.MODE_PRIVATE);
-        return prefs.getBoolean(Constants.Preferences.INSTALL_PARAMETER_NAME, true);
+    static boolean shouldNotifyInstall(Context context){
+        synchronized (lock){
+            SharedPreferences prefs = context.getSharedPreferences(Constants.Preferences.PREFS_NAME, Context.MODE_PRIVATE);
+            boolean result=prefs.getBoolean(Constants.Preferences.INSTALL_PARAMETER_NAME, true);
+            Log.d(TAG,"shouldNotifyInstall = "+result);
+            return result;
+        }
     }
 
-    static boolean shouldNotifyUpdatePackage(){
-        SharedPreferences prefs = getContext() .getSharedPreferences(Constants.Preferences.PREFS_NAME, Context.MODE_PRIVATE);
-        if(!prefs.getString(Constants.Preferences.PACKAGE_VERSION_NAME, "Unknown").equals(TUtils.getVersionName())
-                || prefs.getInt(Constants.Preferences.PACKAGE_VERSION_CODE, -1) != TUtils.getVersionCode()){
+    static boolean shouldNotifyUpdatePackage(Context context){
+        SharedPreferences prefs = context.getSharedPreferences(Constants.Preferences.PREFS_NAME, Context.MODE_PRIVATE);
+        if(!prefs.getString(Constants.Preferences.PACKAGE_VERSION_NAME, "Unknown").equals(TUtils.getVersionName(context))
+                || prefs.getInt(Constants.Preferences.PACKAGE_VERSION_CODE, -1) != TUtils.getVersionCode(context)){
             return true;
         }
         return false;

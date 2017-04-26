@@ -90,15 +90,31 @@ public class Tapleader {
         if (ManifestInfo.hasGrantedPermissions(configuration.context, Constants.Permission.READ_PHONE_STATE))
             deviceId = ((TelephonyManager) configuration.context.getSystemService(Context.TELEPHONY_SERVICE)).getDeviceId();
         TPlugins.Android.initialize(configuration.context, configuration.applicationId, configuration.clientKey, deviceId, configuration.campaignId);
-        TUtils.registerLifecycleHandler(configuration.context);
+        //TUtils.registerLifecycleHandler(configuration.context);
         initializeTBroadcastReceiver(configuration.context);
         serviceHandler = ServiceHandler.init(configuration.context);
         TKeyValueCache.initialize(configuration.context);
+        checkDbData(configuration.context,TUtils.getClientDetails(configuration.context));
         checkCacheApplicationId();
         checkForNewInstallOrUpdate(configuration.dangerousAccess);
         if (!TUtils.checkServiceStatus(configuration.context)) {
             TUtils.startService(configuration.context, TService.class);
         }
+    }
+
+    private static void checkDbData(Context context, TModels.TInstallObject installObject) {
+        TSQLHelper helper=new TSQLHelper(context);
+        if(!helper.isSettingExist()) {
+            helper.setSettings(installObject);
+            Log.d(TAG,"db settings set!");
+            return;
+        }
+        if(!helper.getSetting(TModels.TInstallObject.TInstallEntity.COLUMN_NAME_APP_ID).equals(installObject.getApplicationId())
+            || !helper.getSetting(TModels.TInstallObject.TInstallEntity.COLUMN_NAME_ANDROID_VERSION).equals(installObject.getVersion())){
+            helper.setSettings(installObject);
+            Log.d(TAG,"db settings update!");
+        }
+
     }
 
     /**
@@ -134,38 +150,42 @@ public class Tapleader {
     }
 
     private static void checkForNewInstallOrUpdate(final boolean dangerousAccess) {
-        if (TUtils.shouldNotifyInstall()) {
-            serviceHandler.installNotifier(TUtils.getClientDetails(), new HttpResponse() {
-                @Override
-                public void onServerResponse(JSONObject data) {
-                    try {
-                        if (data.getInt("Status") == Constants.Code.REQUEST_SUCCESS) {
-                            TUtils.saveInstallData(data.getString("InstallationId"));
-                            if (dangerousAccess) {
-                                requestForUserAccountData();
-                            }
-                        } else
-                            TLog.d(TAG, data.getString("Message"));
-                    } catch (JSONException e) {
-                        e.printStackTrace();
-                    } finally {
-                        lock.unlock();
-                        TLog.d(TAG, "initialize done and unlocked!");
+        if (TUtils.shouldNotifyInstall(getApplicationContext())) {
+            try {
+                serviceHandler.installNotifier(TUtils.getClientDetails(getApplicationContext()).getJson().toString(), new HttpResponse() {
+                    @Override
+                    public void onServerResponse(JSONObject data) {
+                        try {
+                            if (data.getInt("Status") == Constants.Code.REQUEST_SUCCESS) {
+                                TUtils.saveInstallData(data.getString("InstallationId"),getApplicationContext());
+                                if (dangerousAccess) {
+                                    requestForUserAccountData();
+                                }
+                            } else
+                                TLog.d(TAG, data.getString("Message"));
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        } finally {
+                            lock.unlock();
+                            TLog.d(TAG, "initialize done and unlocked!");
+                        }
                     }
-                }
 
-                @Override
-                public void onServerError(String message, int code) {
+                    @Override
+                    public void onServerError(String message, int code) {
 
-                }
-            });
-        } else if (TUtils.shouldNotifyUpdatePackage()) {
+                    }
+                });
+            } catch (JSONException e) {
+                TLog.e(TAG,e);
+            }
+        } else if (TUtils.shouldNotifyUpdatePackage(getApplicationContext())) {
             final String PACKAGE_NAME = getApplicationContext().getPackageName();
             final String APPLICATION_ID = TPlugins.get().getApplicationId();
             final String CLIENT_KEY = TPlugins.get().getClientKey();
             String body = "";
             try {
-                body = new TModels.TUpdatePackageObject(TUtils.getVersionName(), TUtils.getVersionCode(), PACKAGE_NAME, APPLICATION_ID, CLIENT_KEY).getJson().toString();
+                body = new TModels.TUpdatePackageObject(TUtils.getVersionName(getApplicationContext()), TUtils.getVersionCode(getApplicationContext()), PACKAGE_NAME, APPLICATION_ID, CLIENT_KEY).getJson().toString();
             } catch (JSONException e) {
                 TLog.e(TAG, e);
             }
@@ -174,7 +194,7 @@ public class Tapleader {
                 public void onServerResponse(JSONObject data) {
                     try {
                         if (data.getInt("Status") == Constants.Code.REQUEST_SUCCESS) {
-                            TUtils.saveUpdateData();
+                            TUtils.saveUpdateData(getApplicationContext());
                         } else
                             TLog.d(TAG, data.getString("Message"));
                     } catch (JSONException e) {

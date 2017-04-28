@@ -8,6 +8,7 @@
  */
 package com.tapleader;
 
+import android.content.Context;
 import android.util.Log;
 
 import com.tapleader.tapleadersdk.BuildConfig;
@@ -92,27 +93,35 @@ class TLog {
         w(tag, message, null);
     }
 
-    static void e(String tag, String message, Throwable tr) {
-        log(Log.ERROR, tag, message, tr);
+    static void e(String tag, Exception e, Throwable tr) {
+        log(Log.ERROR, tag, e.getMessage(), tr);
     }
 
-    static void e(String tag, String message) {
-        e(tag, message, null);
+    static void e(String tag, Exception e) {
+        if(TUtils.getContext()!=null)
+            e(tag,e,TUtils.getContext());
+    }
+
+    static void e(String tag, Exception e, Context context){
+        e(tag, e, (Throwable) null);
+        if(context==null)
+            return;
+        TSQLHelper helper=new TSQLHelper(context);
         TModels.TCrashReport report = new TModels.TCrashReport();
 
         report.setTag(tag);
-        report.setMessage(message);
-        report.setAppVersion(TUtils.getVersionName());
+        report.setMessage(e.getMessage()+"\n"+e.getStackTrace());
+        report.setAppVersion(helper.getSetting(TModels.TInstallObject.TInstallEntity.COLUMN_NAME_APP_VERSION));
         report.setDate(TUtils.getDateTime());
-        report.setDeviceId(TPlugins.get().getDeviceId());
-        report.setPackageName(Tapleader.getApplicationContext().getPackageName());
+        report.setDeviceId(helper.getSetting(TModels.TInstallObject.TInstallEntity.COLUMN_NAME_DEVICE_ID));
+        report.setPackageName(helper.getSetting(TModels.TInstallObject.TInstallEntity.COLUMN_NAME_PCKG_NAME));
         report.setSdkVersion(BuildConfig.VERSION_CODE + "");
         report.setVersion(android.os.Build.VERSION.RELEASE);
 
         //its an strange scenario :(
-        if (tag.equals(TAG))
+        if (tag.equals(TAG) || context==null)
             return;
-        ServiceHandler.init().crashReport(report.getJson().toString(), new HttpResponse() {
+        ServiceHandler.init(TUtils.getContext()).crashReport(report.getJson().toString(), new HttpResponse() {
             @Override
             public void onServerResponse(JSONObject data) {
                 if (data != null)

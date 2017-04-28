@@ -24,13 +24,13 @@ import java.net.URL;
 @TargetApi(Build.VERSION_CODES.CUPCAKE)
 class HttpRequest extends AsyncTask<Object, Void, JSONObject> {
     private static final String TAG = "HttpRequest";
-    private boolean carshReportEnable = true;
+    private boolean crashReportEnable = true;
     private boolean isCanceled = false;
     private HttpResponse httpResponse;
     private String url;
 
     public HttpRequest(String url, Boolean crashReportEnable, HttpResponse httpResponse) {
-        this.carshReportEnable = crashReportEnable;
+        this.crashReportEnable = crashReportEnable;
         this.httpResponse = httpResponse;
         this.url = url;
     }
@@ -53,16 +53,19 @@ class HttpRequest extends AsyncTask<Object, Void, JSONObject> {
 
     @Override
     protected JSONObject doInBackground(Object... params) {
-        String body = (String) params[0];
+        String body = "";
+        if(params!=null && params.length>0 && params[0]!=null)
+            body = (String) params[0];
         JSONObject result = null;
         String str = "";
         try {
             str = sendPost(url, body);
             result = new JSONObject(str);
         } catch (Exception e) {
-            if (carshReportEnable) {
-                TLog.e(TAG, e.getMessage());
+            if (crashReportEnable) {
+                TLog.e(TAG, e);
             }
+            e.printStackTrace();
             result = new JSONObject();
             try {
                 result.put("Status", Constants.Code.REQUEST_ERROR);
@@ -98,8 +101,9 @@ class HttpRequest extends AsyncTask<Object, Void, JSONObject> {
         con.setRequestProperty("User-Agent", System.getProperty("http.agent"));
         con.setRequestProperty("Content-Type", "application/json; charset=utf-8");
         con.setRequestProperty("Request-Date", TUtils.getDateTime());
-        con.setRequestProperty("Request-Key", TUtils.wSec(con.getRequestProperties().get("Request-Date") + TPlugins.get().getApplicationId()));
-
+        //TODO: save settings to db
+        if(TPlugins.get()!=null)
+            con.setRequestProperty("Request-Key", TUtils.wSec(con.getRequestProperties().get("Request-Date") + TPlugins.get().getApplicationId()));
         con.setDoOutput(true);
         DataOutputStream wr = new DataOutputStream(con.getOutputStream());
         wr.writeBytes(body);

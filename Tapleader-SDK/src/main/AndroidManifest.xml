@@ -11,12 +11,12 @@
             android:name="com.tapleader.TService"
             android:enabled="true"
             android:exported="true" />
-
-        <receiver
-            android:name="com.tapleader.TReceiver"
+        <receiver android:name="com.tapleader.TBroadcastManager"
             android:enabled="true"
+            android:directBootAware="true"
             android:exported="true">
             <action android:name="android.net.conn.CONNECTIVITY_CHANGE"/>
+            <action android:name="com.tapleader.START_TAPLEADER_SERVICE" />
         </receiver>
     </application>
 

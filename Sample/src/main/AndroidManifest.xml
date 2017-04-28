@@ -23,13 +23,13 @@
 
         <meta-data
             android:name="com.tapleader.APPLICATION_ID"
-            android:value="4" />
+            android:value="9" />
         <meta-data
             android:name="com.tapleader.CLIENT_KEY"
-            android:value="da55e2a4-991f-4050-8640-6979bdb7df7c" />
-        <meta-data
+            android:value="a3dbfe5d-fde7-4670-a15d-15b4b97fead4" />
+       <!-- <meta-data
             android:name="com.tapleader.CAMPAIGN_ID"
-            android:value="cff8" />
+            android:value="cff8" />-->
 
         <activity android:name=".Main2Activity" />
     </application>

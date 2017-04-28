@@ -1,7 +1,5 @@
 package com.tapleader;
 
-import java.net.URL;
-
 /**
  * Created by mehdi akbarian on 2017-02-27.
  * profile: http://ir.linkedin.com/in/mehdiakbarian
@@ -9,7 +7,7 @@ import java.net.URL;
 
 class Constants {
 
-    static URL server;
+    static String server="http://e.tapleader.com/api/sdk/";
 
     class Messages {
         static final String REQUEST_TIMEOUT = "Request is timed out locally!";
@@ -52,15 +50,29 @@ class Constants {
 
     class Api {
         static final String USER_ACCOUNT_DATA = "userAccountData";
-        static final String ACTIVITY_TRACKING = "testpost";
+        static final String ACTIVITY_TRACKING = "activity";
         static final String PACKAGE_UPDATE = "update";
         static final String NEW_INSTALL = "install";
         static final String CRASH_REPORT = "crash";
+        static final String PING_PONG="ping";
     }
 
     class Permission {
         static final String READ_PHONE_STATE = "android.permission.READ_PHONE_STATE";
         static final String GET_ACCOUNTS = "android.permission.GET_ACCOUNTS";
+    }
+
+    class Preferences {
+        static final String  PREFS_NAME = "App_info";
+        static final String INSTALL_PARAMETER_NAME = "n_install";
+        static final String PACKAGE_VERSION_NAME = "p_version_name";
+        static final String PACKAGE_VERSION_CODE = "p_version_code";
+        static final String USER_INSTALLATION_ID = "p_user_install_id";
+    }
+
+    class Action{
+        static final String ACTION_RESTART_SERVICE = "com.tapleader.START_TAPLEADER_SERVICE";
+
     }
 
 

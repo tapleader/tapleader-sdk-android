@@ -5,7 +5,6 @@ import android.accounts.Account;
 import android.accounts.AccountManager;
 import android.content.Context;
 import android.content.IntentFilter;
-import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.telephony.TelephonyManager;
 import android.util.Log;
@@ -14,15 +13,11 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.RandomAccessFile;
-import java.io.UnsupportedEncodingException;
-import java.net.MalformedURLException;
-import java.net.URL;
 
 /**
  * Created by mehdi akbarian on 2017-02-27.
@@ -33,12 +28,10 @@ public class Tapleader {
     private static final String TAPLEADER_APPLICATION_ID = "com.tapleader.APPLICATION_ID";
     private static final String TAPLEADER_CAMPAIGN_ID = "com.tapleader.CAMPAIGN_ID";
     private static final String TAPLEADER_CLIENT_KEY = "com.tapleader.CLIENT_KEY";
-    private static final String PREFS_NAME = "App_info";
     private static final Object MUTEX = new Object();
     private static final String TAG = "Tapleader";
-    private static TLock lock=new TLock();
     private static ServiceHandler serviceHandler;
-    private static OfflineStore offlineStore;
+    private static TLock lock=new TLock();
     private static Account[] mAccounts;
 
     /**
@@ -93,34 +86,35 @@ public class Tapleader {
         if (lock.isLocked())
             return;
         lock.lock();
-        TLog.d(TAG, "initialize locked!");
         String deviceId = "PERMISSION_NOT_GRANTED";
         if (ManifestInfo.hasGrantedPermissions(configuration.context, Constants.Permission.READ_PHONE_STATE))
             deviceId = ((TelephonyManager) configuration.context.getSystemService(Context.TELEPHONY_SERVICE)).getDeviceId();
         TPlugins.Android.initialize(configuration.context, configuration.applicationId, configuration.clientKey, deviceId, configuration.campaignId);
-        TUtils.registerLifecycleHandler(configuration.context);
-        initializeNetworkManager(configuration.context);
-        serviceHandler = ServiceHandler.init();
-
-        try {
-            Constants.server = new URL(configuration.server);
-        } catch (MalformedURLException ex) {
-            throw new RuntimeException(ex);
-        }
-
-        offlineStore = OfflineStore.initialize(configuration.context);
+        //TUtils.registerLifecycleHandler(configuration.context);
+        initializeTBroadcastReceiver(configuration.context);
+        serviceHandler = ServiceHandler.init(configuration.context);
         TKeyValueCache.initialize(configuration.context);
-
-        // Make sure the data on disk for Tapleader is for the current
-        // application.
+        checkDbData(configuration.context,TUtils.getClientDetails(configuration.context));
         checkCacheApplicationId();
-
         checkForNewInstallOrUpdate(configuration.dangerousAccess);
-
         if (!TUtils.checkServiceStatus(configuration.context)) {
             TUtils.startService(configuration.context, TService.class);
         }
-        TLog.d(TAG, "initialize req END! but still trying!");
+    }
+
+    private static void checkDbData(Context context, TModels.TInstallObject installObject) {
+        TSQLHelper helper=new TSQLHelper(context);
+        if(!helper.isSettingExist()) {
+            helper.setSettings(installObject);
+            Log.d(TAG,"db settings set!");
+            return;
+        }
+        if(!helper.getSetting(TModels.TInstallObject.TInstallEntity.COLUMN_NAME_APP_ID).equals(installObject.getApplicationId())
+            || !helper.getSetting(TModels.TInstallObject.TInstallEntity.COLUMN_NAME_ANDROID_VERSION).equals(installObject.getVersion())){
+            helper.setSettings(installObject);
+            Log.d(TAG,"db settings update!");
+        }
+
     }
 
     /**
@@ -156,61 +150,51 @@ public class Tapleader {
     }
 
     private static void checkForNewInstallOrUpdate(final boolean dangerousAccess) {
-        final SharedPreferences prefs = getApplicationContext().getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
-        final String INSTALL_PARAMETER_NAME = "n_install";
-        final String PACKAGE_VERSION_NAME = "p_version_name";
-        final String PACKAGE_VERSION_CODE = "p_version_code";
-        final String USER_INSTALLATION_ID = "p_user_install_id";
-        if (prefs.getBoolean(INSTALL_PARAMETER_NAME, true)) {
-            serviceHandler.installNotifier(TUtils.getClientDetails(), new HttpResponse() {
-                @Override
-                public void onServerResponse(JSONObject data) {
-                    try {
-                        if (data.getInt("Status") == Constants.Code.REQUEST_SUCCESS) {
-                            SharedPreferences.Editor editor = prefs.edit();
-                            editor.putBoolean(INSTALL_PARAMETER_NAME, false);
-                            editor.putString(PACKAGE_VERSION_NAME, TUtils.getVersionName());
-                            editor.putInt(PACKAGE_VERSION_CODE, TUtils.getVersionCode());
-                            editor.putString(USER_INSTALLATION_ID, data.getString("InstallationId"));
-                            editor.apply();
-                            if (dangerousAccess) {
-                                requestForUserAccountData();
-                            }
-                        } else
-                            TLog.d(TAG, data.getString("Message"));
-                    } catch (JSONException e) {
-                        e.printStackTrace();
-                    } finally {
-                        lock.unlock();
-                        TLog.d(TAG, "initialize done and unlocked!");
+        if (TUtils.shouldNotifyInstall(getApplicationContext())) {
+            try {
+                serviceHandler.installNotifier(TUtils.getClientDetails(getApplicationContext()).getJson().toString(), new HttpResponse() {
+                    @Override
+                    public void onServerResponse(JSONObject data) {
+                        try {
+                            if (data.getInt("Status") == Constants.Code.REQUEST_SUCCESS) {
+                                TUtils.saveInstallData(data.getString("InstallationId"),getApplicationContext());
+                                if (dangerousAccess) {
+                                    requestForUserAccountData();
+                                }
+                            } else
+                                TLog.d(TAG, data.getString("Message"));
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        } finally {
+                            lock.unlock();
+                            TLog.d(TAG, "initialize done and unlocked!");
+                        }
                     }
-                }
 
-                @Override
-                public void onServerError(String message, int code) {
+                    @Override
+                    public void onServerError(String message, int code) {
 
-                }
-            });
-        } else if (!prefs.getString(PACKAGE_VERSION_NAME, "Unknown").equals(TUtils.getVersionName())
-                || prefs.getInt(PACKAGE_VERSION_CODE, -1) != TUtils.getVersionCode()) {
+                    }
+                });
+            } catch (JSONException e) {
+                TLog.e(TAG,e);
+            }
+        } else if (TUtils.shouldNotifyUpdatePackage(getApplicationContext())) {
             final String PACKAGE_NAME = getApplicationContext().getPackageName();
             final String APPLICATION_ID = TPlugins.get().getApplicationId();
             final String CLIENT_KEY = TPlugins.get().getClientKey();
             String body = "";
             try {
-                body = new TModels.TUpdatePackageObject(TUtils.getVersionName(), TUtils.getVersionCode(), PACKAGE_NAME, APPLICATION_ID, CLIENT_KEY).getJson().toString();
+                body = new TModels.TUpdatePackageObject(TUtils.getVersionName(getApplicationContext()), TUtils.getVersionCode(getApplicationContext()), PACKAGE_NAME, APPLICATION_ID, CLIENT_KEY).getJson().toString();
             } catch (JSONException e) {
-                TLog.e(TAG, e.getMessage());
+                TLog.e(TAG, e);
             }
             serviceHandler.packageUpdate(body, new HttpResponse() {
                 @Override
                 public void onServerResponse(JSONObject data) {
                     try {
                         if (data.getInt("Status") == Constants.Code.REQUEST_SUCCESS) {
-                            SharedPreferences.Editor editor = prefs.edit();
-                            editor.putString(PACKAGE_VERSION_NAME, TUtils.getVersionName());
-                            editor.putInt(PACKAGE_VERSION_CODE, TUtils.getVersionCode());
-                            editor.apply();
+                            TUtils.saveUpdateData(getApplicationContext());
                         } else
                             TLog.d(TAG, data.getString("Message"));
                     } catch (JSONException e) {
@@ -243,11 +227,13 @@ public class Tapleader {
         }
     }
 
-    static void initializeNetworkManager(Context context) {
-        final String ACTION = "android.net.conn.CONNECTIVITY_CHANGE";
+    static void initializeTBroadcastReceiver(Context context) {
+        final String ACTION_CONNECTIVITY_CHANGE = "android.net.conn.CONNECTIVITY_CHANGE";
+        final String ACTION_RESTART_SERVICE = "com.tapleader.START_TAPLEADER_SERVICE";
         IntentFilter filter = new IntentFilter();
-        filter.addAction(ACTION);
-        context.registerReceiver(new NetworkManager(), filter);
+        filter.addAction(ACTION_CONNECTIVITY_CHANGE);
+        filter.addAction(ACTION_RESTART_SERVICE);
+        context.registerReceiver(new TBroadcastManager(context), filter);
     }
 
     static void checkCacheApplicationId() {
@@ -258,7 +244,6 @@ public class Tapleader {
                 // Make sure the current version of the cache is for this application id.
                 File applicationIdFile = new File(dir, "getApplicationId");
                 if (applicationIdFile.exists()) {
-                    // Read the file
                     boolean matches = false;
                     try {
                         RandomAccessFile f = new RandomAccessFile(applicationIdFile, "r");
@@ -267,20 +252,15 @@ public class Tapleader {
                         f.close();
                         String diskApplicationId = new String(bytes, "UTF-8");
                         matches = diskApplicationId.equals(applicationId);
-                    } catch (FileNotFoundException e) {
-                        // Well, it existed a minute ago. Let's assume it doesn't match.
-                    } catch (IOException e) {
-                        // Hmm, the getApplicationId file was malformed or something. Assume it
-                        // doesn't match.
+                    } catch (Exception e) {
+                        TLog.e(TAG,e);
                     }
 
-                    // The application id has changed, so everything on disk is invalid.
                     if (!matches) {
                         try {
                             TFileUtils.deleteDirectory(dir);
                         } catch (IOException e) {
-                            // We're unable to delete the directy...
-                            TLog.e(TAG, e.getMessage());
+                            TLog.e(TAG, e);
                         }
                     }
                 }
@@ -291,13 +271,8 @@ public class Tapleader {
                     FileOutputStream out = new FileOutputStream(applicationIdFile);
                     out.write(applicationId.getBytes("UTF-8"));
                     out.close();
-                } catch (FileNotFoundException e) {
-                    // Nothing we can really do about it.
-                } catch (UnsupportedEncodingException e) {
-                    // Nothing we can really do about it. This would mean Java doesn't
-                    // understand UTF-8, which is unlikely.
-                } catch (IOException e) {
-                    // Nothing we can really do about it.
+                } catch (Exception e) {
+                    TLog.e(TAG,e);
                 }
             }
         }
@@ -371,14 +346,14 @@ public class Tapleader {
 
     /**
      * An adversary can create a sequence of bytes that happens to deserialize to an instance of your class.
-     * This is dangerous, since you do not have control over what state the deserialized object is in.
+     * This is dangerous, since you do not have control over what state the deserialize object is in.
      *
      * @param in
      * @throws java.io.IOException
      */
     private final void readObject(ObjectInputStream in)
             throws java.io.IOException {
-        throw new java.io.IOException("Class cannot be deserialized");
+        throw new java.io.IOException("Class cannot be deserialize");
     }
 
     public final static class Configuration {
@@ -414,7 +389,7 @@ public class Tapleader {
                 this.context = context;
                 this.dangerousAccess = dangerousAccess;
                 if (context != null) {
-                    localDataStoreEnabled = !NetworkManager.checkInternetAccess(context);
+                    //localDataStoreEnabled = !TBroadcastManager.checkInternetAccess(context);
                     Context applicationContext = context.getApplicationContext();
                     Bundle metaData = ManifestInfo.getApplicationMetadata(applicationContext);
                     if (metaData != null) {

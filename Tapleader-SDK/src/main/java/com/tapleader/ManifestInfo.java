@@ -61,7 +61,7 @@ class ManifestInfo {
                 try {
                     versionCode = getPackageManager().getPackageInfo(getContext().getPackageName(), 0).versionCode;
                 } catch (NameNotFoundException e) {
-                    TLog.e(TAG, "Couldn't find info about own package", e);
+                    TLog.e(TAG, e);
                 }
             }
         }
@@ -79,7 +79,7 @@ class ManifestInfo {
                 try {
                     versionName = getPackageManager().getPackageInfo(getContext().getPackageName(), 0).versionName;
                 } catch (NameNotFoundException e) {
-                    TLog.e(TAG, "Couldn't find info about own package", e);
+                    TLog.e(TAG, e);
                 }
             }
         }
@@ -133,6 +133,7 @@ class ManifestInfo {
         List<ResolveInfo> list = new ArrayList<>();
 
         for (String action : actions) {
+            //noinspection WrongConstant
             list.addAll(
                     context.getPackageManager().queryBroadcastReceivers(
                             new Intent(action),
@@ -149,7 +150,7 @@ class ManifestInfo {
     }
 
     private static Context getContext() {
-        return Tapleader.getApplicationContext();
+        return TPlugins.Android.get().applicationContext();
     }
 
     private static PackageManager getPackageManager() {
@@ -228,7 +229,7 @@ class ManifestInfo {
             }
             return Arrays.asList(pi.requestedPermissions).containsAll(Arrays.asList(permissions));
         } catch (NameNotFoundException e) {
-            TLog.e(TAG, "Couldn't find info about own package", e);
+            TLog.e(TAG,e);
             return false;
         }
     }

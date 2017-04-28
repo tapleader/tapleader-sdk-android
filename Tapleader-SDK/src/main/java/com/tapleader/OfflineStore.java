@@ -1,10 +1,8 @@
 package com.tapleader;
 
 import android.content.Context;
-import android.content.SharedPreferences;
-import android.util.Log;
 
-
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -12,6 +10,7 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.ArrayList;
 
 
 /**
@@ -19,28 +18,30 @@ import java.io.IOException;
  * profile: http://ir.linkedin.com/in/mehdiakbarian
  */
 
-class OfflineStore implements NetworkObserver {
+class OfflineStore{
 
     private static final String FILE_NAME = "t_offlineStore";
     private static final String TAG = "OfflineStore";
     private static OfflineStore mOfflineStore = null;
     private static Context context;
 
-    private OfflineStore() {
-    }
-
     private OfflineStore(Context context) {
         this.context = context;
-        NetworkManager.init(this);
-        Log.d(TAG, "constructed");
     }
 
     public static OfflineStore initialize(Context context) {
         if (mOfflineStore == null)
             mOfflineStore = new OfflineStore(context);
+        TLog.d(TAG,"initialize");
         return mOfflineStore;
     }
 
+    /**
+     * use {@link OfflineStore#store(TModels.TOfflineRecord)}
+     * @param url
+     * @param body
+     */
+    @Deprecated()
     public void store(String url, String body) {
         File localData = new File(TPlugins.get().getCacheDir(), FILE_NAME);
         String data = getData(url, body);
@@ -48,7 +49,7 @@ class OfflineStore implements NetworkObserver {
             try {
                 localData.createNewFile();
             } catch (IOException e) {
-                TLog.e(TAG, e.getMessage());
+                TLog.e(TAG, e);
                 return;
             }
         }
@@ -57,77 +58,130 @@ class OfflineStore implements NetworkObserver {
             writer.write(data + "\r\n");
             writer.flush();
         } catch (IOException e) {
-            TLog.e(TAG, e.getMessage());
+            TLog.e(TAG, e);
         }
-
-
     }
 
-    public void push() {
-        File localData = new File(TPlugins.get().getCacheDir(), FILE_NAME);
-        if (!localData.exists())
-            return;
-        String data = "";
-        JSONObject result = null;
-        try {
-            data = TFileUtils.readFileToString(localData, "UTF-8");
-            result = parsData(data);
-        } catch (IOException e) {
-            TLog.e(TAG, e.getMessage());
-            return;
-        }
-        String path = null;
-        try {
-            path = result.getString("path");
-        } catch (JSONException e) {
-            TLog.e(TAG, e.getMessage());
-            return;
-        }
-        if (path != null && path.equals(Constants.Api.NEW_INSTALL)) {
-            final String INSTALL_PARAMETER_NAME = "n_install";
-            final String PACKAGE_VERSION_NAME = "p_version_name";
-            final String PACKAGE_VERSION_CODE = "p_version_code";
-            final String USER_INSTALLATION_ID = "p_user_install_id";
-            final String PREFS_NAME = "App_info";
-            final SharedPreferences prefs = Tapleader.getApplicationContext().getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
-            if (prefs.getBoolean(INSTALL_PARAMETER_NAME, true)) {
-                ServiceHandler.init().installNotifier(TUtils.getClientDetails(), new HttpResponse() {
-                    @Override
-                    public void onServerResponse(JSONObject data) {
-                        TLog.d(TAG, data.toString());
-                        try {
-                            if (data.getInt("Status") == Constants.Code.REQUEST_SUCCESS) {
-                                File localData = new File(TPlugins.get().getCacheDir(), FILE_NAME);
-                                //TODO:it just for new install!
-                                TFileUtils.forceDelete(localData);
-                                SharedPreferences.Editor editor = prefs.edit();
-                                editor.putBoolean(INSTALL_PARAMETER_NAME, false);
-                                editor.putString(PACKAGE_VERSION_NAME, TUtils.getVersionName());
-                                editor.putInt(PACKAGE_VERSION_CODE, TUtils.getVersionCode());
-                                editor.putString(USER_INSTALLATION_ID, data.getString("InstallationId"));
-                                editor.apply();
-                            }
-                        } catch (Exception e) {
-                            TLog.e(TAG, e.getMessage());
-                        }
+    /**
+     *
+     * @param record
+     * @return the row ID of the newly inserted row, or -1 if an error occurred
+     * @since version 1.1.4
+     */
+    long store(TModels.TOfflineRecord record){
+        TSQLHelper helper=new TSQLHelper(context);
+        long id=-1l;
+        if(record!=null) {
+            switch (record.getPath()){
+                case Constants.Api.NEW_INSTALL:
+                    TModels.TOfflineRecord old=isInstallRecordExist();
+                    if(old!=null){
+                        id=old.getId();
+                        helper.updateOfflineRecordId(record,id);
+                    }else {
+                        id = helper.insertNewOfflineRecord(record);
                     }
-
-                    @Override
-                    public void onServerError(String message, int code) {
-
-                    }
-                });
-            }else {
-                //TODO:it just for new install!
-                try {
-                    TFileUtils.forceDelete(localData);
-                } catch (IOException e) {
-                    TLog.e(TAG,e.getMessage());
-                }
+                    break;
+                case Constants.Api.ACTIVITY_TRACKING:
+                    id = helper.insertNewOfflineRecord(record);
+                    break;
             }
         }
+        return id;
     }
 
+    TModels.TOfflineRecord isInstallRecordExist(){
+        ArrayList<TModels.TOfflineRecord> list=getAllRequests();
+        for(TModels.TOfflineRecord record:list){
+            if(record.getPath().equals(Constants.Api.NEW_INSTALL)){
+                return record;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * get list of requests that saved in file!
+     * use {@link OfflineStore#getAllRequests()}
+     * @return
+     */
+    @Deprecated
+    JSONArray getRequests() {
+        File localData = new File(TPlugins.get().getCacheDir(), FILE_NAME);
+        if (!localData.exists())
+            return null;
+        JSONArray requests;
+        try {
+            String data = TFileUtils.readFileToString(localData, "UTF-8");
+            String[] lines=TFileUtils.splitFileLines(data);
+            requests=getJsonArray(lines);
+        } catch (IOException e) {
+            TLog.e(TAG, e);
+            return null;
+        }
+        return requests;
+    }
+
+    /**
+     * get list of {@link com.tapleader.TModels.TOfflineRecord}
+     * @return list of requests in database
+     * @since version 1.1.4
+     */
+    ArrayList<TModels.TOfflineRecord> getAllRequests(){
+        ArrayList<TModels.TOfflineRecord> list=new ArrayList<>();
+        TSQLHelper helper=new TSQLHelper(context);
+        list.addAll(helper.getOfflineRecords(Constants.Api.NEW_INSTALL));
+        list.addAll(helper.getOfflineRecords(Constants.Api.ACTIVITY_TRACKING));
+        helper.close();
+        return list;
+    }
+
+    /**
+     * delete file of offline requests!
+     * use {@link OfflineStore#deleteRequest(long)}
+     * @return true if delete file successfully!
+     */
+    @Deprecated
+    boolean deleteRequests(){
+        File localData = new File(TPlugins.get().getCacheDir(), FILE_NAME);
+        if (!localData.exists())
+            return false;
+        return TFileUtils.deleteQuietly(localData);
+    }
+
+    /**
+     * delete each request by id
+     * @param id
+     * @return true if delete successfully!
+     * @since version 1.1.4
+     */
+    boolean deleteRequest(long id){
+        TSQLHelper helper=new TSQLHelper(context);
+        return helper.deleteOfflineRecord(id);
+    }
+
+    boolean deleteInstallRecords(){
+        TSQLHelper helper=new TSQLHelper(context);
+        ArrayList<TModels.TOfflineRecord> list=new ArrayList<>();
+        list.addAll(helper.getOfflineRecords(Constants.Api.NEW_INSTALL));
+        helper.close();
+        if(list.size()==0)
+            return false;
+        for(TModels.TOfflineRecord record:list){
+            deleteRequest(record.getId());
+        }
+        return true;
+    }
+
+    @Deprecated
+    private JSONArray getJsonArray(String[] data) {
+        JSONArray array = new JSONArray();
+        for (int i = 0; i < data.length; i++)
+            array.put(data[i]);
+        return array;
+    }
+
+    @Deprecated
     private String getData(String url, String body) {
         JSONObject object = new JSONObject();
         try {
@@ -135,25 +189,19 @@ class OfflineStore implements NetworkObserver {
             object.put("body", body);
             object.put("date", TUtils.getDateTime());
         } catch (JSONException e) {
-            TLog.e(TAG, e.getMessage());
+            TLog.e(TAG, e);
         }
         return object.toString();
     }
 
+    @Deprecated
     private JSONObject parsData(String data) {
         JSONObject object = null;
         try {
             object = new JSONObject(data);
         } catch (JSONException e) {
-            TLog.e(TAG, e.getMessage());
+            TLog.e(TAG, e);
         }
         return object;
-    }
-
-    @Override
-    public void onChange(boolean isConnected) {
-        if (isConnected) {
-            push();
-        }
     }
 }

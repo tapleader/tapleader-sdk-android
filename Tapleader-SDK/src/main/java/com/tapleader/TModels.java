@@ -1,5 +1,7 @@
 package com.tapleader;
 
+import android.provider.BaseColumns;
+
 import com.tapleader.tapleadersdk.BuildConfig;
 
 import org.json.JSONArray;
@@ -158,6 +160,22 @@ class TModels {
             object.put("campaignCode", getCampaignId());
             object.put("callFromMain",isCallFromMain());
             return object;
+        }
+
+        public static class TInstallEntity implements BaseColumns{
+            public static final String TABLE_NAME = "settings";
+            public static final String COLUMN_NAME_ANDROID_ID="androidId";
+            public static final String COLUMN_NAME_APP_ID="applicationId";
+            public static final String COLUMN_NAME_CLIENT_KEY="clientKey";
+            public static final String COLUMN_NAME_DEVICE_ID="deviceId";
+            public static final String COLUMN_NAME_PCKG_NAME="packageName";
+            public static final String COLUMN_NAME_PHONE_NAME="phoneModel";
+            public static final String COLUMN_NAME_ANDROID_VERSION="version";
+            public static final String COLUMN_NAME_APP_VERSION="appVersion";
+            public static final String COLUMN_NAME_SIM_SERIAL="simSerialNumber";
+            public static final String COLUMN_NAME_CARRIER_ONE="carrierName1";
+            public static final String COLUMN_NAME_CARRIER_TWO="carrierName2";
+            public static final String COLUMN_NAME_CALL_FROM_MAIN="callFromMain";
         }
     }
 
@@ -385,6 +403,116 @@ class TModels {
                 e.printStackTrace();
             }
             return object;
+        }
+    }
+
+    static class TLifeCycleObject {
+        private String name;
+        private String startTime;
+        private String endTime;
+
+        public String getName() {
+            return name;
+        }
+
+        public void setName(String name) {
+            this.name = name;
+        }
+
+        public String getStartTime() {
+            return startTime;
+        }
+
+        public void setStartTime(String startTime) {
+            this.startTime = startTime;
+        }
+
+        public String getEndTime() {
+            return endTime;
+        }
+
+        public void setEndTime(String endTime) {
+            this.endTime = endTime;
+        }
+
+        public JSONObject getJson() throws JSONException {
+            JSONObject object = new JSONObject();
+            object.put("name", getName());
+            object.put("startTime", getStartTime());
+            object.put("endTime", getEndTime());
+            return object;
+        }
+    }
+
+    static class TOfflineRecord{
+        private long id;
+        private String body;
+        private String path;
+        private String date;
+
+        public long getId() {
+            return id;
+        }
+
+        public void setId(long id) {
+            this.id = id;
+        }
+
+        public String getBody() {
+            return body;
+        }
+
+        public void setBody(String body) {
+            this.body = body;
+        }
+
+        public String getPath() {
+            return path;
+        }
+
+        public void setPath(String path) {
+            this.path = path;
+        }
+
+        public String getDate() {
+            return date;
+        }
+
+        public void setDate(String date) {
+            this.date = date;
+        }
+
+        private String getJson() {
+            JSONObject object = new JSONObject();
+            try {
+                object.put("path", path);
+                object.put("body", body);
+                object.put("date", TUtils.getDateTime());
+            } catch (JSONException e) {
+                TLog.e(getClass().getSimpleName(), e);
+            }
+            return object.toString();
+        }
+
+        @Override
+        public String toString() {
+            return "path: "+getPath()
+                    +"body: "+getBody()
+                    +"date: "+getDate();
+        }
+
+        /**
+         * By implementing the BaseColumns interface,
+         * your inner class can inherit a primary key field called _ID that some
+         * Android classes such as cursor adaptors will expect it to have. It's not required,
+         * but this can help your database work harmoniously with the Android framework.
+         */
+        static class TOfflineRecordEntity implements BaseColumns{
+            public static final String TABLE_NAME = "offline_rec";
+            public static final String COLUMN_NAME_PATH="path";
+            public static final String COLUMN_NAME_BODY="body";
+            public static final String COLUMN_NAME_DATE="date";
+
         }
     }
 }

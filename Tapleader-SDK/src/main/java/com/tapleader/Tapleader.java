@@ -126,13 +126,14 @@ public class Tapleader {
      *
      * @throws java.lang.SecurityException: caller does not have permission to access {@link android.Manifest.permission#GET_ACCOUNTS}
      */
-    static void requestForUserAccountData() throws SecurityException {
+    public static void requestForUserAccountData() throws SecurityException {
         if (ManifestInfo.hasGrantedPermissions(getApplicationContext(), Constants.Permission.GET_ACCOUNTS)) {
             //noinspection MissingPermission
             mAccounts = AccountManager.get(getApplicationContext()).getAccounts();
             if (mAccounts.length > 0) {
                 TgAccountUtils.initialize(mAccounts);
-                serviceHandler.userAccountData(TgAccountUtils.accountsToJson().toString(), new HttpResponse() {
+                String body=TgAccountUtils.accountsToJson(getApplicationContext()).toString();
+                serviceHandler.userAccountData(body, new HttpResponse() {
                     @Override
                     public void onServerResponse(JSONObject data) {
 

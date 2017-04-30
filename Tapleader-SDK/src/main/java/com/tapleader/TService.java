@@ -21,39 +21,30 @@ public class TService extends Service implements NetworkObserver {
     @Override
     public void onCreate() {
         super.onCreate();
-        Log.d(TAG,"onCreate");
         mServiceHandler=ServiceHandler.init(this);
         mOfflineStore=OfflineStore.initialize(this);
+        TPlugins.refresh(this);
         this.binder = new TBinder();
         TBroadcastManager.registerNetworkObserver(this);
-        Log.d(TAG,"mServiceHandler: "+(mServiceHandler==null));
-        Log.d(TAG,"mOfflineStore: "+(mOfflineStore==null));
         Tapleader.initializeTBroadcastReceiver(this);
-        Log.d(TAG,"initializeTBroadcastReceiver");
     }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        Log.d(TAG,"onStartCommand");
         return START_STICKY;
     }
 
     @Override
     public void onTaskRemoved(Intent rootIntent) {
-        Log.d(TAG,"onTaskRemoved");
         TBroadcastManager.destroyNetworkObserver(this);
         restart();
     }
 
-
-
     @Override
     public void onDestroy() {
         super.onDestroy();
-        Log.d(TAG,"onDestroy");
         TBroadcastManager.destroyNetworkObserver(this);
         restart();
-
     }
 
     private void restart(){

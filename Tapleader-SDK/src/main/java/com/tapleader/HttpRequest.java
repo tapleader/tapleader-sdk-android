@@ -101,7 +101,6 @@ class HttpRequest extends AsyncTask<Object, Void, JSONObject> {
         con.setRequestProperty("User-Agent", System.getProperty("http.agent"));
         con.setRequestProperty("Content-Type", "application/json; charset=utf-8");
         con.setRequestProperty("Request-Date", TUtils.getDateTime());
-        //TODO: save settings to db
         if(TPlugins.get()!=null)
             con.setRequestProperty("Request-Key", TUtils.wSec(con.getRequestProperties().get("Request-Date") + TPlugins.get().getApplicationId()));
         con.setDoOutput(true);

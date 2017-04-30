@@ -442,6 +442,14 @@ class TModels {
             object.put("endTime", getEndTime());
             return object;
         }
+
+        static class  TLifeCycleEntity implements BaseColumns{
+            public static final String TABLE_NAME = "offline_rec";
+            public static final String COLUMN_NAME_NAME="name";
+            public static final String COLUMN_NAME_START="startTime";
+            public static final String COLUMN_NAME_END="endTime";
+
+        }
     }
 
     static class TOfflineRecord{

@@ -50,6 +50,15 @@ class TSQLHelper extends SQLiteOpenHelper {
     private static final String SQL_DELETE_SETTINGS_TABLE =
             "DROP TABLE IF EXISTS " + TModels.TOfflineRecord.TOfflineRecordEntity.TABLE_NAME;
 
+    private static final String SQL_CREATE_LIFECYCLE_TABLE=
+            "CREATE TABLE "+ TModels.TLifeCycleObject.TLifeCycleEntity.TABLE_NAME + " (" +
+                    TModels.TLifeCycleObject.TLifeCycleEntity._ID + " INTEGER PRIMARY KEY," +
+                    TModels.TLifeCycleObject.TLifeCycleEntity.COLUMN_NAME_NAME + " TEXT," +
+                    TModels.TLifeCycleObject.TLifeCycleEntity.COLUMN_NAME_START + " TEXT," +
+                    TModels.TLifeCycleObject.TLifeCycleEntity.COLUMN_NAME_END + " TEXT)";
+    private static final String SQL_DELETE_LIFECYCLE_TABLE =
+            "DROP TABLE IF EXISTS " + TModels.TLifeCycleObject.TLifeCycleEntity.TABLE_NAME;
+
     TSQLHelper(Context context) {
         super(context,DATABASE_NAME,null,DATABASE_VERSION);
     }
@@ -65,12 +74,14 @@ class TSQLHelper extends SQLiteOpenHelper {
     public void onCreate(SQLiteDatabase db) {
         db.execSQL(SQL_CREATE_OFFLINE_RECORD_TABLE);
         db.execSQL(SQL_CREATE_SETTINGS_TABLE);
+        db.execSQL(SQL_CREATE_LIFECYCLE_TABLE);
     }
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
         db.execSQL(SQL_DELETE_OFFLINE_RECORD_TABLE);
         db.execSQL(SQL_DELETE_SETTINGS_TABLE);
+        db.execSQL(SQL_DELETE_LIFECYCLE_TABLE);
         onCreate(db);
     }
 
@@ -230,5 +241,22 @@ class TSQLHelper extends SQLiteOpenHelper {
             TLog.e(TAG,e);
         }
         return cnt == 0l ? false:true;
+    }
+
+    long addActivityLifecycLog(TModels.TLifeCycleObject lifeCycleObject){
+        SQLiteDatabase db =null;
+        try{
+            db= this.getWritableDatabase();
+        }catch (SQLException e){
+            TLog.e(TAG,e);
+            return -1l;
+        }
+        ContentValues values = new ContentValues();
+        values.put(TModels.TLifeCycleObject.TLifeCycleEntity.COLUMN_NAME_NAME,lifeCycleObject.getName());
+        values.put(TModels.TLifeCycleObject.TLifeCycleEntity.COLUMN_NAME_START,lifeCycleObject.getStartTime());
+        values.put(TModels.TLifeCycleObject.TLifeCycleEntity.COLUMN_NAME_END,lifeCycleObject.getEndTime());
+        long newRowId = db.insert(TModels.TInstallObject.TInstallEntity.TABLE_NAME, null, values);
+        db.close();
+        return newRowId;
     }
 }

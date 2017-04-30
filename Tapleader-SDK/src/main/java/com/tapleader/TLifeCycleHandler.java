@@ -65,6 +65,7 @@ class TLifeCycleHandler implements Application.ActivityLifecycleCallbacks {
         } else {
             String current = TUtils.getDateTime();
             lastWLO.setEndTime(current);
+            //TODO: change to log with context for db
             log(lastWLO);
             lastWLO = new TModels.TLifeCycleObject();
             lastWLO.setName(activity.getComponentName().getClassName());
@@ -96,7 +97,7 @@ class TLifeCycleHandler implements Application.ActivityLifecycleCallbacks {
     public void onActivityDestroyed(Activity activity) {
 
     }
-
+    @Deprecated
     private void log(TModels.TLifeCycleObject lastTLO) {
         final File log = new File(TPlugins.get().getCacheDir(), FILE_NAME);
         String data = null;
@@ -132,6 +133,10 @@ class TLifeCycleHandler implements Application.ActivityLifecycleCallbacks {
         }
     }
 
+    private long log(Context context,TModels.TLifeCycleObject lastTLO){
+        TSQLHelper helper=new TSQLHelper(context);
+        return helper.addActivityLifecycLog(lastTLO);
+    }
     /**
      * read data from file with name {@link TLifeCycleHandler#FILE_NAME} and sed to server
      *

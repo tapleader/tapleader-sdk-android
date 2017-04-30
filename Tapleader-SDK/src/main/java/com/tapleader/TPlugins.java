@@ -50,6 +50,18 @@ class TPlugins {
         }
     }
 
+    static void refresh(Context context){
+        synchronized (LOCK){
+            if(instance==null){
+                TSQLHelper helper=new TSQLHelper(context);
+                String appId=helper.getSetting(TModels.TInstallObject.TInstallEntity.COLUMN_NAME_APP_ID);
+                String clnKey=helper.getSetting(TModels.TInstallObject.TInstallEntity.COLUMN_NAME_CLIENT_KEY);
+                String devId=helper.getSetting(TModels.TInstallObject.TInstallEntity.COLUMN_NAME_DEVICE_ID);
+                String cmpId=ManifestInfo.getApplicationMetadata(context).getString("com.tapleader.CAMPAIGN_ID");
+                initialize(appId,clnKey,devId,cmpId!=null ? cmpId : "Unknown");
+            }
+        }
+    }
     static void reset() {
         synchronized (LOCK) {
             instance = null;

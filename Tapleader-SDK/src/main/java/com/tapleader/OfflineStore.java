@@ -73,7 +73,7 @@ class OfflineStore{
         long id=-1l;
         if(record!=null) {
             switch (record.getPath()){
-                case Constants.Api.NEW_INSTALL:
+                case Constants.Endpoint.NEW_INSTALL:
                     TModels.TOfflineRecord old=isInstallRecordExist();
                     if(old!=null){
                         id=old.getId();
@@ -82,7 +82,7 @@ class OfflineStore{
                         id = helper.insertNewOfflineRecord(record);
                     }
                     break;
-                case Constants.Api.ACTIVITY_TRACKING:
+                case Constants.Endpoint.ACTIVITY_TRACKING:
                     id = helper.insertNewOfflineRecord(record);
                     break;
             }
@@ -93,7 +93,7 @@ class OfflineStore{
     TModels.TOfflineRecord isInstallRecordExist(){
         ArrayList<TModels.TOfflineRecord> list=getAllRequests();
         for(TModels.TOfflineRecord record:list){
-            if(record.getPath().equals(Constants.Api.NEW_INSTALL)){
+            if(record.getPath().equals(Constants.Endpoint.NEW_INSTALL)){
                 return record;
             }
         }
@@ -130,8 +130,8 @@ class OfflineStore{
     ArrayList<TModels.TOfflineRecord> getAllRequests(){
         ArrayList<TModels.TOfflineRecord> list=new ArrayList<>();
         TSQLHelper helper=new TSQLHelper(context);
-        list.addAll(helper.getOfflineRecords(Constants.Api.NEW_INSTALL));
-        list.addAll(helper.getOfflineRecords(Constants.Api.ACTIVITY_TRACKING));
+        list.addAll(helper.getOfflineRecords(Constants.Endpoint.NEW_INSTALL));
+        list.addAll(helper.getOfflineRecords(Constants.Endpoint.ACTIVITY_TRACKING));
         helper.close();
         return list;
     }
@@ -163,7 +163,7 @@ class OfflineStore{
     boolean deleteInstallRecords(){
         TSQLHelper helper=new TSQLHelper(context);
         ArrayList<TModels.TOfflineRecord> list=new ArrayList<>();
-        list.addAll(helper.getOfflineRecords(Constants.Api.NEW_INSTALL));
+        list.addAll(helper.getOfflineRecords(Constants.Endpoint.NEW_INSTALL));
         helper.close();
         if(list.size()==0)
             return false;

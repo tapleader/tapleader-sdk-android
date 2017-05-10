@@ -29,21 +29,25 @@ class TLifeCycleHandler implements Application.ActivityLifecycleCallbacks {
     private final static String PREFS_NAME = "BufferCounter";
     private final static String PARAMETER_NAME = "counter";
     private final static String TAG = "TLifeCycleHandler";
-    private final static int BUFFER_SIZE = 10;
+    private final static boolean SHOULD_NOTIFY_ALL= false;
     private static TLifeCycleHandler mTLifeCycleHandler;
-    private static TModels.TLifeCycleObject lastWLO;
+    private static TModels.TLifeCycleObject lastTLO;
+    private final static long MIN_STOPOVER=3*1000;
+    private final static int BUFFER_SIZE = 10;
     private SharedPreferences prefs;
     private BufferedWriter writer;
+    private  TSQLHelper helper;
     private int counter = 0;
 
-    private TLifeCycleHandler() {
-        this.prefs = TUtils.getContext().getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+    private TLifeCycleHandler(Context context) {
+        this.prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
         this.counter = getLastCounter();
+        this.helper=new TSQLHelper(context);
     }
 
-    public static TLifeCycleHandler getInstance() {
+    public static TLifeCycleHandler getInstance(Context context) {
         if (mTLifeCycleHandler == null) {
-            mTLifeCycleHandler = new TLifeCycleHandler();
+            mTLifeCycleHandler = new TLifeCycleHandler(context);
         }
         return mTLifeCycleHandler;
     }
@@ -58,24 +62,22 @@ class TLifeCycleHandler implements Application.ActivityLifecycleCallbacks {
     @Override
     public void onActivityStarted(Activity activity) {
         TLog.d(TAG, "onActivityStarted" + activity.getComponentName().toString());
-        if (lastWLO == null) {
-            lastWLO = new TModels.TLifeCycleObject();
-            lastWLO.setName(activity.getComponentName().getClassName());
-            lastWLO.setStartTime(TUtils.getDateTime());
+        if (lastTLO == null) {
+            lastTLO = new TModels.TLifeCycleObject();
+            lastTLO.setName(activity.getComponentName().getClassName().replace('.','_'));
+            lastTLO.setStartTime(TUtils.getDateTime());
         } else {
             String current = TUtils.getDateTime();
-            lastWLO.setEndTime(current);
-            //TODO: change to log with context for db
-            log(lastWLO);
-            lastWLO = new TModels.TLifeCycleObject();
-            lastWLO.setName(activity.getComponentName().getClassName());
-            lastWLO.setStartTime(current);
+            lastTLO.setEndTime(current);
+            logToDb(lastTLO);
+            lastTLO = new TModels.TLifeCycleObject();
+            lastTLO.setName(activity.getComponentName().getClassName().replace('.','_'));
+            lastTLO.setStartTime(current);
         }
     }
 
     @Override
     public void onActivityResumed(Activity activity) {
-        TLog.d(TAG, "onActivityResumed" + activity.getComponentName().toString());
     }
 
     @Override
@@ -85,7 +87,14 @@ class TLifeCycleHandler implements Application.ActivityLifecycleCallbacks {
 
     @Override
     public void onActivityStopped(Activity activity) {
-
+        try {
+            boolean foreground = new TForegroundCheckTask().execute(TUtils.getContext()).get();
+            if(!foreground) {
+                TUtils.updateLunchTime(TUtils.getContext(),System.currentTimeMillis());
+            }
+        } catch (Exception e) {
+            TLog.e(TAG,e);
+        }
     }
 
     @Override
@@ -133,16 +142,19 @@ class TLifeCycleHandler implements Application.ActivityLifecycleCallbacks {
         }
     }
 
-    private long log(Context context,TModels.TLifeCycleObject lastTLO){
-        TSQLHelper helper=new TSQLHelper(context);
-        return helper.addActivityLifecycLog(lastTLO);
+    private long logToDb(TModels.TLifeCycleObject lastTLO){
+        long endTime=TUtils.dateParser(lastTLO.getEndTime()).getTime();
+        long startTime=TUtils.dateParser(lastTLO.getStartTime()).getTime();
+        if(endTime-startTime>=MIN_STOPOVER || SHOULD_NOTIFY_ALL )
+            return helper.addActivityLifecycleLog(lastTLO);
+        return -1;
     }
     /**
      * read data from file with name {@link TLifeCycleHandler#FILE_NAME} and sed to server
      *
      * @throws IOException if file is not accessible!
      */
-    //TODO://
+    @Deprecated
     private void flush() throws IOException, JSONException {
         if(TUtils.getContext()==null) {
             TLog.d(TAG,"context is null");
@@ -184,6 +196,7 @@ class TLifeCycleHandler implements Application.ActivityLifecycleCallbacks {
         }
     }
 
+    @Deprecated
     private JSONArray getJsonArray(String[] data) {
         JSONArray array = new JSONArray();
         for (int i = 0; i < data.length; i++)
@@ -191,6 +204,7 @@ class TLifeCycleHandler implements Application.ActivityLifecycleCallbacks {
         return array;
     }
 
+    @Deprecated
     private String[] parsFile(String body) {
         String[] lines = body.split("\\r?\\n");
         return lines;
@@ -203,6 +217,7 @@ class TLifeCycleHandler implements Application.ActivityLifecycleCallbacks {
      * @return
      * @throws JSONException
      */
+    @Deprecated
     private String getBody(JSONArray jsonArray) throws JSONException {
         class Value {
             int count = 0;
@@ -297,11 +312,13 @@ class TLifeCycleHandler implements Application.ActivityLifecycleCallbacks {
         return body.toString();
     }
 
+    @Deprecated
     private int getLastCounter() {
         int id = prefs.getInt(PARAMETER_NAME, 0);
         return id;
     }
 
+    @Deprecated
     private void updateLastCounter(int id) {
         SharedPreferences.Editor editor = prefs.edit();
         editor.putInt(PARAMETER_NAME, id);

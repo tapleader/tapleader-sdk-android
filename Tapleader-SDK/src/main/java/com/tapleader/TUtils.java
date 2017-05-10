@@ -85,7 +85,7 @@ class TUtils {
 
     static void registerLifecycleHandler(Context context) {
         if (context instanceof Application)
-            ((Application) context.getApplicationContext()).registerActivityLifecycleCallbacks(TLifeCycleHandler.getInstance());
+            ((Application) context.getApplicationContext()).registerActivityLifecycleCallbacks(TLifeCycleHandler.getInstance(context));
         else
             TLog.e(TAG, new Exception("can't start LifeCycleHandler"));
     }
@@ -229,6 +229,47 @@ class TUtils {
         editor.putInt(Constants.Preferences.PACKAGE_VERSION_CODE, TUtils.getVersionCode(context));
         editor.putString(Constants.Preferences.USER_INSTALLATION_ID, installationId);
         editor.commit();
+    }
+
+    static String getInstallationId(Context context){
+        SharedPreferences prefs = context.getSharedPreferences(Constants.Preferences.PREFS_NAME, Context.MODE_PRIVATE);
+        return prefs.getString(Constants.Preferences.USER_INSTALLATION_ID,"Unknown");
+    }
+
+    static long getLastPushActivityLogTime(Context context){
+        SharedPreferences prefs = context.getSharedPreferences(Constants.Preferences.PREFS_NAME, Context.MODE_PRIVATE);
+        return prefs.getLong(Constants.Preferences.LAST_ACTIVITY_LOG_PUSH_TIME,0l);
+    }
+
+    static int getLunchCounter(Context context){
+        SharedPreferences prefs = context.getSharedPreferences(Constants.Preferences.PREFS_NAME, Context.MODE_PRIVATE);
+        return prefs.getInt(Constants.Preferences.LAUNCH_COUNTER,0);
+    }
+
+    static void updateLunchCounter(Context context, int count){
+        SharedPreferences prefs = context.getSharedPreferences(Constants.Preferences.PREFS_NAME, Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = prefs.edit();
+        editor.putInt(Constants.Preferences.LAUNCH_COUNTER,count);
+        editor.apply();
+    }
+
+    static long getLastLaunchTime(Context context){
+        SharedPreferences prefs = context.getSharedPreferences(Constants.Preferences.PREFS_NAME, Context.MODE_PRIVATE);
+        return prefs.getLong(Constants.Preferences.LAST_LAUNCH_TIME,0l);
+    }
+
+    static void updateLunchTime(Context context, long time){
+        SharedPreferences prefs = context.getSharedPreferences(Constants.Preferences.PREFS_NAME, Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = prefs.edit();
+        editor.putLong(Constants.Preferences.LAST_LAUNCH_TIME,time);
+        editor.apply();
+    }
+
+    static void updateLastPushActivityLogTime(Context context, long time){
+        SharedPreferences prefs = context.getSharedPreferences(Constants.Preferences.PREFS_NAME, Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = prefs.edit();
+        editor.putLong(Constants.Preferences.LAST_ACTIVITY_LOG_PUSH_TIME,time);
+        editor.apply();
     }
 
     static void saveUpdateData(Context context){

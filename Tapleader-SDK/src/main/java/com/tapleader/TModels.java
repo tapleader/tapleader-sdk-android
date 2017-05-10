@@ -444,10 +444,11 @@ class TModels {
         }
 
         static class  TLifeCycleEntity implements BaseColumns{
-            public static final String TABLE_NAME = "offline_rec";
+            public static final String TABLE_NAME = "life_cycle";
             public static final String COLUMN_NAME_NAME="name";
-            public static final String COLUMN_NAME_START="startTime";
-            public static final String COLUMN_NAME_END="endTime";
+            public static final String COLUMN_NAME_DATE="date";
+            public static final String COLUMN_NAME_DURATION="duration";
+            public static final String COLUMN_NAME_COUNT="count";
 
         }
     }
@@ -521,6 +522,69 @@ class TModels {
             public static final String COLUMN_NAME_BODY="body";
             public static final String COLUMN_NAME_DATE="date";
 
+        }
+    }
+
+    static class RetentionObject{
+        private String clientKey;
+        private String packageName;
+        private int launchCounter;
+        private String deviceId;
+        private String installationId;
+
+        public String getInstallationId() {
+            return installationId;
+        }
+
+        public void setInstallationId(String installationId) {
+            this.installationId = installationId;
+        }
+
+        public String getClientKey() {
+            return clientKey;
+        }
+
+        public void setClientKey(String clientKey) {
+            this.clientKey = clientKey;
+        }
+
+        public String getPackageName() {
+            return packageName;
+        }
+
+        public void setPackageName(String packageName) {
+            this.packageName = packageName;
+        }
+
+        public int getLaunchCounter() {
+            return launchCounter;
+        }
+
+        public void setLaunchCounter(int launchCounter) {
+            this.launchCounter = launchCounter;
+        }
+
+        public String getDeviceId() {
+            return deviceId;
+        }
+
+        public void setDeviceId(String deviceId) {
+            this.deviceId = deviceId;
+        }
+
+
+        public JSONObject getJson(){
+            JSONObject object = new JSONObject();
+            try {
+                object.put("clientKey", getClientKey());
+                object.put("deviceId", getDeviceId());
+                object.put("launchesCount", getLaunchCounter());
+                object.put("packageName", getPackageName());
+                object.put("InstallationId",getInstallationId());
+            }catch (Exception e){
+                e.printStackTrace();
+            }
+            return object;
         }
     }
 }

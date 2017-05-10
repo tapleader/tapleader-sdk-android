@@ -5,6 +5,7 @@ import android.accounts.Account;
 import android.accounts.AccountManager;
 import android.content.Context;
 import android.content.IntentFilter;
+import android.net.ConnectivityManager;
 import android.os.Bundle;
 import android.telephony.TelephonyManager;
 import android.util.Log;
@@ -89,8 +90,8 @@ public class Tapleader {
         String deviceId = "PERMISSION_NOT_GRANTED";
         if (ManifestInfo.hasGrantedPermissions(configuration.context, Constants.Permission.READ_PHONE_STATE))
             deviceId = ((TelephonyManager) configuration.context.getSystemService(Context.TELEPHONY_SERVICE)).getDeviceId();
-        TPlugins.Android.initialize(configuration.context, configuration.applicationId, configuration.clientKey, deviceId, configuration.campaignId);
-        //TUtils.registerLifecycleHandler(configuration.context);
+        TPlugins.initialize(configuration.context, configuration.applicationId, configuration.clientKey, deviceId, configuration.campaignId);
+        TUtils.registerLifecycleHandler(configuration.context);
         initializeTBroadcastReceiver(configuration.context);
         serviceHandler = ServiceHandler.init(configuration.context);
         TKeyValueCache.initialize(configuration.context);
@@ -211,76 +212,115 @@ public class Tapleader {
 
                 }
             });
+        }else if((System.currentTimeMillis()-TUtils.getLastLaunchTime(getApplicationContext()))>=1000 * 60 * 5) {
+            serviceHandler.retention(getRetentionData(), new HttpResponse() {
+                @Override
+                public void onServerResponse(JSONObject data) {
+                    try {
+                        if (data.getInt("Status") == Constants.Code.REQUEST_SUCCESS) {
+                            //do nothing
+                        } else
+                            TLog.d(TAG, data.getString("Message"));
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    } finally {
+                        TUtils.updateLunchCounter(getApplicationContext(),TUtils.getLunchCounter(getApplicationContext())+1);
+                        lock.unlock();
+                    }
+                }
+
+                @Override
+                public void onServerError(String message, int code) {
+
+                }
+            });
         }else {
             lock.unlock();
             TLog.d(TAG, "initialize done and unlocked!");
         }
     }
 
+    static String getRetentionData(){
+        int counter= (int) TUtils.getLunchCounter(getApplicationContext());
+        TModels.RetentionObject retentionObject=new TModels.RetentionObject();
+        retentionObject.setClientKey(TPlugins.get().getClientKey());
+        retentionObject.setDeviceId(TPlugins.get().getDeviceId());
+        retentionObject.setLaunchCounter(counter);
+        retentionObject.setPackageName(getApplicationContext().getPackageName());
+        retentionObject.setInstallationId(TUtils.getInstallationId(getApplicationContext()));
+        return retentionObject.getJson().toString();
+    }
+
     static Context getApplicationContext() {
-        checkContext();
-        return TPlugins.Android.get().applicationContext();
+        return TPlugins.get().applicationContext();
     }
 
     static void checkContext() {
-        if (TPlugins.Android.get().applicationContext() == null) {
+        if (TPlugins.get().applicationContext() == null) {
             throw new RuntimeException(Constants.Exception.NULL_CONTEXT);
         }
     }
 
     static void initializeTBroadcastReceiver(Context context) {
-        final String ACTION_CONNECTIVITY_CHANGE = "android.net.conn.CONNECTIVITY_CHANGE";
-        final String ACTION_RESTART_SERVICE = "com.tapleader.START_TAPLEADER_SERVICE";
         IntentFilter filter = new IntentFilter();
-        filter.addAction(ACTION_CONNECTIVITY_CHANGE);
-        filter.addAction(ACTION_RESTART_SERVICE);
+        filter.addAction(ConnectivityManager.CONNECTIVITY_ACTION);
+        filter.addAction(Constants.Action.ACTION_RESTART_SERVICE);
+        filter.addAction(Constants.Action.ACTION_ALARM_MANAGER);
         context.registerReceiver(new TBroadcastManager(context), filter);
     }
 
     static void checkCacheApplicationId() {
         synchronized (MUTEX) {
-            String applicationId = TPlugins.get().getApplicationId();
-            if (applicationId != null) {
-                File dir = Tapleader.getTapleaderCacheDir();
-                // Make sure the current version of the cache is for this application id.
-                File applicationIdFile = new File(dir, "getApplicationId");
-                if (applicationIdFile.exists()) {
-                    boolean matches = false;
+            try {
+                String applicationId = TPlugins.get().getApplicationId();
+                if (applicationId != null) {
+                    File dir = Tapleader.getTapleaderCacheDir();
+                    // Make sure the current version of the cache is for this application id.
+                    File applicationIdFile = new File(dir, "getApplicationId");
+                    if (applicationIdFile.exists()) {
+                        boolean matches = false;
+                        try {
+                            RandomAccessFile f = new RandomAccessFile(applicationIdFile, "r");
+                            byte[] bytes = new byte[(int) f.length()];
+                            f.readFully(bytes);
+                            f.close();
+                            String diskApplicationId = new String(bytes, "UTF-8");
+                            matches = diskApplicationId.equals(applicationId);
+                        } catch (Exception e) {
+                            TLog.e(TAG,e);
+                        }
+
+                        if (!matches) {
+                            try {
+                                TFileUtils.deleteDirectory(dir);
+                            } catch (IOException e) {
+                                TLog.e(TAG, e);
+                            }
+                        }
+                    }
+
+                    // Create the version file if needed.
+                    applicationIdFile = new File(dir, "getApplicationId");
                     try {
-                        RandomAccessFile f = new RandomAccessFile(applicationIdFile, "r");
-                        byte[] bytes = new byte[(int) f.length()];
-                        f.readFully(bytes);
-                        f.close();
-                        String diskApplicationId = new String(bytes, "UTF-8");
-                        matches = diskApplicationId.equals(applicationId);
+                        FileOutputStream out = new FileOutputStream(applicationIdFile);
+                        out.write(applicationId.getBytes("UTF-8"));
+                        out.close();
                     } catch (Exception e) {
                         TLog.e(TAG,e);
                     }
-
-                    if (!matches) {
-                        try {
-                            TFileUtils.deleteDirectory(dir);
-                        } catch (IOException e) {
-                            TLog.e(TAG, e);
-                        }
-                    }
                 }
-
-                // Create the version file if needed.
-                applicationIdFile = new File(dir, "getApplicationId");
-                try {
-                    FileOutputStream out = new FileOutputStream(applicationIdFile);
-                    out.write(applicationId.getBytes("UTF-8"));
-                    out.close();
-                } catch (Exception e) {
-                    TLog.e(TAG,e);
-                }
+            }catch (Exception e){
+                TLog.e(TAG,e);
             }
+
         }
     }
 
     static File getTapleaderCacheDir() {
-        return TPlugins.get().getCacheDir();
+        TPlugins tPlugins= TPlugins.get();
+        if(tPlugins==null)
+            return null;
+        return tPlugins.getCacheDir();
     }
 
     static File getTapleaderCacheDir(String subDir) {
@@ -294,16 +334,23 @@ public class Tapleader {
     }
 
     static File getTapleaderFilesDir() {
-        return TPlugins.get().getFilesDir();
+        TPlugins tPlugins= TPlugins.get();
+        if(tPlugins==null)
+            return null;
+        return tPlugins.getFilesDir();
     }
 
     static File getTapleaderFilesDir(String subDir) {
         synchronized (MUTEX) {
-            File dir = new File(getTapleaderFilesDir(), subDir);
-            if (!dir.exists()) {
-                dir.mkdirs();
+            File fDir =getTapleaderFilesDir();
+            if(fDir!=null) {
+                File dir = new File(fDir, subDir);
+                if (!dir.exists()) {
+                    dir.mkdirs();
+                }
+                return dir;
             }
-            return dir;
+            return null;
         }
     }
 

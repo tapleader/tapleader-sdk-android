@@ -150,7 +150,7 @@ class ManifestInfo {
     }
 
     private static Context getContext() {
-        return TPlugins.Android.get().applicationContext();
+        return TPlugins.get().applicationContext();
     }
 
     private static PackageManager getPackageManager() {

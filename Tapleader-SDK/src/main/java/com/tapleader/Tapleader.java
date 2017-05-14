@@ -152,6 +152,7 @@ public class Tapleader {
     }
 
     private static void checkForNewInstallOrUpdate(final boolean dangerousAccess) {
+        TUtils.updateLunchCounter(getApplicationContext(),TUtils.getLunchCounter(getApplicationContext())+1);
         if (TUtils.shouldNotifyInstall(getApplicationContext())) {
             try {
                 serviceHandler.installNotifier(TUtils.getClientDetails(getApplicationContext()).getJson().toString(), new HttpResponse() {
@@ -213,18 +214,18 @@ public class Tapleader {
                 }
             });
         }else if((System.currentTimeMillis()-TUtils.getLastLaunchTime(getApplicationContext()))>=1000 * 60 * 5) {
+            Log.d(TAG,"notify retention!");
             serviceHandler.retention(getRetentionData(), new HttpResponse() {
                 @Override
                 public void onServerResponse(JSONObject data) {
                     try {
                         if (data.getInt("Status") == Constants.Code.REQUEST_SUCCESS) {
-                            //do nothing
+                            Log.d(TAG,"retention notified done!");
                         } else
                             TLog.d(TAG, data.getString("Message"));
                     } catch (JSONException e) {
                         e.printStackTrace();
                     } finally {
-                        TUtils.updateLunchCounter(getApplicationContext(),TUtils.getLunchCounter(getApplicationContext())+1);
                         lock.unlock();
                     }
                 }
@@ -241,7 +242,7 @@ public class Tapleader {
     }
 
     static String getRetentionData(){
-        int counter= (int) TUtils.getLunchCounter(getApplicationContext());
+        int counter= TUtils.getLunchCounter(getApplicationContext());
         TModels.RetentionObject retentionObject=new TModels.RetentionObject();
         retentionObject.setClientKey(TPlugins.get().getClientKey());
         retentionObject.setDeviceId(TPlugins.get().getDeviceId());

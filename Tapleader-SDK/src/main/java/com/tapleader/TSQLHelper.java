@@ -125,7 +125,7 @@ class TSQLHelper extends SQLiteOpenHelper {
             TLog.e(TAG,e);
         }finally {
 
-            return result > 0 ? true : false;
+            return result > 0;
         }
     }
 
@@ -256,7 +256,7 @@ class TSQLHelper extends SQLiteOpenHelper {
             TLog.e(TAG,e);
         }finally {
 
-            return cnt == 0l ? false:true;
+            return cnt != 0l;
         }
     }
 
@@ -315,15 +315,19 @@ class TSQLHelper extends SQLiteOpenHelper {
         SQLiteDatabase db=null;
         try {
             db = this.getReadableDatabase();
-            Cursor cursor= db.rawQuery("SELECT SUM("
-                    + TModels.TLifeCycleObject.TLifeCycleEntity.COLUMN_NAME_COUNT
-                    +") FROM " + TModels.TLifeCycleObject.TLifeCycleEntity.TABLE_NAME,null);
-            cursor.moveToFirst();
-            cnt=cursor.getInt(0);
-            db.close();
+            synchronized (db) {
+                Cursor cursor = db.rawQuery("SELECT SUM("
+                        + TModels.TLifeCycleObject.TLifeCycleEntity.COLUMN_NAME_COUNT
+                        + ") FROM " + TModels.TLifeCycleObject.TLifeCycleEntity.TABLE_NAME, null);
+                cursor.moveToFirst();
+                cnt = cursor.getInt(0);
+            }
+
         }catch (Exception e){
             TLog.e(TAG,e);
         }finally {
+            if(db!=null && db.isOpen())
+                db.close();
             return cnt;
         }
     }
@@ -332,7 +336,8 @@ class TSQLHelper extends SQLiteOpenHelper {
         SQLiteDatabase db=this.getWritableDatabase();
         int count=0;
         try {
-            count = db.delete(TModels.TLifeCycleObject.TLifeCycleEntity.TABLE_NAME,null,null);
+            Cursor cursor=db.rawQuery("DELETE FROM "+TModels.TLifeCycleObject.TLifeCycleEntity.TABLE_NAME,null);
+            count= cursor.getCount();
             db.close();
         }catch (Exception e){
             TLog.e(TAG,e);
@@ -365,7 +370,7 @@ class TSQLHelper extends SQLiteOpenHelper {
                     int count=cursor.getColumnIndexOrThrow(TModels.TLifeCycleObject.TLifeCycleEntity.COLUMN_NAME_COUNT);
                     object.put(TModels.TLifeCycleObject.TLifeCycleEntity.COLUMN_NAME_NAME,cursor.getString(name));
                     object.put(TModels.TLifeCycleObject.TLifeCycleEntity.COLUMN_NAME_DATE,cursor.getString(date));
-                    object.put(TModels.TLifeCycleObject.TLifeCycleEntity.COLUMN_NAME_DURATION,cursor.getInt(duration));
+                    object.put(TModels.TLifeCycleObject.TLifeCycleEntity.COLUMN_NAME_DURATION,cursor.getInt(duration)/1000);
                     object.put(TModels.TLifeCycleObject.TLifeCycleEntity.COLUMN_NAME_COUNT,cursor.getInt(count));
                     array.put(object);
                 }

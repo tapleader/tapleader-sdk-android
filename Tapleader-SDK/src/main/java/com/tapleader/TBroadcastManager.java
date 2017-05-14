@@ -49,7 +49,7 @@ public class TBroadcastManager extends BroadcastReceiver {
     }
 
     public TBroadcastManager(Context context) {
-        this.context = context;
+        TBroadcastManager.context = context;
         doPingPong();
         setAlarm(context);
     }
@@ -87,7 +87,7 @@ public class TBroadcastManager extends BroadcastReceiver {
     }
 
     public void onReceive(Context context, Intent intent) {
-        this.context = context;
+        TBroadcastManager.context = context;
         switch (intent.getAction()) {
             case ConnectivityManager.CONNECTIVITY_ACTION:
                 pushUpdateMessage(checkInstantly(context), SHOULD_PINGPONG);
@@ -118,7 +118,7 @@ public class TBroadcastManager extends BroadcastReceiver {
                     Log.d(TAG, "Alarm Manager Done!");
                 }
             };
-            context.bindService(new Intent(context, TService.class), mConnection, context.BIND_AUTO_CREATE);
+            context.bindService(new Intent(context, TService.class), mConnection, Context.BIND_AUTO_CREATE);
         }
     }
 

@@ -125,6 +125,8 @@ public class TService extends Service implements NetworkObserver {
                             case Constants.Endpoint.ACTIVITY_TRACKING:
                                 mServiceHandler.activityTracking(record.getBody(),TOfflineResponse.initialize(record.getId(),TService.this).getActivityTrackingResponse());
                                 break;
+                            case Constants.Endpoint.SECOND_LAUNCH:
+                                mServiceHandler.retention(record.getBody(),TOfflineResponse.initialize(record.getId(),TService.this).getRetentionResponse());
                         }
                     }
                 }
@@ -140,12 +142,13 @@ public class TService extends Service implements NetworkObserver {
                 long lastTime=TUtils.getLastPushActivityLogTime(TService.this);
                 if(recordCount>BUFFER_SIZE
                         || (recordCount>0 && currentTime-lastTime>INTERVAL)){
-                    JSONObject body=new JSONObject();
+                    final JSONObject body=new JSONObject();
                     try {
                         body.put("clientKey",helper.getSetting(TModels.TInstallObject.TInstallEntity.COLUMN_NAME_CLIENT_KEY));
                         body.put("packageName",helper.getSetting(TModels.TInstallObject.TInstallEntity.COLUMN_NAME_PCKG_NAME));
                         body.put("InstallationId",TUtils.getInstallationId(TService.this));
                         body.put("data",helper.getActivityLifeCycle());
+                        helper.truncateActivityLifeCycle();
                     } catch (JSONException e) {
                             TLog.e(TAG,e,TService.this);
                     }
@@ -155,7 +158,6 @@ public class TService extends Service implements NetworkObserver {
                             try {
                                 int status = data.getInt("Status");
                                 if (status == Constants.Code.REQUEST_SUCCESS) {
-                                    helper.truncateActivityLifeCycle();
                                     TUtils.updateLastPushActivityLogTime(TService.this,System.currentTimeMillis());
                                 }
                             } catch (JSONException e) {
@@ -165,7 +167,11 @@ public class TService extends Service implements NetworkObserver {
 
                         @Override
                         public void onServerError(String message, int code) {
-
+                            TModels.TOfflineRecord record=new TModels.TOfflineRecord();
+                            record.setBody(body.toString());
+                            record.setPath(Constants.Endpoint.ACTIVITY_TRACKING);
+                            record.setDate(TUtils.getDateTime());
+                            helper.insertNewOfflineRecord(record);
                         }
                     });
                 }

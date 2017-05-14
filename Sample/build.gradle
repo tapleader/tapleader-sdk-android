@@ -11,8 +11,6 @@ android {
         versionCode 2
         versionName "2.1"
         multiDexEnabled true
-
-
     }
     buildTypes {
         release {

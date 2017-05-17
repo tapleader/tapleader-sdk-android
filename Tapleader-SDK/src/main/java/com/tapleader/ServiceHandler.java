@@ -15,8 +15,8 @@ class ServiceHandler implements NetworkObserver {
     private static Context context;
 
     private ServiceHandler(Context context) {
-        this.isConnected=false;
-        this.context=context;
+        isConnected=false;
+        ServiceHandler.context =context;
         TBroadcastManager.registerNetworkObserver(this);
         offlineStore = OfflineStore.initialize(context);
     }
@@ -38,8 +38,6 @@ class ServiceHandler implements NetworkObserver {
 
     void activityTracking(String body, HttpResponse httpResponse) {
         handleRequest(Constants.Endpoint.ACTIVITY_TRACKING,body,true,true,httpResponse);
-       /* HttpRequest httpRequest = new HttpRequest(Constants.test,true, httpResponse);
-        httpRequest.execute(body);*/
     }
 
     void crashReport(String body, HttpResponse httpResponse) {
@@ -60,7 +58,7 @@ class ServiceHandler implements NetworkObserver {
     }
 
     void retention(String body,HttpResponse httpResponse){
-       handleRequest(urlGen(Constants.Endpoint.SECOND_LAUNCH),body,true,true,httpResponse);
+       handleRequest(Constants.Endpoint.SECOND_LAUNCH,body,true,true,httpResponse);
     }
     private void handleRequest(String url, String body,boolean crashReporter,boolean supportOffline, HttpResponse httpResponse) {
         if (isConnected) {
@@ -78,7 +76,7 @@ class ServiceHandler implements NetworkObserver {
 
     @Override
     public void onChange(boolean isConnected) {
-        this.isConnected = isConnected;
+        ServiceHandler.isConnected = isConnected;
     }
 
     @Override

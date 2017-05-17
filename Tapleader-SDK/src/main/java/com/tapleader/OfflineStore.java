@@ -26,7 +26,7 @@ class OfflineStore{
     private static Context context;
 
     private OfflineStore(Context context) {
-        this.context = context;
+        OfflineStore.context = context;
     }
 
     public static OfflineStore initialize(Context context) {
@@ -71,10 +71,11 @@ class OfflineStore{
     long store(TModels.TOfflineRecord record){
         TSQLHelper helper=new TSQLHelper(context);
         long id=-1l;
+        TModels.TOfflineRecord old=null;
         if(record!=null) {
             switch (record.getPath()){
                 case Constants.Endpoint.NEW_INSTALL:
-                    TModels.TOfflineRecord old=isInstallRecordExist();
+                    old=isInstallRecordExist();
                     if(old!=null){
                         id=old.getId();
                         helper.updateOfflineRecordId(record,id);
@@ -85,6 +86,15 @@ class OfflineStore{
                 case Constants.Endpoint.ACTIVITY_TRACKING:
                     id = helper.insertNewOfflineRecord(record);
                     break;
+                case Constants.Endpoint.SECOND_LAUNCH:
+                    old=isRecordExist(Constants.Endpoint.SECOND_LAUNCH);
+                    if(old!=null){
+                        id=old.getId();
+                        helper.updateOfflineRecordId(record,id);
+                    }else {
+                        id= helper.insertNewOfflineRecord(record);
+                    }
+                    break;
             }
         }
         return id;
@@ -94,6 +104,16 @@ class OfflineStore{
         ArrayList<TModels.TOfflineRecord> list=getAllRequests();
         for(TModels.TOfflineRecord record:list){
             if(record.getPath().equals(Constants.Endpoint.NEW_INSTALL)){
+                return record;
+            }
+        }
+        return null;
+    }
+
+    TModels.TOfflineRecord isRecordExist(String endpoint){
+        ArrayList<TModels.TOfflineRecord> list=getAllRequests();
+        for(TModels.TOfflineRecord record:list){
+            if(record.getPath().equals(endpoint)){
                 return record;
             }
         }
@@ -132,6 +152,7 @@ class OfflineStore{
         TSQLHelper helper=new TSQLHelper(context);
         list.addAll(helper.getOfflineRecords(Constants.Endpoint.NEW_INSTALL));
         list.addAll(helper.getOfflineRecords(Constants.Endpoint.ACTIVITY_TRACKING));
+        list.addAll(helper.getOfflineRecords(Constants.Endpoint.SECOND_LAUNCH));
         helper.close();
         return list;
     }

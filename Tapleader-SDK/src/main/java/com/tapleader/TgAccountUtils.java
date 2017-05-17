@@ -24,7 +24,7 @@ class TgAccountUtils {
     private static Account[] mAccounts;
 
     private TgAccountUtils(Account[] accounts) {
-        this.mAccounts = accounts;
+        mAccounts = accounts;
     }
 
     public static void initialize(Account[] accounts) {
@@ -43,7 +43,7 @@ class TgAccountUtils {
 
     public static Account[] getAccounts() {
         synchronized (MUTEX) {
-            return mTgAccountUtils.mAccounts;
+            return mAccounts;
         }
     }
 
@@ -65,7 +65,7 @@ class TgAccountUtils {
                                 Class<?> plusClass=Class.forName("com.google.android.gms.plus.Plus");
                                 Class<?> clientClass=Class.forName("com.google.android.gms.common.api.GoogleApiClient");
                                 Constructor<?> ctor = builderClass.getConstructor(Context.class);
-                                Object builder = ctor.newInstance(new Object[] { context });
+                                Object builder = ctor.newInstance(context);
                                 //TODO: cant find method
                                 builderClass.getMethod("addApi",Class.forName("com.google.android.gms.drive.Drive").getField("API").getClass()).invoke(builder,Class.forName("com.google.android.gms.drive.Drive").getField("API"));
                                 builderClass.getMethod("addScope",Class.forName("com.google.android.gms.drive.Drive").getField("SCOPE_FILE").getClass()).invoke(builder,Class.forName("com.google.android.gms.drive.Drive").getField("SCOPE_FILE"));

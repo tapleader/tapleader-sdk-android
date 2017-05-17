@@ -1,10 +1,10 @@
 package com.tapleader;
 
 import android.content.Context;
+import android.util.Log;
 
+import org.json.JSONException;
 import org.json.JSONObject;
-
-import java.io.File;
 
 /**
  * Created by mehdi akbarian on 2017-04-19.
@@ -47,11 +47,6 @@ class TOfflineResponse {
                 int status=data.getInt("Status");
                 if (status == Constants.Code.REQUEST_SUCCESS) {
                     OfflineStore.initialize(context).deleteRequest(id);
-                    File log = new File(TPlugins.get().getCacheDir(), "t_activity_tracking_log");
-                    if (!log.exists()) {
-                        TLog.e(TAG, new Exception(Constants.Exception.ACTIVITY_LOG_NOT_FOUND));
-                    }else
-                        TFileUtils.forceDelete(log);
                 } else {
                     //do nothing
                 }
@@ -75,6 +70,35 @@ class TOfflineResponse {
         return new TOfflineResponse(recordId,context);
     }
 
+    private HttpResponse retentionResponse =new HttpResponse() {
+        @Override
+        public void onServerResponse(JSONObject data) {
+            int status= 0;
+            try {
+                status = data.getInt("Status");
+                if (status == Constants.Code.REQUEST_SUCCESS) {
+                    Log.d(TAG,"default response done! for record with id= "+id);
+                    OfflineStore.initialize(context).deleteRequest(id);
+
+                }else {
+                    Log.d(TAG,data.getString("Message")+"\n for record with id= "+id);
+                }
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+
+        }
+
+        @Override
+        public void onServerError(String message, int code) {
+
+        }
+    };
+
+    HttpResponse getRetentionResponse(){
+        return retentionResponse;
+    }
+
     HttpResponse getActivityTrackingResponse(){
         return activityTrackingResponse;
     }
@@ -82,6 +106,7 @@ class TOfflineResponse {
     HttpResponse getInstallResponse(){
         return installResponse;
     }
+
 
 
 }

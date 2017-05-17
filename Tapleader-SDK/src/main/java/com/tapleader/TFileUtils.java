@@ -500,11 +500,7 @@ class TFileUtils {
             fileInCanonicalDir = new File(canonicalDir, file.getName());
         }
 
-        if (fileInCanonicalDir.getCanonicalFile().equals(fileInCanonicalDir.getAbsoluteFile())) {
-            return false;
-        } else {
-            return true;
-        }
+        return !fileInCanonicalDir.getCanonicalFile().equals(fileInCanonicalDir.getAbsoluteFile());
     }
 
     //region String

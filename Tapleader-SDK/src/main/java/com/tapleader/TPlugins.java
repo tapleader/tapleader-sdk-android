@@ -23,7 +23,9 @@ class TPlugins {
     protected File tapleaderDir;
     protected File cacheDir;
     protected File filesDir;
-    private TPlugins(String applicationId, String clientKey, String deviceId, String campaignId) {
+    private Context context;
+    private TPlugins(Context context,String applicationId, String clientKey, String deviceId, String campaignId) {
+        this.context=context;
         this.applicationId = applicationId;
         this.clientKey = clientKey;
         this.deviceId = deviceId;
@@ -32,8 +34,8 @@ class TPlugins {
 
     // TODO(grantland): Move towards a Config/Builder parameter pattern to allow other configurations
     // such as path (disabled for Android), etc.
-    static void initialize(String applicationId, String clientKey, String deviceId, String campaignId) {
-        TPlugins.set(new TPlugins(applicationId, clientKey, deviceId, campaignId));
+    static void initialize(Context context,String applicationId, String clientKey, String deviceId, String campaignId) {
+        TPlugins.set(new TPlugins(context,applicationId, clientKey, deviceId, campaignId));
     }
 
     static void set(TPlugins plugins) {
@@ -50,6 +52,23 @@ class TPlugins {
         }
     }
 
+
+    Context applicationContext(){
+        return context;
+    }
+
+    static void refresh(Context context){
+        synchronized (LOCK){
+            if(instance==null){
+                TSQLHelper helper=new TSQLHelper(context);
+                String appId=helper.getSetting(TModels.TInstallObject.TInstallEntity.COLUMN_NAME_APP_ID);
+                String clnKey=helper.getSetting(TModels.TInstallObject.TInstallEntity.COLUMN_NAME_CLIENT_KEY);
+                String devId=helper.getSetting(TModels.TInstallObject.TInstallEntity.COLUMN_NAME_DEVICE_ID);
+                String cmpId=ManifestInfo.getApplicationMetadata(context).getString("com.tapleader.CAMPAIGN_ID");
+                initialize(context,appId,clnKey,devId,cmpId!=null ? cmpId : "Unknown");
+            }
+        }
+    }
     static void reset() {
         synchronized (LOCK) {
             instance = null;
@@ -81,68 +100,31 @@ class TPlugins {
         return campaignId;
     }
 
-    @Deprecated
+    @SuppressWarnings("deprecation")
     File getTapleaderDir() {
-        throw new IllegalStateException("Stub");
+        synchronized (lock) {
+            if (tapleaderDir == null) {
+                tapleaderDir = context.getDir("tapleader", Context.MODE_PRIVATE);
+            }
+            return createFileDir(tapleaderDir);
+        }
     }
 
     File getCacheDir() {
-        throw new IllegalStateException("Stub");
+        synchronized (lock) {
+            if (cacheDir == null) {
+                cacheDir = new File(context.getCacheDir(), "com.tapleader");
+            }
+            return createFileDir(cacheDir);
+        }
     }
 
     File getFilesDir() {
-        throw new IllegalStateException("Stub");
-    }
-
-    static class Android extends TPlugins {
-        private final Context applicationContext;
-
-        private Android(Context context, String applicationId, String clientKey, String deviceId, String campaignId) {
-            super(applicationId, clientKey, deviceId, campaignId);
-            applicationContext = context.getApplicationContext();
-        }
-
-        static void initialize(Context context, String applicationId, String clientKey, String deviceId, String campaignId) {
-            TPlugins.set(new Android(context, applicationId, clientKey, deviceId, campaignId));
-        }
-
-        static Android get() {
-            return (Android) TPlugins.get();
-        }
-
-        Context applicationContext() {
-            return applicationContext;
-        }
-
-        @Override
-        @SuppressWarnings("deprecation")
-        File getTapleaderDir() {
-            synchronized (lock) {
-                if (tapleaderDir == null) {
-                    tapleaderDir = applicationContext.getDir("tapleader", Context.MODE_PRIVATE);
-                }
-                return createFileDir(tapleaderDir);
+        synchronized (lock) {
+            if (filesDir == null) {
+                filesDir = new File(context.getFilesDir(), "com.tapleader");
             }
-        }
-
-        @Override
-        File getCacheDir() {
-            synchronized (lock) {
-                if (cacheDir == null) {
-                    cacheDir = new File(applicationContext.getCacheDir(), "com.tapleader");
-                }
-                return createFileDir(cacheDir);
-            }
-        }
-
-        @Override
-        File getFilesDir() {
-            synchronized (lock) {
-                if (filesDir == null) {
-                    filesDir = new File(applicationContext.getFilesDir(), "com.tapleader");
-                }
-                return createFileDir(filesDir);
-            }
+            return createFileDir(filesDir);
         }
     }
 }

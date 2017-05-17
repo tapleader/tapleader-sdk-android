@@ -33,37 +33,40 @@ class ServiceHandler implements NetworkObserver {
     }
 
     void installNotifier(String body, HttpResponse httpResponse) {
-        handleRequest(Constants.Api.NEW_INSTALL, body,true,true, httpResponse);
+        handleRequest(Constants.Endpoint.NEW_INSTALL, body,true,true, httpResponse);
     }
 
     void activityTracking(String body, HttpResponse httpResponse) {
-        //handleRequest(Constants.Api.ACTIVITY_TRACKING,body,true,true,httpResponse);
+        handleRequest(Constants.Endpoint.ACTIVITY_TRACKING,body,true,true,httpResponse);
+       /* HttpRequest httpRequest = new HttpRequest(Constants.test,true, httpResponse);
+        httpRequest.execute(body);*/
     }
 
     void crashReport(String body, HttpResponse httpResponse) {
-        handleRequest(Constants.Api.CRASH_REPORT, body,false,false, httpResponse);
+        handleRequest(Constants.Endpoint.CRASH_REPORT, body,false,false, httpResponse);
     }
 
     void packageUpdate(String body, HttpResponse httpResponse) {
-        // handleRequest(Constants.Api.PACKAGE_UPDATE,body,httpResponse);
+        // handleRequest(Constants.Endpoint.PACKAGE_UPDATE,body,httpResponse);
     }
 
     void userAccountData(String body, HttpResponse httpResponse) {
-        //handleRequest(Constants.Api.USER_ACCOUNT_DATA,body,httpResponse);
+        //handleRequest(Constants.Endpoint.USER_ACCOUNT_DATA,body,httpResponse);
     }
 
     void pingPong(HttpResponse httpResponse){
-        HttpRequest httpRequest = new HttpRequest(urlGen(Constants.Api.PING_PONG),false, httpResponse);
+        HttpRequest httpRequest = new HttpRequest(urlGen(Constants.Endpoint.PING_PONG),false, httpResponse);
         httpRequest.execute();
     }
 
-    private void handleRequest(String url, String body,Boolean crashReporter,boolean supportOffilne, HttpResponse httpResponse) {
+    void retention(String body,HttpResponse httpResponse){
+       handleRequest(urlGen(Constants.Endpoint.SECOND_LAUNCH),body,true,true,httpResponse);
+    }
+    private void handleRequest(String url, String body,boolean crashReporter,boolean supportOffline, HttpResponse httpResponse) {
         if (isConnected) {
             HttpRequest httpRequest = new HttpRequest(urlGen(url),crashReporter, httpResponse);
             httpRequest.execute(body);
-        } else if(supportOffilne) {
-            // TODO: 2017-03-01 offline handler should be implemented here
-            //offlineStore.store(url, body);
+        } else if(supportOffline) {
             TModels.TOfflineRecord record=new TModels.TOfflineRecord();
             record.setDate(TUtils.getDateTime());
             record.setPath(url);

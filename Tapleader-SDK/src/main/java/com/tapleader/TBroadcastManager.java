@@ -1,10 +1,16 @@
 package com.tapleader;
 
+import android.app.AlarmManager;
+import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.ServiceConnection;
+import android.content.pm.PackageManager;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.os.IBinder;
 import android.util.Log;
 
 import org.json.JSONException;
@@ -28,12 +34,15 @@ public class TBroadcastManager extends BroadcastReceiver {
     private static AtomicBoolean isConnectedToServer = new AtomicBoolean(false);
     private static AtomicBoolean isConnectedTONetwork = new AtomicBoolean(false);
     private static AtomicBoolean isTryingToPingPong = new AtomicBoolean(false);
+    private static AtomicBoolean isAlarmManagerSet = new AtomicBoolean(false);
     private static NetworkInfo activeNetInfo;
     private static NetworkInfo activeNetwork;
     private static Object MUTEX = new Object();
     private static final long MAX_LAT = 120000;
     private static final long MIN_LAT = 60000;
+    private static final long INTERVAL= 10 * 60 * 1000;
     private static Context context;
+    private AlarmManager alarmMgr;
 
     public TBroadcastManager() {
 
@@ -42,6 +51,7 @@ public class TBroadcastManager extends BroadcastReceiver {
     public TBroadcastManager(Context context) {
         this.context = context;
         doPingPong();
+        setAlarm(context);
     }
 
     private static boolean checkInstantly(Context context) {
@@ -85,8 +95,31 @@ public class TBroadcastManager extends BroadcastReceiver {
             case Constants.Action.ACTION_RESTART_SERVICE:
                 TUtils.startService(context, TService.class);
                 break;
+            case Constants.Action.ACTION_ALARM_MANAGER:
+                Log.d(TAG,"ALARM : "+Constants.Action.ACTION_ALARM_MANAGER);
+                notifyService(context);
+                break;
         }
 
+    }
+
+    private void notifyService(final Context context) {
+        synchronized (MUTEX) {
+            ServiceConnection mConnection = new ServiceConnection() {
+                @Override
+                public void onServiceConnected(ComponentName name, IBinder service) {
+                    TService.TBinder binder = (TService.TBinder) service;
+                    binder.handleAlarmMangerRequest();
+                    context.unbindService(this);
+                }
+
+                @Override
+                public void onServiceDisconnected(ComponentName name) {
+                    Log.d(TAG, "Alarm Manager Done!");
+                }
+            };
+            context.bindService(new Intent(context, TService.class), mConnection, context.BIND_AUTO_CREATE);
+        }
     }
 
     private void pushUpdateMessage(boolean state, boolean pingPong) {
@@ -172,5 +205,26 @@ public class TBroadcastManager extends BroadcastReceiver {
                 cancel();
             }
         }, MIN_LAT, MAX_LAT);
+    }
+
+
+    public void setAlarm(Context context) {
+        if(isAlarmManagerSet.get())
+            return;
+        isAlarmManagerSet.set(true);
+        Log.d(TAG,"alarmIntent Set!");
+        alarmMgr = (AlarmManager)context.getSystemService(Context.ALARM_SERVICE);
+        Intent intent = new Intent();
+        intent.setAction(Constants.Action.ACTION_ALARM_MANAGER);
+        PendingIntent alarmIntent = PendingIntent.getBroadcast(context, 0, intent, 0);
+
+        alarmMgr.setRepeating(AlarmManager.RTC_WAKEUP,
+                System.currentTimeMillis()+INTERVAL,INTERVAL, alarmIntent);
+        ComponentName receiver = new ComponentName(context, TBroadcastManager.class);
+        PackageManager pm = context.getPackageManager();
+
+        pm.setComponentEnabledSetting(receiver,
+                PackageManager.COMPONENT_ENABLED_STATE_ENABLED,
+                PackageManager.DONT_KILL_APP);
     }
 }

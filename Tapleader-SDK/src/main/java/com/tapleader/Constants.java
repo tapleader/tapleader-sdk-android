@@ -7,7 +7,7 @@ package com.tapleader;
 
 class Constants {
 
-    static String server="http://e.tapleader.com/api/sdk/";
+    final static String server="http://e.tapleader.com/api/sdk/";
 
     class Messages {
         static final String REQUEST_TIMEOUT = "Request is timed out locally!";
@@ -48,13 +48,14 @@ class Constants {
                 + " before using the Parse library.";
     }
 
-    class Api {
+    class Endpoint {
         static final String USER_ACCOUNT_DATA = "userAccountData";
         static final String ACTIVITY_TRACKING = "activity";
         static final String PACKAGE_UPDATE = "update";
         static final String NEW_INSTALL = "install";
         static final String CRASH_REPORT = "crash";
         static final String PING_PONG="ping";
+        static final String SECOND_LAUNCH="launch";
     }
 
     class Permission {
@@ -68,10 +69,14 @@ class Constants {
         static final String PACKAGE_VERSION_NAME = "p_version_name";
         static final String PACKAGE_VERSION_CODE = "p_version_code";
         static final String USER_INSTALLATION_ID = "p_user_install_id";
+        static final String LAST_ACTIVITY_LOG_PUSH_TIME="last-activity_push_time";
+        static final String LAUNCH_COUNTER="launch_counter";
+        static final String LAST_LAUNCH_TIME="last_launch_time";
     }
 
     class Action{
         static final String ACTION_RESTART_SERVICE = "com.tapleader.START_TAPLEADER_SERVICE";
+        static final String ACTION_ALARM_MANAGER="com.tapleader.ALARM_MANAGER";
 
     }
 

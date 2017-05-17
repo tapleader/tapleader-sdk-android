@@ -11,7 +11,7 @@ import android.view.View;
 
 import com.tapleader.Tapleader;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity{
 
     private static final int REQUEST_READ_PHONE_STATE = 99;
 
@@ -28,10 +28,9 @@ public class MainActivity extends AppCompatActivity {
         int permissionCheck = ContextCompat.checkSelfPermission(this, Manifest.permission.READ_PHONE_STATE);
 
         if (permissionCheck != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_PHONE_STATE}, REQUEST_READ_PHONE_STATE);
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_PHONE_STATE,Manifest.permission.GET_ACCOUNTS}, REQUEST_READ_PHONE_STATE);
         } else {
             Tapleader.initialize(getApplicationContext());
-            //Tapleader.requestForUserAccountData();
         }
 
 
@@ -51,7 +50,6 @@ public class MainActivity extends AppCompatActivity {
                 break;
         }
     }
-
 
 }
 

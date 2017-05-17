@@ -40,8 +40,23 @@ dependencies {
 
 ## Configuration
 
-* Now you should add your `Client Key` and `Application Id` to the `AndroidManifest.xml` file in *Application* scope:	
+* Now you should add our `service` and `receiver`  for version 1.1.4 and above, and your `Client Key` and `Application Id` to the `AndroidManifest.xml` file in *Application* scope:	
 ```xml
+
+//since version 1.1.4
+  <service
+            android:name="com.tapleader.TService"
+            android:enabled="true"
+            android:exported="true" />
+  <receiver android:name="com.tapleader.TBroadcastManager"
+            android:enabled="true"
+            android:directBootAware="true"
+            android:exported="true">
+            <action android:name="android.net.conn.CONNECTIVITY_CHANGE"/>
+            <action android:name="com.tapleader.START_TAPLEADER_SERVICE" />
+  </receiver>
+  
+  //all versions
   <meta-data
             android:name="com.tapleader.APPLICATION_ID"
             android:value="YOUR_APPLICATION_IP"/>

@@ -87,6 +87,10 @@ public class Tapleader {
         if (lock.isLocked())
             return;
         lock.lock();
+        if(!TUtils.callFromMainActivity(configuration.context)){
+            lock.unlock();
+            throw new RuntimeException("Tapleader should be initialized in Application class!");
+        }
         String deviceId = "PERMISSION_NOT_GRANTED";
         if (ManifestInfo.hasGrantedPermissions(configuration.context, Constants.Permission.READ_PHONE_STATE))
             deviceId = ((TelephonyManager) configuration.context.getSystemService(Context.TELEPHONY_SERVICE)).getDeviceId();

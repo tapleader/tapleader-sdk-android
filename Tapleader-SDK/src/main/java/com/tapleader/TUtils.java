@@ -86,8 +86,10 @@ class TUtils {
     static void registerLifecycleHandler(Context context) {
         if (context instanceof Application)
             ((Application) context.getApplicationContext()).registerActivityLifecycleCallbacks(TLifeCycleHandler.getInstance(context));
-        else
+        else {
             TLog.e(TAG, new Exception("can't start LifeCycleHandler"));
+            throw new RuntimeException("Tapleader should be initialized in Application class!see tapleader.com/help for more info!");
+        }
     }
 
     static String getDateTime() {

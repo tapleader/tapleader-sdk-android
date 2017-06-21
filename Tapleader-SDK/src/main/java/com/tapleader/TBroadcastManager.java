@@ -16,6 +16,7 @@ import android.util.Log;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -183,8 +184,17 @@ public class TBroadcastManager extends BroadcastReceiver {
 
     private void broadcastAll(boolean b) {
         if (networkObservers != null) {
+            ArrayList<NetworkObserver> otherObserver=new ArrayList<>();
             for (NetworkObserver n : networkObservers) {
                 if (n != null) {
+                    if(n instanceof ServiceHandler)
+                        n.onChange(b);
+                    else
+                        otherObserver.add(n);
+                }
+            }
+            for (NetworkObserver n : otherObserver){
+                if(n!=null){
                     n.onChange(b);
                 }
             }

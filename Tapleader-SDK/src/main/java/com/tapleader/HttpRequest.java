@@ -24,10 +24,13 @@ import java.net.URL;
 @TargetApi(Build.VERSION_CODES.CUPCAKE)
 class HttpRequest extends AsyncTask<Object, Void, JSONObject> {
     private static final String TAG = "HttpRequest";
+    private static final int CONNECT_TIMEOUT=10000;
+    private static final int READ_TIMEOUT=20000;
     private boolean crashReportEnable = true;
     private boolean isCanceled = false;
     private HttpResponse httpResponse;
     private String url;
+    private int retryCounter=0;
 
     public HttpRequest(String url, Boolean crashReportEnable, HttpResponse httpResponse) {
         this.crashReportEnable = crashReportEnable;
@@ -60,20 +63,16 @@ class HttpRequest extends AsyncTask<Object, Void, JSONObject> {
         String str = "";
         try {
             str = sendPost(url, body);
-            result = new JSONObject(str);
+            if(str!=null && !str.isEmpty())
+                result = new JSONObject(str);
+            else
+                return getFailResult("no response from server");
         } catch (Exception e) {
             if (crashReportEnable) {
                 TLog.e(TAG, e);
             }
             e.printStackTrace();
-            result = new JSONObject();
-            try {
-                result.put("Status", Constants.Code.REQUEST_ERROR);
-                result.put("Message", str);
-                result.put("InstallationId",-1);
-            } catch (JSONException e1) {
-                //never mind:D
-            }
+            result = getFailResult(e.getMessage());
         }
         return result;
     }
@@ -97,6 +96,8 @@ class HttpRequest extends AsyncTask<Object, Void, JSONObject> {
     private String sendPost(String url, String body) throws IOException {
         URL obj = new URL(url);
         HttpURLConnection con = (HttpURLConnection) obj.openConnection();
+        con.setConnectTimeout(CONNECT_TIMEOUT);
+        con.setReadTimeout(READ_TIMEOUT);
         con.setRequestMethod("POST");
         con.setRequestProperty("User-Agent", System.getProperty("http.agent"));
         con.setRequestProperty("Content-Type", "application/json; charset=utf-8");
@@ -110,17 +111,36 @@ class HttpRequest extends AsyncTask<Object, Void, JSONObject> {
         wr.close();
 
         int responseCode = con.getResponseCode();
+        if(responseCode==200) {
+            BufferedReader in = new BufferedReader(
+                    new InputStreamReader(con.getInputStream()));
+            String inputLine;
+            StringBuffer response = new StringBuffer();
 
-        BufferedReader in = new BufferedReader(
-                new InputStreamReader(con.getInputStream()));
-        String inputLine;
-        StringBuffer response = new StringBuffer();
-
-        while ((inputLine = in.readLine()) != null) {
-            response.append(inputLine);
+            while ((inputLine = in.readLine()) != null) {
+                response.append(inputLine);
+            }
+            in.close();
+            return response.toString();
+        }else if(retryCounter<3){
+            retryCounter++;
+            return sendPost(url,body);
+        }else {
+            return "";
         }
-        in.close();
-        return response.toString();
+    }
+
+
+    private JSONObject getFailResult(String message){
+        JSONObject result = new JSONObject();
+        try {
+            result.put("Status", Constants.Code.REQUEST_ERROR);
+            result.put("Message", message);
+            result.put("InstallationId",-1);
+        } catch (JSONException e1) {
+            //never mind:D
+        }
+        return result;
     }
 
 

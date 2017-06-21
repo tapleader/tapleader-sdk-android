@@ -93,6 +93,7 @@ public class TService extends Service implements NetworkObserver {
         Log.d(TAG,"onChange");
         isConnectedToNet.set(isConnected);
         if(isConnected && mOfflineStore!=null){
+
             binder.handleRequests(mOfflineStore.getAllRequests());
         }
     }

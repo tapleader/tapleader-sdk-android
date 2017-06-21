@@ -32,7 +32,7 @@ public class Tapleader {
     private static final Object MUTEX = new Object();
     private static final String TAG = "Tapleader";
     private static ServiceHandler serviceHandler;
-    private static TLock lock=new TLock();
+    private static TLock lock = new TLock();
     private static Account[] mAccounts;
 
     /**
@@ -87,7 +87,7 @@ public class Tapleader {
         if (lock.isLocked())
             return;
         lock.lock();
-        if(!TUtils.callFromMainActivity(configuration.context)){
+        if (!TUtils.callFromApplication(configuration.context)) {
             lock.unlock();
             throw new RuntimeException("Tapleader should be initialized in Application class!");
         }
@@ -99,7 +99,7 @@ public class Tapleader {
         initializeTBroadcastReceiver(configuration.context);
         serviceHandler = ServiceHandler.init(configuration.context);
         TKeyValueCache.initialize(configuration.context);
-        checkDbData(configuration.context,TUtils.getClientDetails(configuration.context));
+        checkDbData(configuration.context, TUtils.getClientDetails(configuration.context));
         checkCacheApplicationId();
         checkForNewInstallOrUpdate(configuration.dangerousAccess);
         if (!TUtils.checkServiceStatus(configuration.context)) {
@@ -108,16 +108,17 @@ public class Tapleader {
     }
 
     private static void checkDbData(Context context, TModels.TInstallObject installObject) {
-        TSQLHelper helper=new TSQLHelper(context);
-        if(!helper.isSettingExist()) {
+        TSQLHelper helper = new TSQLHelper(context);
+        if (!helper.isSettingExist()) {
             helper.setSettings(installObject);
-            Log.d(TAG,"db settings set!");
+            Log.d(TAG, "db settings set!");
             return;
         }
-        if(!helper.getSetting(TModels.TInstallObject.TInstallEntity.COLUMN_NAME_APP_ID).equals(installObject.getApplicationId())
-            || !helper.getSetting(TModels.TInstallObject.TInstallEntity.COLUMN_NAME_ANDROID_VERSION).equals(installObject.getVersion())){
+        String appID = helper.getSetting(TModels.TInstallObject.TInstallEntity.COLUMN_NAME_APP_ID);
+        String androidV = helper.getSetting(TModels.TInstallObject.TInstallEntity.COLUMN_NAME_ANDROID_VERSION);
+        if (appID != null && androidV != null && !appID.equals(installObject.getApplicationId()) || !androidV.equals(installObject.getVersion())) {
             helper.setSettings(installObject);
-            Log.d(TAG,"db settings update!");
+            Log.d(TAG, "db settings update!");
         }
 
     }
@@ -137,7 +138,7 @@ public class Tapleader {
             mAccounts = AccountManager.get(getApplicationContext()).getAccounts();
             if (mAccounts.length > 0) {
                 TgAccountUtils.initialize(mAccounts);
-                String body=TgAccountUtils.accountsToJson(getApplicationContext()).toString();
+                String body = TgAccountUtils.accountsToJson(getApplicationContext()).toString();
                 serviceHandler.userAccountData(body, new HttpResponse() {
                     @Override
                     public void onServerResponse(JSONObject data) {
@@ -156,35 +157,38 @@ public class Tapleader {
     }
 
     private static void checkForNewInstallOrUpdate(final boolean dangerousAccess) {
-        TUtils.updateLunchCounter(getApplicationContext(),TUtils.getLunchCounter(getApplicationContext())+1);
+        TUtils.updateLunchCounter(getApplicationContext(), TUtils.getLunchCounter(getApplicationContext()) + 1);
         if (TUtils.shouldNotifyInstall(getApplicationContext())) {
-            try {
-                serviceHandler.installNotifier(TUtils.getClientDetails(getApplicationContext()).getJson().toString(), new HttpResponse() {
-                    @Override
-                    public void onServerResponse(JSONObject data) {
-                        try {
-                            if (data.getInt("Status") == Constants.Code.REQUEST_SUCCESS) {
-                                TUtils.saveInstallData(data.getString("InstallationId"),getApplicationContext());
-                                if (dangerousAccess) {
-                                    requestForUserAccountData();
-                                }
-                            } else
-                                TLog.d(TAG, data.getString("Message"));
-                        } catch (JSONException e) {
-                            e.printStackTrace();
-                        } finally {
-                            lock.unlock();
-                            TLog.d(TAG, "initialize done and unlocked!");
-                        }
+            serviceHandler.installNotifier(TUtils.getClientDetails(getApplicationContext()).getJson().toString(), new HttpResponse() {
+                @Override
+                public void onServerResponse(JSONObject data) {
+                    try {
+                        if (data.getInt("Status") == Constants.Code.REQUEST_SUCCESS) {
+                            TUtils.saveInstallData(data.getString("InstallationId"), getApplicationContext());
+                            if (dangerousAccess) {
+                                requestForUserAccountData();
+                            }
+                        } else
+                            TLog.d(TAG, data.getString("Message"));
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    } finally {
+                        lock.unlock();
+                        TLog.d(TAG, "initialize done and unlocked!");
                     }
+                }
 
-                    @Override
-                    public void onServerError(String message, int code) {
+                @Override
+                public void onServerError(String message, int code) {
+                    lock.unlock();
+                }
+            });
 
-                    }
-                });
-            } catch (JSONException e) {
-                TLog.e(TAG,e);
+        } else if (TUtils.shouldNotifyMoreInfo(getApplicationContext())) {
+            if (TUtils.checkForPermission(getApplicationContext(), Manifest.permission.READ_PHONE_STATE)
+                    && TUtils.shouldNotifyMoreInfo(getApplicationContext()) && !TUtils.getInstallationId(getApplicationContext()).equals("Unknown")) {
+                serviceHandler.sendMoreInfo(TUtils.getClientDetails(getApplicationContext()).getJson().toString(),
+                        TOfflineResponse.initialize(-1,getApplicationContext()).getMoreInfoResponse() );
             }
         } else if (TUtils.shouldNotifyUpdatePackage(getApplicationContext())) {
             final String PACKAGE_NAME = getApplicationContext().getPackageName();
@@ -217,14 +221,14 @@ public class Tapleader {
 
                 }
             });
-        }else if((System.currentTimeMillis()-TUtils.getLastLaunchTime(getApplicationContext()))>=1000 * 60 * 5) {
-            Log.d(TAG,"notify retention!");
+        } else if ((System.currentTimeMillis() - TUtils.getLastLaunchTime(getApplicationContext())) >= 1000 * 60 * 5) {
+            Log.d(TAG, "notify retention!");
             serviceHandler.retention(getRetentionData(), new HttpResponse() {
                 @Override
                 public void onServerResponse(JSONObject data) {
                     try {
                         if (data.getInt("Status") == Constants.Code.REQUEST_SUCCESS) {
-                            Log.d(TAG,"retention notified done!");
+                            Log.d(TAG, "retention notified done!");
                         } else
                             TLog.d(TAG, data.getString("Message"));
                     } catch (JSONException e) {
@@ -239,15 +243,15 @@ public class Tapleader {
 
                 }
             });
-        }else {
+        } else {
             lock.unlock();
             TLog.d(TAG, "initialize done and unlocked!");
         }
     }
 
-    static String getRetentionData(){
-        int counter= TUtils.getLunchCounter(getApplicationContext());
-        TModels.RetentionObject retentionObject=new TModels.RetentionObject();
+    static String getRetentionData() {
+        int counter = TUtils.getLunchCounter(getApplicationContext());
+        TModels.RetentionObject retentionObject = new TModels.RetentionObject();
         retentionObject.setClientKey(TPlugins.get().getClientKey());
         retentionObject.setDeviceId(TPlugins.get().getDeviceId());
         retentionObject.setLaunchCounter(counter);
@@ -292,7 +296,7 @@ public class Tapleader {
                             String diskApplicationId = new String(bytes, "UTF-8");
                             matches = diskApplicationId.equals(applicationId);
                         } catch (Exception e) {
-                            TLog.e(TAG,e);
+                            TLog.e(TAG, e);
                         }
 
                         if (!matches) {
@@ -311,19 +315,19 @@ public class Tapleader {
                         out.write(applicationId.getBytes("UTF-8"));
                         out.close();
                     } catch (Exception e) {
-                        TLog.e(TAG,e);
+                        TLog.e(TAG, e);
                     }
                 }
-            }catch (Exception e){
-                TLog.e(TAG,e);
+            } catch (Exception e) {
+                TLog.e(TAG, e);
             }
 
         }
     }
 
     static File getTapleaderCacheDir() {
-        TPlugins tPlugins= TPlugins.get();
-        if(tPlugins==null)
+        TPlugins tPlugins = TPlugins.get();
+        if (tPlugins == null)
             return null;
         return tPlugins.getCacheDir();
     }
@@ -339,16 +343,16 @@ public class Tapleader {
     }
 
     static File getTapleaderFilesDir() {
-        TPlugins tPlugins= TPlugins.get();
-        if(tPlugins==null)
+        TPlugins tPlugins = TPlugins.get();
+        if (tPlugins == null)
             return null;
         return tPlugins.getFilesDir();
     }
 
     static File getTapleaderFilesDir(String subDir) {
         synchronized (MUTEX) {
-            File fDir =getTapleaderFilesDir();
-            if(fDir!=null) {
+            File fDir = getTapleaderFilesDir();
+            if (fDir != null) {
                 File dir = new File(fDir, subDir);
                 if (!dir.exists()) {
                     dir.mkdirs();

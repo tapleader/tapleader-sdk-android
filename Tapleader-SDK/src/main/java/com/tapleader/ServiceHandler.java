@@ -57,6 +57,11 @@ class ServiceHandler implements NetworkObserver {
         httpRequest.execute();
     }
 
+    void sendMoreInfo(String body, HttpResponse httpResponse){
+        String installId=TUtils.getInstallationId(context);
+        handleRequest(Constants.Endpoint.NEW_INSTALL+"/"+installId, body,true,true, httpResponse);
+    }
+
     void retention(String body,HttpResponse httpResponse){
        handleRequest(Constants.Endpoint.SECOND_LAUNCH,body,true,true,httpResponse);
     }

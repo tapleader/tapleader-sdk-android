@@ -24,7 +24,9 @@ class TOfflineResponse {
                     TUtils.saveInstallData(data.getString("InstallationId"),context);
                     OfflineStore.initialize(context).deleteInstallRecords();
                 } else if(status == Constants.Code.NOT_COMPATIBLE_APPLICATION_ID_AND_CLIENT_KEY){
-                    TLog.d(TAG, data.getString("Message"));
+                    TLog.d(TAG, "\n==================WARNING=====================\n"
+                            +data.getString("Message")
+                    + "\n================================================\n");
                     OfflineStore.initialize(context).deleteRequest(id);
                 }else {
                     //do nothing
@@ -94,6 +96,30 @@ class TOfflineResponse {
 
         }
     };
+
+    private HttpResponse moreInfoResponse=new HttpResponse() {
+        @Override
+        public void onServerResponse(JSONObject data) {
+            int status= 0;
+            try {
+                status = data.getInt("Status");
+                if (status == Constants.Code.REQUEST_SUCCESS) {
+                    TUtils.updateMoreInfo(context,false);
+                }
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
+
+        @Override
+        public void onServerError(String message, int code) {
+
+        }
+    };
+
+    public HttpResponse getMoreInfoResponse() {
+        return moreInfoResponse;
+    }
 
     HttpResponse getRetentionResponse(){
         return retentionResponse;

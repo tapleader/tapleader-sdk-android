@@ -72,29 +72,30 @@ class OfflineStore{
         TSQLHelper helper=new TSQLHelper(context);
         long id=-1l;
         TModels.TOfflineRecord old=null;
+        String installId=TUtils.getInstallationId(context);
         if(record!=null) {
-            switch (record.getPath()){
-                case Constants.Endpoint.NEW_INSTALL:
-                    old=isInstallRecordExist();
-                    if(old!=null){
-                        id=old.getId();
-                        helper.updateOfflineRecordId(record,id);
-                    }else {
-                        id = helper.insertNewOfflineRecord(record);
-                    }
-                    break;
-                case Constants.Endpoint.ACTIVITY_TRACKING:
+            if(record.getPath().equals(Constants.Endpoint.NEW_INSTALL)){
+                old=isInstallRecordExist();
+                if(old!=null){
+                    id=old.getId();
+                    helper.updateOfflineRecordId(record,id);
+                }else {
                     id = helper.insertNewOfflineRecord(record);
-                    break;
-                case Constants.Endpoint.SECOND_LAUNCH:
-                    old=isRecordExist(Constants.Endpoint.SECOND_LAUNCH);
-                    if(old!=null){
-                        id=old.getId();
-                        helper.updateOfflineRecordId(record,id);
-                    }else {
-                        id= helper.insertNewOfflineRecord(record);
-                    }
-                    break;
+                }
+            }else if(record.getPath().equals(Constants.Endpoint.ACTIVITY_TRACKING)){
+                id = helper.insertNewOfflineRecord(record);
+            }else if(record.getPath().equals(Constants.Endpoint.SECOND_LAUNCH)){
+                old=isRecordExist(Constants.Endpoint.SECOND_LAUNCH);
+                if(old!=null){
+                    id=old.getId();
+                    helper.updateOfflineRecordId(record,id);
+                }else {
+                    id= helper.insertNewOfflineRecord(record);
+                }
+            }else if(record.getPath().equals(Constants.Endpoint.NEW_INSTALL.concat("/"+installId))){
+                old=isRecordExist(record.getBody());
+                if(old==null)
+                    id= helper.insertNewOfflineRecord(record);
             }
         }
         return id;

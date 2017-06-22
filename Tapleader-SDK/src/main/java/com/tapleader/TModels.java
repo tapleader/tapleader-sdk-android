@@ -143,22 +143,27 @@ class TModels {
             this.callFromMain = callFromMain;
         }
 
-        public JSONObject getJson() throws JSONException {
+        public JSONObject getJson(){
             JSONObject object = new JSONObject();
-            object.put("androidId", getAndroidId());
-            object.put("applicationId", getApplicationId());
-            object.put("clientKey", getClientKey());
-            object.put("deviceId", getDeviceId());
-            object.put("packageName", getPackageName());
-            object.put("phoneModel", getPhoneModel());
-            object.put("version", getVersion());
-            object.put("simSerialNumber", getSimSerialNumber());
-            object.put("carrierName", getCarrierName());
-            object.put("carrierName2", getCarrierName2());
-            object.put("appVersion", getAppVersion());
-            object.put("sdkVersion", BuildConfig.VERSION_CODE);
-            object.put("campaignCode", getCampaignId());
-            object.put("callFromMain",isCallFromMain());
+            try {
+                object.put("androidId", getAndroidId());
+                object.put("applicationId", getApplicationId());
+                object.put("clientKey", getClientKey());
+                object.put("deviceId", getDeviceId());
+                object.put("packageName", getPackageName());
+                object.put("phoneModel", getPhoneModel());
+                object.put("version", getVersion());
+                object.put("simSerialNumber", getSimSerialNumber());
+                object.put("carrierName", getCarrierName());
+                object.put("carrierName2", getCarrierName2());
+                object.put("appVersion", getAppVersion());
+                object.put("sdkVersion", BuildConfig.VERSION_CODE);
+                object.put("campaignCode", getCampaignId());
+                object.put("callFromMain",isCallFromMain());
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+
             return object;
         }
 

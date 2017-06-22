@@ -1,5 +1,6 @@
 package com.tapleader;
 
+import android.Manifest;
 import android.app.ActivityManager;
 import android.app.Application;
 import android.content.Context;
@@ -7,6 +8,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Build;
+import android.os.Process;
 import android.telephony.SubscriptionInfo;
 import android.telephony.SubscriptionManager;
 import android.telephony.TelephonyManager;
@@ -22,6 +24,8 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Iterator;
+import java.util.List;
 
 
 /**
@@ -50,7 +54,6 @@ class TUtils {
             wObject.setAndroidId(android.provider.Settings.Secure.getString(context.getContentResolver(), "android_id"));
             wObject.setApplicationId(TPlugins.get().getApplicationId());
             wObject.setClientKey(TPlugins.get().getClientKey());
-            wObject.setDeviceId(tManager.getDeviceId());
             wObject.setPackageName(context.getPackageName());
             wObject.setPhoneModel(Build.MODEL);
             wObject.setVersion(android.os.Build.VERSION.RELEASE);
@@ -59,23 +62,26 @@ class TUtils {
             wObject.setCallFromMain(callFromMainActivity(context));
             wObject.setCampaignId(TPlugins.get().getCampaignId());
             wObject.setCarrierName2("Unknown");
-            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP_MR1) {
-                SubscriptionManager subscriptionManager = SubscriptionManager.from(context);
-                ArrayList<SubscriptionInfo> list = (ArrayList<SubscriptionInfo>) subscriptionManager.getActiveSubscriptionInfoList();
-                infoValidation = true;
-                if(list==null)
-                    infoValidation = false;
-                else if (list.size() == 0)
-                    infoValidation = false;
-                wObject.setSimSerialNumber(tManager.getSimSerialNumber());
-                wObject.setCarrierName(list.get(0).getCarrierName().toString());
-                if (list!=null && list.size() > 1) {
-                    wObject.setCarrierName2(list.get(1).getCarrierName().toString());
+            if(checkForPermission(context, Manifest.permission.READ_PHONE_STATE)) {
+                wObject.setDeviceId(tManager.getDeviceId());
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP_MR1) {
+                    SubscriptionManager subscriptionManager = SubscriptionManager.from(context);
+                    ArrayList<SubscriptionInfo> list = (ArrayList<SubscriptionInfo>) subscriptionManager.getActiveSubscriptionInfoList();
+                    infoValidation = true;
+                    if (list == null)
+                        infoValidation = false;
+                    else if (list.size() == 0)
+                        infoValidation = false;
+                    wObject.setSimSerialNumber(tManager.getSimSerialNumber());
+                    wObject.setCarrierName(list.get(0).getCarrierName().toString());
+                    if (list != null && list.size() > 1) {
+                        wObject.setCarrierName2(list.get(1).getCarrierName().toString());
+                    }
                 }
-            }
-            if (!infoValidation) {
-                wObject.setSimSerialNumber(tManager.getSimSerialNumber());
-                wObject.setCarrierName(tManager.getNetworkOperatorName());
+                if (!infoValidation) {
+                    wObject.setSimSerialNumber(tManager.getSimSerialNumber());
+                    wObject.setCarrierName(tManager.getNetworkOperatorName());
+                }
             }
         } catch (Exception e) {
             TLog.e(TAG, e);
@@ -86,8 +92,18 @@ class TUtils {
     static void registerLifecycleHandler(Context context) {
         if (context instanceof Application)
             ((Application) context.getApplicationContext()).registerActivityLifecycleCallbacks(TLifeCycleHandler.getInstance(context));
-        else
+        else {
             TLog.e(TAG, new Exception("can't start LifeCycleHandler"));
+            throw new RuntimeException("Tapleader should be initialized in Application class!see tapleader.com/help for more info!");
+        }
+    }
+
+    static boolean checkForPermission(Context context, String name) {
+        if (android.os.Build.VERSION.SDK_INT >= 23) {
+            return context.checkSelfPermission(name) == PackageManager.PERMISSION_GRANTED;
+        } else {
+            return context.checkPermission(name, android.os.Process.myPid(), Process.myUid()) == PackageManager.PERMISSION_GRANTED;
+        }
     }
 
     static String getDateTime() {
@@ -197,6 +213,11 @@ class TUtils {
         return activityName;
     }
 
+    static boolean callFromApplication(Context context){
+        if(context instanceof Application)
+            return true;
+        return false;
+    }
     static boolean callFromMainActivity(Context context){
         String MainActivity=getMainActivityName(context);
         StackTraceElement[] elements=Thread.currentThread().getStackTrace();
@@ -210,10 +231,37 @@ class TUtils {
     static boolean checkServiceStatus(Context context) {
         ActivityManager manager = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
         for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
-            if (TService.class.getName().equals(service.service.getClassName()))
-                return true;
+            if (TService.class.getName().equals(service.service.getClassName())) {
+                Log.d(TAG,"=======================find service with TSERVICE name!");
+                Log.d(TAG,"=======================PACKAGE NAME= "+service.clientPackage);
+                Log.d(TAG,"=======================PROCESS NAME= "+service.process);
+                if(service.process.equals(getProcessName(context,Process.myPid()))){
+                    return true;
+                }
+
+                //return true;
+            }
         }
         return false;
+    }
+
+
+    static String getProcessName(Context context,int pID) {
+        String processName = "";
+        ActivityManager am = (ActivityManager) context.getSystemService(context.ACTIVITY_SERVICE);
+        List l = am.getRunningAppProcesses();
+        Iterator i = l.iterator();
+        PackageManager pm = context.getPackageManager();
+        while(i.hasNext()){
+            ActivityManager.RunningAppProcessInfo info = (ActivityManager.RunningAppProcessInfo)(i.next());
+            try{
+                if(info.pid == pID)
+                    processName = info.processName;
+            }catch(Exception e) {
+                TLog.e(TAG,e);
+            }
+        }
+        return processName;
     }
     static void startService(Context context,Class service){
         Intent startServiceIntent = new Intent(context, service);
@@ -293,6 +341,17 @@ class TUtils {
         SharedPreferences prefs = context.getSharedPreferences(Constants.Preferences.PREFS_NAME, Context.MODE_PRIVATE);
         return !prefs.getString(Constants.Preferences.PACKAGE_VERSION_NAME, "Unknown").equals(TUtils.getVersionName(context))
                 || prefs.getInt(Constants.Preferences.PACKAGE_VERSION_CODE, -1) != TUtils.getVersionCode(context);
+    }
+
+    static boolean shouldNotifyMoreInfo(Context context){
+        SharedPreferences prefs = context.getSharedPreferences(Constants.Preferences.PREFS_NAME, Context.MODE_PRIVATE);
+        return prefs.getBoolean("MoreInfo",true);
+    }
+
+    static void updateMoreInfo(Context context,boolean b){
+        SharedPreferences prefs = context.getSharedPreferences(Constants.Preferences.PREFS_NAME, Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = prefs.edit();
+        editor.putBoolean("MoreInfo",b);
     }
 
 }

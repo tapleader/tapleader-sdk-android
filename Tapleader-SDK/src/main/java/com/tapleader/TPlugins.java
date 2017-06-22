@@ -1,6 +1,8 @@
 package com.tapleader;
 
+import android.Manifest;
 import android.content.Context;
+import android.telephony.TelephonyManager;
 
 import java.io.File;
 
@@ -18,7 +20,7 @@ class TPlugins {
     final Object lock = new Object();
     private final String applicationId;
     private final String clientKey;
-    private final String deviceId;
+    private  String deviceId;
     private final String campaignId;
     protected File tapleaderDir;
     protected File cacheDir;
@@ -93,6 +95,9 @@ class TPlugins {
     }
 
     String getDeviceId() {
+        if(deviceId.equals("PERMISSION_NOT_GRANTED") && context!=null && TUtils.checkForPermission(context, Manifest.permission.READ_PHONE_STATE)){
+            deviceId = ((TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE)).getDeviceId();
+        }
         return deviceId;
     }
 

@@ -9,8 +9,6 @@ import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 
-import com.tapleader.Tapleader;
-
 public class MainActivity extends AppCompatActivity{
 
     private static final int REQUEST_READ_PHONE_STATE = 99;
@@ -25,15 +23,12 @@ public class MainActivity extends AppCompatActivity{
                 startActivity(new Intent(MainActivity.this,Main2Activity.class));
             }
         });
+
         int permissionCheck = ContextCompat.checkSelfPermission(this, Manifest.permission.READ_PHONE_STATE);
 
         if (permissionCheck != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_PHONE_STATE,Manifest.permission.GET_ACCOUNTS}, REQUEST_READ_PHONE_STATE);
-        } else {
-            Tapleader.initialize(getApplicationContext());
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_PHONE_STATE, Manifest.permission.GET_ACCOUNTS}, REQUEST_READ_PHONE_STATE);
         }
-
-
 
     }
 
@@ -42,7 +37,7 @@ public class MainActivity extends AppCompatActivity{
         switch (requestCode) {
             case REQUEST_READ_PHONE_STATE:
                 if ((grantResults.length > 0) && (grantResults[0] == PackageManager.PERMISSION_GRANTED)) {
-                    Tapleader.initialize(getApplicationContext());
+
                 }
                 break;
 

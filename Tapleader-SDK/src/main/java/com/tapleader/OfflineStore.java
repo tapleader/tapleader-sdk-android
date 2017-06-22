@@ -93,7 +93,7 @@ class OfflineStore{
                     id= helper.insertNewOfflineRecord(record);
                 }
             }else if(record.getPath().equals(Constants.Endpoint.NEW_INSTALL.concat("/"+installId))){
-                old=isRecordExist(record.getBody());
+                old=isRecordExist(record.getPath());
                 if(old==null)
                     id= helper.insertNewOfflineRecord(record);
             }
@@ -154,6 +154,7 @@ class OfflineStore{
         list.addAll(helper.getOfflineRecords(Constants.Endpoint.NEW_INSTALL));
         list.addAll(helper.getOfflineRecords(Constants.Endpoint.ACTIVITY_TRACKING));
         list.addAll(helper.getOfflineRecords(Constants.Endpoint.SECOND_LAUNCH));
+        list.addAll(helper.getOfflineRecords(Constants.Endpoint.NEW_INSTALL+"/"+TUtils.getInstallationId(context)));
         helper.close();
         return list;
     }

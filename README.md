@@ -33,30 +33,15 @@ allprojects {
 * Add the dependency to your app module `build.gradle`
 ```gradle
 dependencies {
-        compile 'com.github.tapleader:tapleader-sdk-android:v1.2.0'
+        compile 'com.github.tapleader:tapleader-sdk-android:v1.3.0'
 	//...
 }
 ```
 
 ## Configuration
 
-* Now you should add our `service` and `receiver`  for version 1.1.4 and above, and your `Client Key` and `Application Id` to the `AndroidManifest.xml` file in *Application* scope:	
+* Now you should add your `Client Key` and `Application Id` to the `AndroidManifest.xml` file in *Application* scope:
 ```xml
-
-//since version 1.1.4
-  <service
-            android:name="com.tapleader.TService"
-            android:enabled="true"
-            android:exported="true" />
-  <receiver android:name="com.tapleader.TBroadcastManager"
-            android:enabled="true"
-            android:directBootAware="true"
-            android:exported="true">
-            <action android:name="android.net.conn.CONNECTIVITY_CHANGE"/>
-            <action android:name="com.tapleader.START_TAPLEADER_SERVICE" />
-  </receiver>
-  
-  //all versions
   <meta-data
             android:name="com.tapleader.APPLICATION_ID"
             android:value="YOUR_APPLICATION_IP"/>
@@ -79,12 +64,33 @@ dependencies {
 
 ## Initializing the SDK
 
+Initial Tapleader in your Application class:
 
-If your app covering device with API 23 and above you should check permissions. after permissions granted initialize Tapleader SDK:
+```java
+public class App extends Application {
+
+    @Override
+    public void onCreate() {
+        super.onCreate();
+        Tapleader.initialize(this);
+    }
+}
+```
+don't forget to register your App class in AndroidManifest.xml :
+
+```xml
+<application
+        android:name=".App"
+        <!-- other attributes -->
+        >
+```
+
+
+Tapleader need Some Safe permission to track user information, If your app covering device with API 23 and above you should grant permissions:
 
 ```java
 
-public class MainActivity extends AppCompatActivity {
+public class ManiActivity extends AppCompatActivity {
 
     private static final int REQUEST_READ_PHONE_STATE = 99;
     @Override
@@ -97,31 +103,7 @@ public class MainActivity extends AppCompatActivity {
         if (permissionCheck != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_PHONE_STATE}, REQUEST_READ_PHONE_STATE);
         }
-        //or permission granted and you should initialize Tapleader here
-        else {
-            Tapleader.initialize(getApplicationContext());
-        }
-    }
-
-    @Override
-    public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
-        switch (requestCode) {
-            case REQUEST_READ_PHONE_STATE:
-                if ((grantResults.length > 0) && (grantResults[0] == PackageManager.PERMISSION_GRANTED)) {
-                    //after requesting permission next step is initializing SDK
-                    Tapleader.initialize(getApplicationContext());
-                }
-                break;
-            default:
-                break;
-        }
     }
 }
 ```
 
-But if your target API is below 23 just add this line in your starting method ( `onCreate`  ) of Activity:
-
-```java
-    Tapleader.initialize(getApplicationContext());
-
-```

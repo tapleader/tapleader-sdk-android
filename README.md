@@ -8,18 +8,7 @@ Before install, [create a tapleader account](http://tapleader.com/account/regist
 
 ## Installing
 
-### Method 1: Install *jar* file
-
-* Download latest version of sdk *jar* file from [release page](https://github.com/tapleader/tapleader-sdk-android/releases):
-* Move this file to */libs* folder of your project.
-* Add this following lines to your **app level module** `buil.gradle` file dependencies:
-```gradle
-dependencies {
-    compile files('libs/tapleader.jar')
-    //...
-}
-```
-### Method 2: Install with `build.gradle`:
+### Install with `build.gradle`:
 
 * Add it in your root `build.gradle` at the end of repositories:
 ```gradle
@@ -76,7 +65,7 @@ public class App extends Application {
     }
 }
 ```
-don't forget to register your App class in AndroidManifest.xml :
+Don't forget to register your App class in AndroidManifest.xml :
 
 ```xml
 <application

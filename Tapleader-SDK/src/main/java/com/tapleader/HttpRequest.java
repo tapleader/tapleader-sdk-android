@@ -29,8 +29,8 @@ class HttpRequest extends AsyncTask<Object, Void, JSONObject> {
     private boolean crashReportEnable = true;
     private boolean isCanceled = false;
     private HttpResponse httpResponse;
-    private String url;
     private int retryCounter=0;
+    private String url;
 
     public HttpRequest(String url, Boolean crashReportEnable, HttpResponse httpResponse) {
         this.crashReportEnable = crashReportEnable;
@@ -45,9 +45,8 @@ class HttpRequest extends AsyncTask<Object, Void, JSONObject> {
             httpResponse.onServerResponse(jsonObject);
             try {
                 int code=jsonObject.getInt("Status");
-                if(code<0){
+                if(code<0)
                     httpResponse.onServerError(jsonObject.getString("Message"),code);
-                }
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -138,7 +137,7 @@ class HttpRequest extends AsyncTask<Object, Void, JSONObject> {
             result.put("Message", message);
             result.put("InstallationId",-1);
         } catch (JSONException e1) {
-            //never mind:D
+            e1.printStackTrace();
         }
         return result;
     }

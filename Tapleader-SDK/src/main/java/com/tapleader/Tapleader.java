@@ -188,7 +188,7 @@ public class Tapleader {
             if (TUtils.checkForPermission(getApplicationContext(), Manifest.permission.READ_PHONE_STATE)
                     && TUtils.shouldNotifyMoreInfo(getApplicationContext()) && !TUtils.getInstallationId(getApplicationContext()).equals("Unknown")) {
                 serviceHandler.sendMoreInfo(TUtils.getClientDetails(getApplicationContext()).getJson().toString(),
-                        TOfflineResponse.initialize(-1,getApplicationContext()).getMoreInfoResponse() );
+                        TOfflineResponse.initialize(-1, getApplicationContext()).getMoreInfoResponse());
             }
         } else if (TUtils.shouldNotifyUpdatePackage(getApplicationContext())) {
             final String PACKAGE_NAME = getApplicationContext().getPackageName();
@@ -264,11 +264,6 @@ public class Tapleader {
         return TPlugins.get().applicationContext();
     }
 
-    static void checkContext() {
-        if (TPlugins.get().applicationContext() == null) {
-            throw new RuntimeException(Constants.Exception.NULL_CONTEXT);
-        }
-    }
 
     static void initializeTBroadcastReceiver(Context context) {
         IntentFilter filter = new IntentFilter();
@@ -332,35 +327,11 @@ public class Tapleader {
         return tPlugins.getCacheDir();
     }
 
-    static File getTapleaderCacheDir(String subDir) {
-        synchronized (MUTEX) {
-            File dir = new File(getTapleaderCacheDir(), subDir);
-            if (!dir.exists()) {
-                dir.mkdirs();
-            }
-            return dir;
-        }
-    }
-
     static File getTapleaderFilesDir() {
         TPlugins tPlugins = TPlugins.get();
         if (tPlugins == null)
             return null;
         return tPlugins.getFilesDir();
-    }
-
-    static File getTapleaderFilesDir(String subDir) {
-        synchronized (MUTEX) {
-            File fDir = getTapleaderFilesDir();
-            if (fDir != null) {
-                File dir = new File(fDir, subDir);
-                if (!dir.exists()) {
-                    dir.mkdirs();
-                }
-                return dir;
-            }
-            return null;
-        }
     }
 
     /**
@@ -420,7 +391,6 @@ public class Tapleader {
         final String clientKey;
         final String campaignId;
         final String server;
-        final boolean localDataStoreEnabled;
         final boolean dangerousAccess;
 
         private Configuration(Builder builder) {
@@ -428,7 +398,6 @@ public class Tapleader {
             this.applicationId = builder.applicationId;
             this.clientKey = builder.clientKey;
             this.server = builder.server;
-            this.localDataStoreEnabled = builder.localDataStoreEnabled;
             this.dangerousAccess = builder.dangerousAccess;
             this.campaignId = builder.campaignId;
         }
@@ -439,14 +408,12 @@ public class Tapleader {
             private String clientKey;
             private String campaignId;
             private String server = "http://e.tapleader.com/api/sdk/";
-            private boolean localDataStoreEnabled;
             private boolean dangerousAccess;
 
             public Builder(Context context, boolean dangerousAccess) {
                 this.context = context;
                 this.dangerousAccess = dangerousAccess;
                 if (context != null) {
-                    //localDataStoreEnabled = !TBroadcastManager.checkInternetAccess(context);
                     Context applicationContext = context.getApplicationContext();
                     Bundle metaData = ManifestInfo.getApplicationMetadata(applicationContext);
                     if (metaData != null) {

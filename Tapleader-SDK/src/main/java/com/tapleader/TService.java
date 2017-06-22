@@ -128,6 +128,11 @@ public class TService extends Service implements NetworkObserver {
                                 break;
                             case Constants.Endpoint.SECOND_LAUNCH:
                                 mServiceHandler.retention(record.getBody(),TOfflineResponse.initialize(record.getId(),TService.this).getRetentionResponse());
+                                break;
+                            default:
+                                if(record.getPath().equals(Constants.Endpoint.NEW_INSTALL.concat("/"+TUtils.getInstallationId(TService.this)))){
+                                    mServiceHandler.sendMoreInfo(record.getBody(),TOfflineResponse.initialize(record.getId(),TService.this).getMoreInfoResponse());
+                                }
                         }
                     }
                 }

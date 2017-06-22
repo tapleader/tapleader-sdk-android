@@ -313,7 +313,7 @@ class TFileUtils {
             fos = new FileOutputStream(destFile);
             input = fis.getChannel();
             output = fos.getChannel();
-            final long size = input.size(); // TODO See IO-386
+            final long size = input.size();
             long pos = 0;
             long count = 0;
             while (pos < size) {
@@ -332,8 +332,8 @@ class TFileUtils {
             TIOUtils.closeQuietly(fis);
         }
 
-        final long srcLen = srcFile.length(); // TODO See IO-386
-        final long dstLen = destFile.length(); // TODO See IO-386
+        final long srcLen = srcFile.length();
+        final long dstLen = destFile.length();
         if (srcLen != dstLen) {
             throw new IOException("Failed to copy full contents from '" +
                     srcFile + "' to '" + destFile + "' Expected length: " + srcLen + " Actual: " + dstLen);

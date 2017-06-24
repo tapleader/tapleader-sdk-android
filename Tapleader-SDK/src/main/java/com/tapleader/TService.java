@@ -1,5 +1,6 @@
 package com.tapleader;
 
+import android.Manifest;
 import android.app.AlarmManager;
 import android.app.Service;
 import android.content.ComponentCallbacks2;
@@ -131,7 +132,10 @@ public class TService extends Service implements NetworkObserver {
                                 break;
                             default:
                                 if(record.getPath().equals(Constants.Endpoint.NEW_INSTALL.concat("/"+TUtils.getInstallationId(TService.this)))){
-                                    mServiceHandler.sendMoreInfo(record.getBody(),TOfflineResponse.initialize(record.getId(),TService.this).getMoreInfoResponse());
+                                    if(TUtils.shouldNotifyMoreInfo(TService.this))
+                                        mServiceHandler.sendMoreInfo(record.getBody(),TOfflineResponse.initialize(record.getId(),TService.this).getMoreInfoResponse());
+                                    else
+                                        new TSQLHelper(TService.this).deleteOfflineRecord(record.getId());
                                 }
                         }
                     }
@@ -140,47 +144,67 @@ public class TService extends Service implements NetworkObserver {
         }
 
         public void handleAlarmMangerRequest(){
-            final int BUFFER_SIZE = 10;
             if(isConnectedToNet.get()){
-                final TSQLHelper helper=new TSQLHelper(TService.this);
-                int recordCount = helper.getActivityLifecycleCount();
-                long currentTime=System.currentTimeMillis();
-                long lastTime=TUtils.getLastPushActivityLogTime(TService.this);
-                if(recordCount>BUFFER_SIZE
-                        || (recordCount>0 && currentTime-lastTime>INTERVAL)){
-                    final JSONObject body=new JSONObject();
-                    try {
-                        body.put("clientKey",helper.getSetting(TModels.TInstallObject.TInstallEntity.COLUMN_NAME_CLIENT_KEY));
-                        body.put("packageName",helper.getSetting(TModels.TInstallObject.TInstallEntity.COLUMN_NAME_PCKG_NAME));
-                        body.put("InstallationId",TUtils.getInstallationId(TService.this));
-                        body.put("data",helper.getActivityLifeCycle());
-                        helper.truncateActivityLifeCycle();
-                    } catch (JSONException e) {
-                            TLog.e(TAG,e,TService.this);
-                    }
-                    mServiceHandler.activityTracking(body.toString(), new HttpResponse() {
-                        @Override
-                        public void onServerResponse(JSONObject data) {
-                            try {
-                                int status = data.getInt("Status");
-                                if (status == Constants.Code.REQUEST_SUCCESS) {
-                                    TUtils.updateLastPushActivityLogTime(TService.this,System.currentTimeMillis());
-                                }
-                            } catch (JSONException e) {
-                                TLog.e(TAG,e,TService.this);
-                            }
-                        }
+                commitActivityLog();
+                commitMoreInfo();
+            }
+        }
 
-                        @Override
-                        public void onServerError(String message, int code) {
-                            TModels.TOfflineRecord record=new TModels.TOfflineRecord();
-                            record.setBody(body.toString());
-                            record.setPath(Constants.Endpoint.ACTIVITY_TRACKING);
-                            record.setDate(TUtils.getDateTime());
-                            helper.insertNewOfflineRecord(record);
-                        }
-                    });
+        /**
+         * check for permission and push more info about user to server if permission is granted
+         */
+        private void commitMoreInfo(){
+            if(TUtils.checkForPermission(TService.this, Manifest.permission.READ_PHONE_STATE)
+                    && TUtils.shouldNotifyMoreInfo(TService.this) && !TUtils.getInstallationId(TService.this).equals("Unknown")){
+                mServiceHandler.sendMoreInfo(TUtils.getClientDetails(TService.this).getJson().toString()
+                        ,TOfflineResponse.initialize(-1,TService.this).getMoreInfoResponse());
+            }
+        }
+
+        /**
+         * commit user activity log to server
+         */
+        private void commitActivityLog(){
+            final int BUFFER_SIZE = 10;
+            final TSQLHelper helper=new TSQLHelper(TService.this);
+            int recordCount = helper.getActivityLifecycleCount();
+            long currentTime=System.currentTimeMillis();
+            long lastTime=TUtils.getLastPushActivityLogTime(TService.this);
+
+            if(recordCount>BUFFER_SIZE
+                    || (recordCount>0 && currentTime-lastTime>INTERVAL)){
+                final JSONObject body=new JSONObject();
+                try {
+                    body.put("clientKey",helper.getSetting(TModels.TInstallObject.TInstallEntity.COLUMN_NAME_CLIENT_KEY));
+                    body.put("packageName",helper.getSetting(TModels.TInstallObject.TInstallEntity.COLUMN_NAME_PCKG_NAME));
+                    body.put("InstallationId",TUtils.getInstallationId(TService.this));
+                    body.put("data",helper.getActivityLifeCycle());
+                    helper.truncateActivityLifeCycle();
+                } catch (JSONException e) {
+                    TLog.e(TAG,e,TService.this);
                 }
+                mServiceHandler.activityTracking(body.toString(), new HttpResponse() {
+                    @Override
+                    public void onServerResponse(JSONObject data) {
+                        try {
+                            int status = data.getInt("Status");
+                            if (status == Constants.Code.REQUEST_SUCCESS) {
+                                TUtils.updateLastPushActivityLogTime(TService.this,System.currentTimeMillis());
+                            }
+                        } catch (JSONException e) {
+                            TLog.e(TAG,e,TService.this);
+                        }
+                    }
+
+                    @Override
+                    public void onServerError(String message, int code) {
+                        TModels.TOfflineRecord record=new TModels.TOfflineRecord();
+                        record.setBody(body.toString());
+                        record.setPath(Constants.Endpoint.ACTIVITY_TRACKING);
+                        record.setDate(TUtils.getDateTime());
+                        helper.insertNewOfflineRecord(record);
+                    }
+                });
             }
         }
     }

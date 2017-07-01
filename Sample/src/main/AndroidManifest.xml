@@ -21,17 +21,6 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <service
-            android:name="com.tapleader.TService"
-            android:enabled="true"
-            android:exported="false" />
-        <receiver android:name="com.tapleader.TBroadcastManager"
-            android:enabled="true"
-            android:directBootAware="true"
-            android:exported="true">
-            <action android:name="android.net.conn.CONNECTIVITY_CHANGE"/>
-            <action android:name="com.tapleader.START_TAPLEADER_SERVICE" />
-        </receiver>
 
         <meta-data
             android:name="com.tapleader.APPLICATION_ID"

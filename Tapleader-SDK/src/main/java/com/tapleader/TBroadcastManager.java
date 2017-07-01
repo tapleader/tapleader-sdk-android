@@ -30,7 +30,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class TBroadcastManager extends BroadcastReceiver {
     private static HashSet<NetworkObserver> networkObservers;
     private static final String TAG = "TBroadcastManager";
-    private static final boolean SHOULD_PINGPONG = true;
+    private static final boolean SHOULD_PING_PONG = true;
     private static final boolean SHOULD_NOTIFY_INSTANTLY = false;
     private static AtomicBoolean isConnectedToServer = new AtomicBoolean(false);
     private static AtomicBoolean isConnectedTONetwork = new AtomicBoolean(false);
@@ -91,20 +91,24 @@ public class TBroadcastManager extends BroadcastReceiver {
         TBroadcastManager.context = context;
         switch (intent.getAction()) {
             case ConnectivityManager.CONNECTIVITY_ACTION:
-                pushUpdateMessage(checkInstantly(context), SHOULD_PINGPONG);
+                pushUpdateMessage(checkInstantly(context), SHOULD_PING_PONG);
                 break;
             case Constants.Action.ACTION_RESTART_SERVICE:
                 TUtils.startService(context, TService.class);
                 break;
             case Constants.Action.ACTION_ALARM_MANAGER:
                 Log.d(TAG,"ALARM : "+Constants.Action.ACTION_ALARM_MANAGER);
-                notifyService(context);
+                notifyTService(context);
                 break;
         }
 
     }
 
-    private void notifyService(final Context context) {
+    /**
+     * notify {@link TService} to push user Activity data and more info
+     * @param context
+     */
+    private void notifyTService(final Context context) {
         synchronized (MUTEX) {
             ServiceConnection mConnection = new ServiceConnection() {
                 @Override
@@ -211,7 +215,7 @@ public class TBroadcastManager extends BroadcastReceiver {
             public void run() {
                 if (isConnectedToServer.get())
                     cancel();
-                pushUpdateMessage(checkInstantly(context), SHOULD_PINGPONG);
+                pushUpdateMessage(checkInstantly(context), SHOULD_PING_PONG);
                 cancel();
             }
         }, MIN_LAT, MAX_LAT);

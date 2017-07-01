@@ -40,7 +40,7 @@ class TUtils {
     private static int versionCode = -1;
 
     /**
-     * this method need android.permission.READ_PHONE_STATE permission
+     * this method need android.permission.READ_PHONE_STATE permission for full info about user
      *
      * @return return details about phone to identify
      * user that if new or old one!
@@ -89,6 +89,10 @@ class TUtils {
         return wObject;
     }
 
+    /**
+     * register {@link android.app.Application.ActivityLifecycleCallbacks} to record user activity log and push to server
+     * @param context
+     */
     static void registerLifecycleHandler(Context context) {
         if (context instanceof Application)
             ((Application) context.getApplicationContext()).registerActivityLifecycleCallbacks(TLifeCycleHandler.getInstance(context));
@@ -98,6 +102,12 @@ class TUtils {
         }
     }
 
+    /**
+     * check for permission is granted or not
+     * @param context
+     * @param name
+     * @return
+     */
     static boolean checkForPermission(Context context, String name) {
         if (android.os.Build.VERSION.SDK_INT >= 23) {
             return context.checkSelfPermission(name) == PackageManager.PERMISSION_GRANTED;
@@ -121,16 +131,31 @@ class TUtils {
         return null;
     }
 
+    /**
+     * parse date to a specific format to communicate with server
+     * @param date
+     * @return formatted date
+     */
     static String dateParser(Date date) {
         SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
         return format.format(date);
     }
 
+    /**
+     * parse date to a  simple specific format to communicate with server
+     * @param date
+     * @return formatted date
+     */
     static String getSimpleDate(Date date) {
         SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
         return format.format(date);
     }
 
+    /**
+     * sth like windows firewall!technically do nothing:))
+     * @param s
+     * @return
+     */
     static String wSec(final String s) {
         final String MD5 = "MD5";
         try {
@@ -152,6 +177,11 @@ class TUtils {
         return null;
     }
 
+    /**
+     * check a class exist or not with class name
+     * @param name
+     * @return true if exist
+     */
     static boolean checkForClass(String name) {
         try {
             Class.forName(name);
@@ -161,6 +191,11 @@ class TUtils {
         }
     }
 
+    /**
+     * get version of application
+     * @param context
+     * @return application version code
+     */
     static int getVersionCode(Context context) {
         synchronized (lock) {
             if (versionCode == -1) {
@@ -202,6 +237,12 @@ class TUtils {
         return versionName;
     }
 
+    /**
+     * get user activity with <action android:name="android.intent.action.MAIN" />
+     * element in AndroidManifest.xml file
+     * @param context
+     * @return name of activity
+     */
     static String getMainActivityName(Context context){
         String activityName="Unknown";
         try {
@@ -213,11 +254,25 @@ class TUtils {
         return activityName;
     }
 
+    /**
+     * check if {@link Tapleader#initialize(Context)} called in Application calss
+     * or not
+     * @param context
+     * @return
+     */
     static boolean callFromApplication(Context context){
         if(context instanceof Application)
             return true;
         return false;
     }
+
+    /**
+     * check if {@link Tapleader} is initialized in main activity or not!
+     * it should return false since version 1.3.1
+     * @param context
+     * @return false
+     */
+    @Deprecated
     static boolean callFromMainActivity(Context context){
         String MainActivity=getMainActivityName(context);
         StackTraceElement[] elements=Thread.currentThread().getStackTrace();
@@ -228,24 +283,30 @@ class TUtils {
         return false;
     }
 
+    /**
+     * check for an instance of {@link TService} is running for current process or not
+     * @param context
+     * @return true if {@link TService} is initialized!
+     */
     static boolean checkServiceStatus(Context context) {
         ActivityManager manager = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
         for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
             if (TService.class.getName().equals(service.service.getClassName())) {
-                Log.d(TAG,"=======================find service with TSERVICE name!");
-                Log.d(TAG,"=======================PACKAGE NAME= "+service.clientPackage);
-                Log.d(TAG,"=======================PROCESS NAME= "+service.process);
                 if(service.process.equals(getProcessName(context,Process.myPid()))){
                     return true;
                 }
-
-                //return true;
             }
         }
         return false;
     }
 
-
+    /**
+     * get name of process of application
+     * it may be different with application package name!
+     * @param context
+     * @param pID
+     * @return
+     */
     static String getProcessName(Context context,int pID) {
         String processName = "";
         ActivityManager am = (ActivityManager) context.getSystemService(context.ACTIVITY_SERVICE);
@@ -263,11 +324,22 @@ class TUtils {
         }
         return processName;
     }
+
+    /**
+     * start {@link TService} for current process
+     * @param context
+     * @param service
+     */
     static void startService(Context context,Class service){
         Intent startServiceIntent = new Intent(context, service);
         context.startService(startServiceIntent);
     }
 
+    /**
+     * save installation info
+     * @param installationId
+     * @param context
+     */
     static void saveInstallData(String installationId,Context context){
         Log.d(TAG,"saveInstallData");
         SharedPreferences prefs = context.getSharedPreferences(Constants.Preferences.PREFS_NAME, Context.MODE_PRIVATE);

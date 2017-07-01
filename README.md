@@ -38,7 +38,7 @@ dependencies {
             android:name="com.tapleader.CLIENT_KEY"
             android:value="YOUR_CLIENT_KEY" />
   <meta-data
-            android:name="com.tapleader.CAMPAIGN_CODE"
+            android:name="com.tapleader.CAMPAIGN_ID"
             android:value="YOUR_CAMPAIGN_CODE" />
  ```
  Campaign_Code is optional. Usually you shouldn't provide campaign code in manifest file. Just in case you want to [Tracking Without Campaign Link](https://tapleader.com/docs/no-link-tracking)

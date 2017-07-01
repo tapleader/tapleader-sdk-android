@@ -424,6 +424,7 @@ class TUtils {
         SharedPreferences prefs = context.getSharedPreferences(Constants.Preferences.PREFS_NAME, Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = prefs.edit();
         editor.putBoolean("MoreInfo",b);
+        editor.apply();
     }
 
 }

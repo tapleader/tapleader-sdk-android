@@ -28,9 +28,10 @@
         <meta-data
             android:name="com.tapleader.CLIENT_KEY"
             android:value="a3dbfe5d-fde7-4670-a15d-15b4b97fead4" />
-       <!-- <meta-data
+        <meta-data
             android:name="com.tapleader.CAMPAIGN_ID"
-            android:value="cff8" />-->
+            android:value="YOUR_CAMPAIGN_CODE" />
+
 
         <activity android:name=".Main2Activity" />
     </application>

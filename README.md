@@ -22,7 +22,7 @@ allprojects {
 * Add the dependency to your app module `build.gradle`
 ```gradle
 dependencies {
-        compile 'com.github.tapleader:tapleader-sdk-android:v1.3.1'
+        compile 'com.github.tapleader:tapleader-sdk-android:v1.3.2'
 	//...
 }
 ```

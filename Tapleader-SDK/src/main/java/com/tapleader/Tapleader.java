@@ -229,6 +229,7 @@ public class Tapleader {
                     try {
                         if (data.getInt("Status") == Constants.Code.REQUEST_SUCCESS) {
                             Log.d(TAG, "retention notified done!");
+                            TUtils.updateLunchTime(TUtils.getContext(),System.currentTimeMillis());
                         } else
                             TLog.d(TAG, data.getString("Message"));
                     } catch (JSONException e) {

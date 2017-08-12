@@ -105,8 +105,6 @@ public class Tapleader {
         if (!TUtils.checkServiceStatus(configuration.context)) {
             TUtils.startService(configuration.context, TService.class);
         }
-
-        TLog.e("MY TAG",new Exception("some message"));
     }
 
     private static void checkDbData(Context context, TModels.TInstallObject installObject) {

@@ -23,7 +23,7 @@ import java.util.Date;
 class TSQLHelper extends SQLiteOpenHelper {
     static final String DATABASE_NAME = "tapleader_offline.db";
     static final String TAG = "TSQLHelper";
-    static final int DATABASE_VERSION = 2;
+    static final int DATABASE_VERSION = 3;
 
     private static final String SQL_CREATE_OFFLINE_RECORD_TABLE =
             "CREATE TABLE IF NOT EXISTS " + TModels.TOfflineRecord.TOfflineRecordEntity.TABLE_NAME + " (" +
@@ -35,7 +35,7 @@ class TSQLHelper extends SQLiteOpenHelper {
     private static final String SQL_DELETE_OFFLINE_RECORD_TABLE =
             "DROP TABLE IF EXISTS " + TModels.TOfflineRecord.TOfflineRecordEntity.TABLE_NAME;
 
-    private static final  String SQL_CREATE_SETTINGS_TABLE=
+    private static final String SQL_CREATE_SETTINGS_TABLE =
             "CREATE TABLE IF NOT EXISTS " + TModels.TInstallObject.TInstallEntity.TABLE_NAME + " (" +
                     TModels.TInstallObject.TInstallEntity._ID + " INTEGER PRIMARY KEY," +
                     TModels.TInstallObject.TInstallEntity.COLUMN_NAME_ANDROID_ID + " TEXT," +
@@ -53,8 +53,8 @@ class TSQLHelper extends SQLiteOpenHelper {
     private static final String SQL_DELETE_SETTINGS_TABLE =
             "DROP TABLE IF EXISTS " + TModels.TOfflineRecord.TOfflineRecordEntity.TABLE_NAME;
 
-    private static final String SQL_CREATE_LIFECYCLE_TABLE=
-            "CREATE TABLE IF NOT EXISTS "+ TModels.TLifeCycleObject.TLifeCycleEntity.TABLE_NAME + " (" +
+    private static final String SQL_CREATE_LIFECYCLE_TABLE =
+            "CREATE TABLE IF NOT EXISTS " + TModels.TLifeCycleObject.TLifeCycleEntity.TABLE_NAME + " (" +
                     TModels.TLifeCycleObject.TLifeCycleEntity._ID + " INTEGER PRIMARY KEY," +
                     TModels.TLifeCycleObject.TLifeCycleEntity.COLUMN_NAME_NAME + " TEXT," +
                     TModels.TLifeCycleObject.TLifeCycleEntity.COLUMN_NAME_DATE + " TEXT," +
@@ -64,13 +64,14 @@ class TSQLHelper extends SQLiteOpenHelper {
             "DROP TABLE IF EXISTS " + TModels.TLifeCycleObject.TLifeCycleEntity.TABLE_NAME;
 
     TSQLHelper(Context context) {
-        super(context,DATABASE_NAME,null,DATABASE_VERSION);
+        super(context, DATABASE_NAME, null, DATABASE_VERSION);
     }
+
     TSQLHelper(Context context, SQLiteDatabase.CursorFactory factory) {
         super(context, DATABASE_NAME, factory, DATABASE_VERSION);
     }
 
-    TSQLHelper(Context context, SQLiteDatabase.CursorFactory factory,DatabaseErrorHandler errorHandler) {
+    TSQLHelper(Context context, SQLiteDatabase.CursorFactory factory, DatabaseErrorHandler errorHandler) {
         super(context, DATABASE_NAME, factory, DATABASE_VERSION, errorHandler);
     }
 
@@ -94,36 +95,36 @@ class TSQLHelper extends SQLiteOpenHelper {
         onUpgrade(db, oldVersion, newVersion);
     }
 
-    long insertNewOfflineRecord(TModels.TOfflineRecord record){
-        SQLiteDatabase db =null;
-        long newRowId=-1;
-        try{
-            db= this.getWritableDatabase();
+    long insertNewOfflineRecord(TModels.TOfflineRecord record) {
+        SQLiteDatabase db = null;
+        long newRowId = -1;
+        try {
+            db = this.getWritableDatabase();
             ContentValues values = new ContentValues();
             values.put(TModels.TOfflineRecord.TOfflineRecordEntity.COLUMN_NAME_BODY, record.getBody());
             values.put(TModels.TOfflineRecord.TOfflineRecordEntity.COLUMN_NAME_PATH, record.getPath());
             values.put(TModels.TOfflineRecord.TOfflineRecordEntity.COLUMN_NAME_DATE, record.getDate());
             newRowId = db.insert(TModels.TOfflineRecord.TOfflineRecordEntity.TABLE_NAME, null, values);
-        }catch (SQLException e){
-            TLog.e(TAG,e);
-        }finally {
+        } catch (SQLException e) {
+            TLog.e(TAG, e);
+        } finally {
             db.close();
             return newRowId;
         }
     }
 
-    boolean deleteOfflineRecord(long id){
-        SQLiteDatabase db =null;
-        int result=-1;
-        try{
-            db= this.getWritableDatabase();
+    boolean deleteOfflineRecord(long id) {
+        SQLiteDatabase db = null;
+        int result = -1;
+        try {
+            db = this.getWritableDatabase();
             String selection = TModels.TOfflineRecord.TOfflineRecordEntity._ID + " = ?";
-            String[] selectionArgs = { String.valueOf(id) };
-            result=db.delete(TModels.TOfflineRecord.TOfflineRecordEntity.TABLE_NAME, selection, selectionArgs);
+            String[] selectionArgs = {String.valueOf(id)};
+            result = db.delete(TModels.TOfflineRecord.TOfflineRecordEntity.TABLE_NAME, selection, selectionArgs);
             db.close();
-        }catch (SQLException e){
-            TLog.e(TAG,e);
-        }finally {
+        } catch (SQLException e) {
+            TLog.e(TAG, e);
+        } finally {
 
             return result > 0;
         }
@@ -131,12 +132,12 @@ class TSQLHelper extends SQLiteOpenHelper {
 
     ArrayList<TModels.TOfflineRecord> getOfflineRecords(String path) {
         ArrayList<TModels.TOfflineRecord> list = new ArrayList<>();
-        Cursor cursor=null;
-        SQLiteDatabase db=null;
+        Cursor cursor = null;
+        SQLiteDatabase db = null;
         try {
             db = this.getReadableDatabase();
-        }catch (SQLException e){
-            TLog.e(TAG,e);
+        } catch (SQLException e) {
+            TLog.e(TAG, e);
             return list;
         }
 
@@ -153,166 +154,168 @@ class TSQLHelper extends SQLiteOpenHelper {
             cursor = db.query(
                     TModels.TOfflineRecord.TOfflineRecordEntity.TABLE_NAME, projection, selection, selectionArgs, null, null, null);
             while (cursor.moveToNext()) {
-                TModels.TOfflineRecord record=new TModels.TOfflineRecord();
-                int idIndex=cursor.getColumnIndexOrThrow(TModels.TOfflineRecord.TOfflineRecordEntity._ID);
-                int pathIndex=cursor.getColumnIndexOrThrow(TModels.TOfflineRecord.TOfflineRecordEntity.COLUMN_NAME_PATH);
-                int bodyIndex=cursor.getColumnIndexOrThrow(TModels.TOfflineRecord.TOfflineRecordEntity.COLUMN_NAME_BODY);
-                int dateIndex=cursor.getColumnIndexOrThrow(TModels.TOfflineRecord.TOfflineRecordEntity.COLUMN_NAME_DATE);
+                TModels.TOfflineRecord record = new TModels.TOfflineRecord();
+                int idIndex = cursor.getColumnIndexOrThrow(TModels.TOfflineRecord.TOfflineRecordEntity._ID);
+                int pathIndex = cursor.getColumnIndexOrThrow(TModels.TOfflineRecord.TOfflineRecordEntity.COLUMN_NAME_PATH);
+                int bodyIndex = cursor.getColumnIndexOrThrow(TModels.TOfflineRecord.TOfflineRecordEntity.COLUMN_NAME_BODY);
+                int dateIndex = cursor.getColumnIndexOrThrow(TModels.TOfflineRecord.TOfflineRecordEntity.COLUMN_NAME_DATE);
                 record.setBody(cursor.getString(bodyIndex));
                 record.setPath(cursor.getString(pathIndex));
                 record.setDate(cursor.getString(dateIndex));
                 record.setId(cursor.getLong(idIndex));
                 list.add(record);
             }
-            db.close();
-        }catch (Exception e){
-            TLog.e(TAG,e);
-        }finally {
-            if(cursor!=null)
-                cursor.close();
-
+            cursor.close();
+            if(db.isOpen())
+                db.close();
+        } catch (Exception e) {
+            TLog.e(TAG, e);
+        } finally {
             return list;
         }
     }
 
-    int updateOfflineRecordId(TModels.TOfflineRecord record,long id){
-        Cursor cursor=null;
-        SQLiteDatabase db=null;
-        int count=0;
+    int updateOfflineRecordId(TModels.TOfflineRecord record, long id) {
+        Cursor cursor = null;
+        SQLiteDatabase db = null;
+        int count = 0;
         try {
             db = this.getReadableDatabase();
             ContentValues values = new ContentValues();
             values.put(TModels.TOfflineRecord.TOfflineRecordEntity.COLUMN_NAME_BODY, record.getBody());
             String selection = TModels.TOfflineRecord.TOfflineRecordEntity._ID + " = ?";
-            String[] selectionArgs = { String.valueOf(id) };
+            String[] selectionArgs = {String.valueOf(id)};
             count = db.update(
                     TModels.TOfflineRecord.TOfflineRecordEntity.TABLE_NAME,
                     values,
                     selection,
                     selectionArgs);
             db.close();
-        }catch (SQLException e){
-            TLog.e(TAG,e);
-        }finally {
-
+        } catch (SQLException e) {
+            TLog.e(TAG, e);
+        } finally {
             return count;
         }
     }
 
-    long setSettings(TModels.TInstallObject installObject){
-        SQLiteDatabase db =null;
-        long newRowId=-1;
-        try{
-            db= this.getWritableDatabase();
+    long setSettings(TModels.TInstallObject installObject) {
+        SQLiteDatabase db = null;
+        long newRowId = -1;
+        try {
+            db = this.getWritableDatabase();
             ContentValues values = new ContentValues();
-            values.put(TModels.TInstallObject.TInstallEntity.COLUMN_NAME_CLIENT_KEY,installObject.getClientKey());
-            values.put(TModels.TInstallObject.TInstallEntity.COLUMN_NAME_ANDROID_ID,installObject.getAndroidId());
-            values.put(TModels.TInstallObject.TInstallEntity.COLUMN_NAME_ANDROID_VERSION,installObject.getVersion());
-            values.put(TModels.TInstallObject.TInstallEntity.COLUMN_NAME_APP_ID,installObject.getApplicationId());
-            values.put(TModels.TInstallObject.TInstallEntity.COLUMN_NAME_APP_VERSION,installObject.getAppVersion());
-            values.put(TModels.TInstallObject.TInstallEntity.COLUMN_NAME_CALL_FROM_MAIN,installObject.isCallFromMain());
-            values.put(TModels.TInstallObject.TInstallEntity.COLUMN_NAME_CARRIER_ONE,installObject.getCarrierName());
-            values.put(TModels.TInstallObject.TInstallEntity.COLUMN_NAME_CARRIER_TWO,installObject.getCarrierName2());
-            values.put(TModels.TInstallObject.TInstallEntity.COLUMN_NAME_DEVICE_ID,installObject.getDeviceId());
-            values.put(TModels.TInstallObject.TInstallEntity.COLUMN_NAME_PCKG_NAME,installObject.getPackageName());
-            values.put(TModels.TInstallObject.TInstallEntity.COLUMN_NAME_PHONE_NAME,installObject.getPhoneModel());
-            values.put(TModels.TInstallObject.TInstallEntity.COLUMN_NAME_SIM_SERIAL,installObject.getSimSerialNumber());
+            values.put(TModels.TInstallObject.TInstallEntity.COLUMN_NAME_CLIENT_KEY, installObject.getClientKey());
+            values.put(TModels.TInstallObject.TInstallEntity.COLUMN_NAME_ANDROID_ID, installObject.getAndroidId());
+            values.put(TModels.TInstallObject.TInstallEntity.COLUMN_NAME_ANDROID_VERSION, installObject.getVersion());
+            values.put(TModels.TInstallObject.TInstallEntity.COLUMN_NAME_APP_ID, installObject.getApplicationId());
+            values.put(TModels.TInstallObject.TInstallEntity.COLUMN_NAME_APP_VERSION, installObject.getAppVersion());
+            values.put(TModels.TInstallObject.TInstallEntity.COLUMN_NAME_CALL_FROM_MAIN, installObject.isCallFromMain());
+            values.put(TModels.TInstallObject.TInstallEntity.COLUMN_NAME_CARRIER_ONE, installObject.getCarrierName());
+            values.put(TModels.TInstallObject.TInstallEntity.COLUMN_NAME_CARRIER_TWO, installObject.getCarrierName2());
+            values.put(TModels.TInstallObject.TInstallEntity.COLUMN_NAME_DEVICE_ID, installObject.getDeviceId());
+            values.put(TModels.TInstallObject.TInstallEntity.COLUMN_NAME_PCKG_NAME, installObject.getPackageName());
+            values.put(TModels.TInstallObject.TInstallEntity.COLUMN_NAME_PHONE_NAME, installObject.getPhoneModel());
+            values.put(TModels.TInstallObject.TInstallEntity.COLUMN_NAME_SIM_SERIAL, installObject.getSimSerialNumber());
             newRowId = db.insert(TModels.TInstallObject.TInstallEntity.TABLE_NAME, null, values);
             db.close();
-        }catch (SQLException e){
-            TLog.e(TAG,e);
-        }finally {
+        } catch (SQLException e) {
+            TLog.e(TAG, e);
+        } finally {
             return newRowId;
         }
     }
 
-    String getSetting(String colName){
-        String result="";
-        Cursor cursor=null;
-        SQLiteDatabase db=null;
+    String getSetting(String colName) {
+        String result = "";
+        Cursor cursor = null;
+        SQLiteDatabase db = null;
         try {
             db = this.getReadableDatabase();
-            cursor=db.rawQuery("SELECT * from "+ TModels.TInstallObject.TInstallEntity.TABLE_NAME,null);
-            while (cursor.moveToNext()){
-                result=cursor.getString(cursor.getColumnIndex(colName));
+            cursor = db.rawQuery("SELECT * from " + TModels.TInstallObject.TInstallEntity.TABLE_NAME, null);
+            while (cursor.moveToNext()) {
+                result = cursor.getString(cursor.getColumnIndex(colName));
             }
-            db.close();
-        }catch (SQLException e){
-            TLog.e(TAG,e);
-        }finally {
+            cursor.close();
+            if(db.isOpen())
+                db.close();
+        } catch (SQLException e) {
+            TLog.e(TAG+" getSetting.", e);
+        } finally {
 
             return result;
         }
     }
 
-    boolean isSettingExist(){
-        long cnt=0l;
-        SQLiteDatabase db=null;
+    boolean isSettingExist() {
+        long cnt = 0l;
+        SQLiteDatabase db = null;
         try {
             db = this.getReadableDatabase();
-            cnt  = DatabaseUtils.queryNumEntries(db, TModels.TInstallObject.TInstallEntity.TABLE_NAME);
+            cnt = DatabaseUtils.queryNumEntries(db, TModels.TInstallObject.TInstallEntity.TABLE_NAME);
             db.close();
-        }catch (Exception e){
-            TLog.e(TAG,e);
-        }finally {
+        } catch (Exception e) {
+            TLog.e(TAG+ "isSettingExist.", e);
+        } finally {
 
             return cnt != 0l;
         }
     }
 
-    long addActivityLifecycleLog(TModels.TLifeCycleObject lco){
+    long addActivityLifecycleLog(TModels.TLifeCycleObject lco) {
         SQLiteDatabase db = null;
-        long newRowId=-1;
-        Date startDate=TUtils.dateParser(lco.getEndTime());
-        long duration = startDate.getTime()-TUtils.dateParser(lco.getStartTime()).getTime();
+        long newRowId = -1;
+        Date startDate = TUtils.dateParser(lco.getEndTime());
+        long duration = startDate.getTime() - TUtils.dateParser(lco.getStartTime()).getTime();
         String date = TUtils.getSimpleDate(startDate);
-        try{
-            db= this.getWritableDatabase();
-            Cursor cursor=db.rawQuery("SELECT * FROM "+ TModels.TLifeCycleObject.TLifeCycleEntity.TABLE_NAME +
-                    " WHERE "+ TModels.TLifeCycleObject.TLifeCycleEntity.COLUMN_NAME_NAME+" = \""+lco.getName()+
-                    "\" AND "+ TModels.TLifeCycleObject.TLifeCycleEntity.COLUMN_NAME_DATE+" = \""+date+"\"",null);
+        try {
+            db = this.getWritableDatabase();
+            Cursor cursor = db.rawQuery("SELECT * FROM " + TModels.TLifeCycleObject.TLifeCycleEntity.TABLE_NAME +
+                    " WHERE " + TModels.TLifeCycleObject.TLifeCycleEntity.COLUMN_NAME_NAME + " = \"" + lco.getName() +
+                    "\" AND " + TModels.TLifeCycleObject.TLifeCycleEntity.COLUMN_NAME_DATE + " = \"" + date + "\"", null);
             //if exist just update and return
-            while (cursor.moveToNext()){
-                long id= cursor.getLong(cursor.getColumnIndex(TModels.TLifeCycleObject.TLifeCycleEntity._ID));
-                int count=cursor.getInt(cursor.getColumnIndex(TModels.TLifeCycleObject.TLifeCycleEntity.COLUMN_NAME_COUNT));
-                return updateActivityLifecycleLog(db,count+1,id);
+            while (cursor.moveToNext()) {
+                long id = cursor.getLong(cursor.getColumnIndex(TModels.TLifeCycleObject.TLifeCycleEntity._ID));
+                int count = cursor.getInt(cursor.getColumnIndex(TModels.TLifeCycleObject.TLifeCycleEntity.COLUMN_NAME_COUNT));
+                return updateActivityLifecycleLog(db, count + 1, id);
             }
             ContentValues values = new ContentValues();
-            values.put(TModels.TLifeCycleObject.TLifeCycleEntity.COLUMN_NAME_NAME,lco.getName());
-            values.put(TModels.TLifeCycleObject.TLifeCycleEntity.COLUMN_NAME_DATE,date);
-            values.put(TModels.TLifeCycleObject.TLifeCycleEntity.COLUMN_NAME_DURATION,duration);
-            values.put(TModels.TLifeCycleObject.TLifeCycleEntity.COLUMN_NAME_COUNT,1);
+            values.put(TModels.TLifeCycleObject.TLifeCycleEntity.COLUMN_NAME_NAME, lco.getName());
+            values.put(TModels.TLifeCycleObject.TLifeCycleEntity.COLUMN_NAME_DATE, date);
+            values.put(TModels.TLifeCycleObject.TLifeCycleEntity.COLUMN_NAME_DURATION, duration);
+            values.put(TModels.TLifeCycleObject.TLifeCycleEntity.COLUMN_NAME_COUNT, 1);
             newRowId = db.insert(TModels.TLifeCycleObject.TLifeCycleEntity.TABLE_NAME, null, values);
-            db.close();
-        }catch (SQLException e){
-            TLog.e(TAG,e);
-        }finally {
+            cursor.close();
+            if(db.isOpen())
+                db.close();
+        } catch (SQLException e) {
+            TLog.e(TAG+" addActivityLifecycleLog.", e);
+        } finally {
             return newRowId;
         }
     }
 
-    private long updateActivityLifecycleLog(SQLiteDatabase db,int count,long id){
+    private long updateActivityLifecycleLog(SQLiteDatabase db, int count, long id) {
         try {
             ContentValues values = new ContentValues();
             values.put(TModels.TLifeCycleObject.TLifeCycleEntity.COLUMN_NAME_COUNT, count);
             String selection = TModels.TLifeCycleObject.TLifeCycleEntity._ID + " = ?";
-            String[] selectionArgs = { String.valueOf(id) };
+            String[] selectionArgs = {String.valueOf(id)};
             count = db.update(
                     TModels.TLifeCycleObject.TLifeCycleEntity.TABLE_NAME,
                     values,
                     selection,
                     selectionArgs);
             db.close();
-        }catch (Exception e){
-            TLog.e(TAG,e);
-        }finally {
+        } catch (Exception e) {
+            TLog.e(TAG+ "updateActivityLifecycleLog.", e);
+        } finally {
             return id;
         }
     }
 
     int getActivityLifecycleCount() {
-        int cnt=0;
-        SQLiteDatabase db=null;
+        int cnt = 0;
+        SQLiteDatabase db = null;
         try {
             db = this.getReadableDatabase();
             synchronized (db) {
@@ -321,35 +324,37 @@ class TSQLHelper extends SQLiteOpenHelper {
                         + ") FROM " + TModels.TLifeCycleObject.TLifeCycleEntity.TABLE_NAME, null);
                 cursor.moveToFirst();
                 cnt = cursor.getInt(0);
+                cursor.close();
+                if (db != null && db.isOpen())
+                    db.close();
             }
-
-        }catch (Exception e){
-            TLog.e(TAG,e);
-        }finally {
-            if(db!=null && db.isOpen())
-                db.close();
+        } catch (Exception e) {
+            TLog.e(TAG+" getActivityLifecycleCount.", e);
+        } finally {
             return cnt;
         }
     }
 
-    int truncateActivityLifeCycle(){
-        SQLiteDatabase db=this.getWritableDatabase();
-        int count=0;
+    int truncateActivityLifeCycle() {
+        SQLiteDatabase db = this.getWritableDatabase();
+        int count = 0;
         try {
-            Cursor cursor=db.rawQuery("DELETE FROM "+TModels.TLifeCycleObject.TLifeCycleEntity.TABLE_NAME,null);
-            count= cursor.getCount();
-            db.close();
-        }catch (Exception e){
-            TLog.e(TAG,e);
-        }finally {
+            Cursor cursor = db.rawQuery("DELETE FROM " + TModels.TLifeCycleObject.TLifeCycleEntity.TABLE_NAME, null);
+            count = cursor.getCount();
+            cursor.close();
+            if (db.isOpen())
+                db.close();
+        } catch (Exception e) {
+            TLog.e(TAG+" truncateActivityLifeCycle.", e);
+        } finally {
             return count;
         }
     }
 
-    JSONArray getActivityLifeCycle(){
-        JSONArray array=new JSONArray();
-        Cursor cursor=null;
-        SQLiteDatabase db=null;
+    JSONArray getActivityLifeCycle() {
+        JSONArray array = new JSONArray();
+        Cursor cursor = null;
+        SQLiteDatabase db = null;
         try {
             db = this.getReadableDatabase();
             String[] projection = {
@@ -360,24 +365,26 @@ class TSQLHelper extends SQLiteOpenHelper {
                     TModels.TLifeCycleObject.TLifeCycleEntity.COLUMN_NAME_COUNT
             };
 
-                cursor = db.query(
-                        TModels.TLifeCycleObject.TLifeCycleEntity.TABLE_NAME, projection, null, null, null, null, null);
-                while (cursor.moveToNext()) {
-                    JSONObject object=new JSONObject();
-                    int name=cursor.getColumnIndexOrThrow(TModels.TLifeCycleObject.TLifeCycleEntity.COLUMN_NAME_NAME);
-                    int date=cursor.getColumnIndexOrThrow(TModels.TLifeCycleObject.TLifeCycleEntity.COLUMN_NAME_DATE);
-                    int duration=cursor.getColumnIndexOrThrow(TModels.TLifeCycleObject.TLifeCycleEntity.COLUMN_NAME_DURATION);
-                    int count=cursor.getColumnIndexOrThrow(TModels.TLifeCycleObject.TLifeCycleEntity.COLUMN_NAME_COUNT);
-                    object.put(TModels.TLifeCycleObject.TLifeCycleEntity.COLUMN_NAME_NAME,cursor.getString(name));
-                    object.put(TModels.TLifeCycleObject.TLifeCycleEntity.COLUMN_NAME_DATE,cursor.getString(date));
-                    object.put(TModels.TLifeCycleObject.TLifeCycleEntity.COLUMN_NAME_DURATION,cursor.getInt(duration)/1000);
-                    object.put(TModels.TLifeCycleObject.TLifeCycleEntity.COLUMN_NAME_COUNT,cursor.getInt(count));
-                    array.put(object);
-                }
-            db.close();
-        }catch (SQLException e){
-            TLog.e(TAG,e);
-        }finally {
+            cursor = db.query(
+                    TModels.TLifeCycleObject.TLifeCycleEntity.TABLE_NAME, projection, null, null, null, null, null);
+            while (cursor.moveToNext()) {
+                JSONObject object = new JSONObject();
+                int name = cursor.getColumnIndexOrThrow(TModels.TLifeCycleObject.TLifeCycleEntity.COLUMN_NAME_NAME);
+                int date = cursor.getColumnIndexOrThrow(TModels.TLifeCycleObject.TLifeCycleEntity.COLUMN_NAME_DATE);
+                int duration = cursor.getColumnIndexOrThrow(TModels.TLifeCycleObject.TLifeCycleEntity.COLUMN_NAME_DURATION);
+                int count = cursor.getColumnIndexOrThrow(TModels.TLifeCycleObject.TLifeCycleEntity.COLUMN_NAME_COUNT);
+                object.put(TModels.TLifeCycleObject.TLifeCycleEntity.COLUMN_NAME_NAME, cursor.getString(name));
+                object.put(TModels.TLifeCycleObject.TLifeCycleEntity.COLUMN_NAME_DATE, cursor.getString(date));
+                object.put(TModels.TLifeCycleObject.TLifeCycleEntity.COLUMN_NAME_DURATION, cursor.getInt(duration) / 1000);
+                object.put(TModels.TLifeCycleObject.TLifeCycleEntity.COLUMN_NAME_COUNT, cursor.getInt(count));
+                array.put(object);
+            }
+            cursor.close();
+            if (db.isOpen())
+                db.close();
+        } catch (SQLException e) {
+            TLog.e(TAG+ "getActivityLifeCycle.", e);
+        } finally {
 
             return array;
         }

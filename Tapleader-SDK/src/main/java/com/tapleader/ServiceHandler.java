@@ -54,7 +54,7 @@ class ServiceHandler implements NetworkObserver {
 
     void pingPong(HttpResponse httpResponse){
         HttpRequest httpRequest = new HttpRequest(urlGen(Constants.Endpoint.PING_PONG),false, httpResponse);
-        httpRequest.execute();
+        httpRequest.execute("ping-pong");
     }
 
     void sendMoreInfo(String body, HttpResponse httpResponse){

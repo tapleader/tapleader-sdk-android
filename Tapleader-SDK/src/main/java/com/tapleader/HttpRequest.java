@@ -58,6 +58,10 @@ class HttpRequest extends AsyncTask<Object, Void, JSONObject> {
         String body = "";
         if(params!=null && params.length>0 && params[0]!=null)
             body = (String) params[0];
+        else if(params!=null && params.length>0)
+            return getFailResult("body is :"+ params[0]!=null ? (String) params[0] : "NULL");
+        else
+            return getFailResult("params is null in HttpRequest");
         JSONObject result = null;
         String str = "";
         try {
@@ -68,9 +72,8 @@ class HttpRequest extends AsyncTask<Object, Void, JSONObject> {
                 return getFailResult("no response from server");
         } catch (Exception e) {
             if (crashReportEnable) {
-                TLog.e(TAG, e);
+                TLog.e(TAG+" doInBackground.", e);
             }
-            e.printStackTrace();
             result = getFailResult(e.getMessage());
         }
         return result;
@@ -94,6 +97,7 @@ class HttpRequest extends AsyncTask<Object, Void, JSONObject> {
 
     private String sendPost(String url, String body) throws IOException {
         URL obj = new URL(url);
+
         HttpURLConnection con = (HttpURLConnection) obj.openConnection();
         con.setConnectTimeout(CONNECT_TIMEOUT);
         con.setReadTimeout(READ_TIMEOUT);
@@ -137,7 +141,7 @@ class HttpRequest extends AsyncTask<Object, Void, JSONObject> {
             result.put("Message", message);
             result.put("InstallationId",-1);
         } catch (JSONException e1) {
-            e1.printStackTrace();
+            //
         }
         return result;
     }

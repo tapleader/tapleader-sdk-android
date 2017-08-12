@@ -81,7 +81,6 @@ class TOfflineResponse {
                 if (status == Constants.Code.REQUEST_SUCCESS) {
                     Log.d(TAG,"default response done! for record with id= "+id);
                     OfflineStore.initialize(context).deleteRequest(id);
-
                 }else {
                     Log.d(TAG,data.getString("Message")+"\n for record with id= "+id);
                 }

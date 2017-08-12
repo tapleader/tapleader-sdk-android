@@ -397,6 +397,7 @@ class TModels {
         public JSONObject getJson()  {
             JSONObject object = new JSONObject();
             try {
+                object.put("tag",getTag());
                 object.put("message", getMessage());
                 object.put("deviceId", getDeviceId());
                 object.put("version", getVersion());
@@ -459,6 +460,7 @@ class TModels {
     }
 
     static class TOfflineRecord{
+        private final static String TAG="TOfflineRecord";
         private long id;
         private String body;
         private String path;
@@ -503,7 +505,7 @@ class TModels {
                 object.put("body", body);
                 object.put("date", TUtils.getDateTime());
             } catch (JSONException e) {
-                TLog.e(getClass().getSimpleName(), e);
+                //
             }
             return object.toString();
         }

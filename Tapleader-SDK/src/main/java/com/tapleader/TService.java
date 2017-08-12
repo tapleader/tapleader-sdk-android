@@ -50,6 +50,7 @@ public class TService extends Service implements NetworkObserver {
     @Override
     public void onDestroy() {
         super.onDestroy();
+
         TBroadcastManager.destroyNetworkObserver(this);
         restart();
     }
@@ -94,7 +95,6 @@ public class TService extends Service implements NetworkObserver {
         Log.d(TAG,"onChange");
         isConnectedToNet.set(isConnected);
         if(isConnected && mOfflineStore!=null){
-
             binder.handleRequests(mOfflineStore.getAllRequests());
         }
     }

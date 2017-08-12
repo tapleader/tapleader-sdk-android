@@ -121,6 +121,7 @@ public class Tapleader {
             Log.d(TAG, "db settings update!");
         }
 
+
     }
 
     /**
@@ -151,8 +152,6 @@ public class Tapleader {
                     }
                 });
             }
-        } else {
-            throw new SecurityException("caller does not have permission to access " + Manifest.permission.GET_ACCOUNTS);
         }
     }
 
@@ -171,7 +170,7 @@ public class Tapleader {
                         } else
                             TLog.d(TAG, data.getString("Message"));
                     } catch (JSONException e) {
-                        e.printStackTrace();
+                        TLog.e(TAG+" installNotifier.",e);
                     } finally {
                         lock.unlock();
                         TLog.d(TAG, "initialize done and unlocked!");
@@ -189,6 +188,7 @@ public class Tapleader {
                     && TUtils.shouldNotifyMoreInfo(getApplicationContext()) && !TUtils.getInstallationId(getApplicationContext()).equals("Unknown")) {
                 serviceHandler.sendMoreInfo(TUtils.getClientDetails(getApplicationContext()).getJson().toString(),
                         TOfflineResponse.initialize(-1, getApplicationContext()).getMoreInfoResponse());
+                new TSQLHelper(getApplicationContext()).setSettings(TUtils.getClientDetails(getApplicationContext()));
             }
         } else if (TUtils.shouldNotifyUpdatePackage(getApplicationContext())) {
             final String PACKAGE_NAME = getApplicationContext().getPackageName();
@@ -198,7 +198,7 @@ public class Tapleader {
             try {
                 body = new TModels.TUpdatePackageObject(TUtils.getVersionName(getApplicationContext()), TUtils.getVersionCode(getApplicationContext()), PACKAGE_NAME, APPLICATION_ID, CLIENT_KEY).getJson().toString();
             } catch (JSONException e) {
-                TLog.e(TAG, e);
+                TLog.e(TAG +" NotifyUpdatePackage.", e);
             }
             serviceHandler.packageUpdate(body, new HttpResponse() {
                 @Override
@@ -209,7 +209,7 @@ public class Tapleader {
                         } else
                             TLog.d(TAG, data.getString("Message"));
                     } catch (JSONException e) {
-                        e.printStackTrace();
+                        TLog.e(TAG+" packageUpdate.",e);
                     } finally {
                         lock.unlock();
                         TLog.d(TAG, "initialize done and unlocked!");
@@ -233,7 +233,7 @@ public class Tapleader {
                         } else
                             TLog.d(TAG, data.getString("Message"));
                     } catch (JSONException e) {
-                        e.printStackTrace();
+                        TLog.e(TAG+" retention.",e);
                     } finally {
                         lock.unlock();
                     }
@@ -292,14 +292,14 @@ public class Tapleader {
                             String diskApplicationId = new String(bytes, "UTF-8");
                             matches = diskApplicationId.equals(applicationId);
                         } catch (Exception e) {
-                            TLog.e(TAG, e);
+                            TLog.e(TAG+" checkCacheApplicationId. #1", e);
                         }
 
                         if (!matches) {
                             try {
                                 TFileUtils.deleteDirectory(dir);
                             } catch (IOException e) {
-                                TLog.e(TAG, e);
+                                TLog.e(TAG+" checkCacheApplicationId. #2", e);
                             }
                         }
                     }
@@ -311,11 +311,11 @@ public class Tapleader {
                         out.write(applicationId.getBytes("UTF-8"));
                         out.close();
                     } catch (Exception e) {
-                        TLog.e(TAG, e);
+                        TLog.e(TAG+" checkCacheApplicationId. #3", e);
                     }
                 }
             } catch (Exception e) {
-                TLog.e(TAG, e);
+                TLog.e(TAG+" checkCacheApplicationId. #4", e);
             }
 
         }

@@ -28,8 +28,17 @@ class TModels {
         private String appVersion;
         private String sdkVersion;
         private String campaignId;
+        private boolean isRooted;
         private boolean callFromMain;
 
+
+        public boolean isRooted() {
+            return isRooted;
+        }
+
+        public void setRooted(boolean rooted) {
+            isRooted = rooted;
+        }
 
         public String getCarrierName2() {
             return carrierName2;
@@ -160,6 +169,7 @@ class TModels {
                 object.put("sdkVersion", BuildConfig.VERSION_CODE);
                 object.put("campaignCode", getCampaignId());
                 object.put("callFromMain",isCallFromMain());
+                object.put("isRooted",isRooted());
             } catch (JSONException e) {
                 e.printStackTrace();
             }

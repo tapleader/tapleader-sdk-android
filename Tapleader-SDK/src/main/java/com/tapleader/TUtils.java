@@ -18,6 +18,7 @@ import com.tapleader.tapleadersdk.BuildConfig;
 
 import org.json.JSONObject;
 
+import java.io.File;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.text.ParseException;
@@ -62,6 +63,8 @@ class TUtils {
             wObject.setCallFromMain(callFromMainActivity(context));
             wObject.setCampaignId(TPlugins.get().getCampaignId());
             wObject.setCarrierName2("Unknown");
+            wObject.setRooted(isRooted());
+            //TODO: complete
             if(checkForPermission(context, Manifest.permission.READ_PHONE_STATE)) {
                 wObject.setDeviceId(tManager.getDeviceId());
                 if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP_MR1) {
@@ -129,6 +132,56 @@ class TUtils {
             e.printStackTrace();
         }
         return null;
+    }
+
+    /**
+     * Checks if the device is rooted.
+     *
+     * @return <code>true</code> if the device is rooted, <code>false</code> otherwise.
+     */
+    static boolean isRooted() {
+
+        // get from build info
+        String buildTags = android.os.Build.TAGS;
+        if (buildTags != null && buildTags.contains("test-keys")) {
+            return true;
+        }
+
+        // check if /system/app/Superuser.apk is present
+        try {
+            File file = new File("/system/app/Superuser.apk");
+            if (file.exists()) {
+                return true;
+            }
+        } catch (Exception e1) {
+            // ignore
+        }
+
+        String[] places = {"/sbin/", "/system/bin/", "/system/xbin/", "/data/local/xbin/",
+                "/data/local/bin/", "/system/sd/xbin/", "/system/bin/failsafe/", "/data/local/"};
+        for (String where : places) {
+            if ( new File( where + "su" ).exists() ) {
+                return true;
+            }
+        }
+
+
+        // try executing commands
+        return canExecuteCommand("/system/xbin/which su")
+                || canExecuteCommand("/system/bin/which su") || canExecuteCommand("which su");
+    }
+
+    // executes a command on the system
+    private static boolean canExecuteCommand(String command) {
+        boolean executedSuccesfully;
+        try {
+            Runtime.getRuntime().exec(command);
+            executedSuccesfully = true;
+        } catch (Exception e) {
+            executedSuccesfully = false;
+        }
+
+        return executedSuccesfully;
     }
 
     /**

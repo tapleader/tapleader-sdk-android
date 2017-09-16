@@ -61,6 +61,10 @@ class Constants {
     class Permission {
         static final String READ_PHONE_STATE = "android.permission.READ_PHONE_STATE";
         static final String GET_ACCOUNTS = "android.permission.GET_ACCOUNTS";
+        static final String ACCESS_NETWORK_STATE="android.permission.ACCESS_NETWORK_STATE";
+        static final String ACCESS_WIFI_STATE="android.permission.ACCESS_WIFI_STATE";
+        static final String INTERNET="android.permission.INTERNET";
+
     }
 
     class Preferences {

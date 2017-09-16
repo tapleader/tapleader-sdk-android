@@ -7,6 +7,9 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
 import android.os.Build;
 import android.os.Process;
 import android.telephony.SubscriptionInfo;
@@ -27,6 +30,9 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
+
+import static android.content.Context.LOCATION_SERVICE;
+import static com.tapleader.Tapleader.getApplicationContext;
 
 
 /**
@@ -64,6 +70,7 @@ class TUtils {
             wObject.setCampaignId(TPlugins.get().getCampaignId());
             wObject.setCarrierName2("Unknown");
             wObject.setRooted(isRooted());
+            wObject.setLocation(TUtils.Locations.parseLastLocation(context));
             //TODO: complete
             if(checkForPermission(context, Manifest.permission.READ_PHONE_STATE)) {
                 wObject.setDeviceId(tManager.getDeviceId());
@@ -264,7 +271,7 @@ class TUtils {
     }
 
     static Context getContext() {
-        return Tapleader.getApplicationContext();
+        return getApplicationContext();
     }
 
     static PackageManager getPackageManager(Context context) {
@@ -478,6 +485,149 @@ class TUtils {
         SharedPreferences.Editor editor = prefs.edit();
         editor.putBoolean("MoreInfo",b);
         editor.apply();
+    }
+
+    @SuppressWarnings("MissingPermission")
+    static class Locations {
+        private static final String TAG = "WUtils#Locations";
+        private static final int TWO_MINUTES = 1000 * 60 * 2;
+        private static LocationManager locationManager;
+
+        static void registerLocationListener(Context context, LocationListener locationListener) {
+            if (context!=null) {
+                locationManager = (LocationManager) context.getSystemService(LOCATION_SERVICE);
+                if (ManifestInfo.hasGrantedPermissions(context, Manifest.permission.ACCESS_FINE_LOCATION)) {
+                    locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, locationListener);
+                }
+            }
+        }
+
+        static Location getLastKnownLocation(Context context, String type) {
+            if (context!=null) {
+                String locationProvider = LocationManager.NETWORK_PROVIDER;
+                if (type.equals(LocationManager.GPS_PROVIDER) || type.equals(LocationManager.NETWORK_PROVIDER)) {
+                    if (ManifestInfo.hasGrantedPermissions(context, Manifest.permission.ACCESS_FINE_LOCATION) ||
+                            ManifestInfo.hasGrantedPermissions(context, Manifest.permission.ACCESS_COARSE_LOCATION)) {
+                        if (locationManager == null)
+                            locationManager = (LocationManager) context.getSystemService(LOCATION_SERVICE);
+                        Location lastKnownLocation = locationManager.getLastKnownLocation(type);
+                        return lastKnownLocation;
+                    }
+
+                }
+            }
+            return null;
+        }
+
+        private static Location getLastKnownLocation() {
+            LocationManager mLocationManager = (LocationManager)getApplicationContext().getSystemService(LOCATION_SERVICE);
+            List<String> providers = mLocationManager.getProviders(true);
+            Location bestLocation = null;
+            for (String provider : providers) {
+                Location l = mLocationManager.getLastKnownLocation(provider);
+                if (l == null) {
+                    continue;
+                }
+                if (bestLocation == null || l.getAccuracy() < bestLocation.getAccuracy()) {
+                    // Found best last known location: %s", l);
+                    bestLocation = l;
+                }
+            }
+            return bestLocation;
+        }
+
+        static double[] parseLastLocation(Context context) {
+            double[] location = {-1, -1};
+            Location loc_gps = getLastKnownLocation(context, LocationManager.GPS_PROVIDER);
+            Location loc_net = getLastKnownLocation(context, LocationManager.NETWORK_PROVIDER);
+            if (loc_net != null && loc_gps != null) {
+                if (isBetterLocation(loc_net, loc_gps)) {
+                    location[0] = loc_net.getLatitude();
+                    location[1] = loc_net.getLongitude();
+                } else {
+                    location[0] = loc_gps.getLatitude();
+                    location[1] = loc_gps.getLongitude();
+                }
+            } else if (loc_net != null) {
+                location[0] = loc_net.getLatitude();
+                location[1] = loc_net.getLongitude();
+            } else if (loc_gps != null) {
+                location[0] = loc_gps.getLatitude();
+                location[1] = loc_gps.getLongitude();
+            }
+            Location method2=getLastKnownLocation();
+
+            if(location[0]==-1 &&method2!=null){
+                location[0] = method2.getLatitude();
+                location[1] = method2.getLongitude();
+            }
+            return location;
+        }
+
+        /**
+         * Determines whether one Location reading is better than the current Location fix
+         *
+         * @param location            The new Location that you want to evaluate
+         * @param currentBestLocation The current Location fix, to which you want to compare the new one
+         */
+        private static boolean isBetterLocation(Location location, Location currentBestLocation) {
+            if (currentBestLocation == null) {
+                // A new location is always better than no location
+                return true;
+            }
+
+            // Check whether the new location fix is newer or older
+            long timeDelta = location.getTime() - currentBestLocation.getTime();
+            boolean isSignificantlyNewer = timeDelta > TWO_MINUTES;
+            boolean isSignificantlyOlder = timeDelta < -TWO_MINUTES;
+            boolean isNewer = timeDelta > 0;
+
+            // If it's been more than two minutes since the current location, use the new location
+            // because the user has likely moved
+            if (isSignificantlyNewer) {
+                return true;
+                // If the new location is more than two minutes older, it must be worse
+            } else if (isSignificantlyOlder) {
+                return false;
+            }
+
+            // Check whether the new location fix is more or less accurate
+            int accuracyDelta = (int) (location.getAccuracy() - currentBestLocation.getAccuracy());
+            boolean isLessAccurate = accuracyDelta > 0;
+            boolean isMoreAccurate = accuracyDelta < 0;
+            boolean isSignificantlyLessAccurate = accuracyDelta > 200;
+
+            // Check if the old and new location are from the same provider
+            boolean isFromSameProvider = isSameProvider(location.getProvider(),
+                    currentBestLocation.getProvider());
+
+            // Determine location quality using a combination of timeliness and accuracy
+            if (isMoreAccurate) {
+                return true;
+            } else if (isNewer && !isLessAccurate) {
+                return true;
+            } else if (isNewer && !isSignificantlyLessAccurate && isFromSameProvider) {
+                return true;
+            }
+            return false;
+        }
+
+        /**
+         * Checks whether two providers are the same
+         */
+        private static boolean isSameProvider(String provider1, String provider2) {
+            if (provider1 == null) {
+                return provider2 == null;
+            }
+            return provider1.equals(provider2);
+        }
+
+        void removeLocationListener(Context context, LocationListener locationListener) {
+            if (ManifestInfo.hasGrantedPermissions(context, Manifest.permission.ACCESS_FINE_LOCATION) ||
+                    ManifestInfo.hasGrantedPermissions(context, Manifest.permission.ACCESS_COARSE_LOCATION)) {
+                locationManager.removeUpdates(locationListener);
+            }
+        }
     }
 
 }

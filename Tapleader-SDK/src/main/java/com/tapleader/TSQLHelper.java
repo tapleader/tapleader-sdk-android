@@ -113,6 +113,17 @@ class TSQLHelper extends SQLiteOpenHelper {
         }
     }
 
+    void deleteSettings(){
+        SQLiteDatabase db = null;
+        int result = -1;
+        try {
+            db.execSQL("delete from "+ TModels.TInstallObject.TInstallEntity.TABLE_NAME);
+            db = this.getWritableDatabase();
+        }catch (Exception e){
+            TLog.e(TAG+" deleteSettings.",e);
+        }
+    }
+
     boolean deleteOfflineRecord(long id) {
         SQLiteDatabase db = null;
         int result = -1;

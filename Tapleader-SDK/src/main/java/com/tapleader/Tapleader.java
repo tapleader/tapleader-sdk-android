@@ -91,6 +91,7 @@ public class Tapleader {
             lock.unlock();
             throw new RuntimeException("Tapleader should be initialized in Application class!");
         }
+        checkPermissions(configuration.context);
         String deviceId = "PERMISSION_NOT_GRANTED";
         if (ManifestInfo.hasGrantedPermissions(configuration.context, Constants.Permission.READ_PHONE_STATE))
             deviceId = ((TelephonyManager) configuration.context.getSystemService(Context.TELEPHONY_SERVICE)).getDeviceId();
@@ -107,6 +108,16 @@ public class Tapleader {
         }
     }
 
+    private static void checkPermissions(Context context) {
+        if(!ManifestInfo.hasGrantedPermissions(context,Constants.Permission.INTERNET)){
+            throw new RuntimeException(Constants.Permission.INTERNET+" should be granted!");
+        }else if(!ManifestInfo.hasGrantedPermissions(context,Constants.Permission.ACCESS_WIFI_STATE)){
+            throw new RuntimeException(Constants.Permission.ACCESS_WIFI_STATE+" should be granted!");
+        }else if(!ManifestInfo.hasGrantedPermissions(context,Constants.Permission.ACCESS_NETWORK_STATE)){
+            throw new RuntimeException(Constants.Permission.ACCESS_NETWORK_STATE+" should be granted!");
+        }
+    }
+
     private static void checkDbData(Context context, TModels.TInstallObject installObject) {
         TSQLHelper helper = new TSQLHelper(context);
         if (!helper.isSettingExist()) {
@@ -117,6 +128,7 @@ public class Tapleader {
         String appID = helper.getSetting(TModels.TInstallObject.TInstallEntity.COLUMN_NAME_APP_ID);
         String androidV = helper.getSetting(TModels.TInstallObject.TInstallEntity.COLUMN_NAME_ANDROID_VERSION);
         if (appID != null && androidV != null && !appID.equals(installObject.getApplicationId()) || !androidV.equals(installObject.getVersion())) {
+            helper.deleteSettings();
             helper.setSettings(installObject);
             Log.d(TAG, "db settings update!");
         }
@@ -156,7 +168,6 @@ public class Tapleader {
     }
 
     private static void checkForNewInstallOrUpdate(final boolean dangerousAccess) {
-        TUtils.updateLunchCounter(getApplicationContext(), TUtils.getLunchCounter(getApplicationContext()) + 1);
         if (TUtils.shouldNotifyInstall(getApplicationContext())) {
             serviceHandler.installNotifier(TUtils.getClientDetails(getApplicationContext()).getJson().toString(), new HttpResponse() {
                 @Override
@@ -222,6 +233,7 @@ public class Tapleader {
                 }
             });
         } else if ((System.currentTimeMillis() - TUtils.getLastLaunchTime(getApplicationContext())) >= 1000 * 60 * 5) {
+            TUtils.updateLunchCounter(getApplicationContext(), TUtils.getLunchCounter(getApplicationContext()) + 1);
             Log.d(TAG, "notify retention!");
             serviceHandler.retention(getRetentionData(), new HttpResponse() {
                 @Override

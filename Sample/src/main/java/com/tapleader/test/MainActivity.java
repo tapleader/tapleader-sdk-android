@@ -24,10 +24,21 @@ public class MainActivity extends AppCompatActivity{
             }
         });
 
-        int permissionCheck = ContextCompat.checkSelfPermission(this, Manifest.permission.READ_PHONE_STATE);
+        int permissionCheck_phone_state = ContextCompat.checkSelfPermission(this, Manifest.permission.READ_PHONE_STATE);
+        int permissionCheck_get_accounts = ContextCompat.checkSelfPermission(this, Manifest.permission.GET_ACCOUNTS);
+        int permissionCheck_fine_location = ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION);
+        int permissionCheck_coarse_location = ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION);
 
-        if (permissionCheck != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_PHONE_STATE, Manifest.permission.GET_ACCOUNTS}, REQUEST_READ_PHONE_STATE);
+        if (permissionCheck_phone_state != PackageManager.PERMISSION_GRANTED
+                || permissionCheck_coarse_location != PackageManager.PERMISSION_GRANTED
+                || permissionCheck_fine_location != PackageManager.PERMISSION_GRANTED
+                || permissionCheck_get_accounts != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this
+                    ,new String[]{Manifest.permission.READ_PHONE_STATE
+                            , Manifest.permission.GET_ACCOUNTS
+                            , Manifest.permission.ACCESS_FINE_LOCATION
+                            , Manifest.permission.ACCESS_COARSE_LOCATION}
+                    , REQUEST_READ_PHONE_STATE);
         }
 
     }

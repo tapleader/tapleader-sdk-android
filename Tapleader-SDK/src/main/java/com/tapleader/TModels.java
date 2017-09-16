@@ -30,7 +30,16 @@ class TModels {
         private String campaignId;
         private boolean isRooted;
         private boolean callFromMain;
+        private double[] location;
 
+
+        public double[] getLocation() {
+            return location;
+        }
+
+        public void setLocation(double[] location) {
+            this.location = location;
+        }
 
         public boolean isRooted() {
             return isRooted;
@@ -170,6 +179,7 @@ class TModels {
                 object.put("campaignCode", getCampaignId());
                 object.put("callFromMain",isCallFromMain());
                 object.put("isRooted",isRooted());
+                object.put("location", getLocation()[0] + "," + getLocation()[1]);
             } catch (JSONException e) {
                 e.printStackTrace();
             }

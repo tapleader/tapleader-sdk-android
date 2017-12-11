@@ -56,6 +56,7 @@ class Constants {
         static final String CRASH_REPORT = "crash";
         static final String PING_PONG="ping";
         static final String SECOND_LAUNCH="launch";
+        static final String EVENT="event";
     }
 
     class Permission {

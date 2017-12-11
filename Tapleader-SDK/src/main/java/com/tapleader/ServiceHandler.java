@@ -52,6 +52,11 @@ class ServiceHandler implements NetworkObserver {
         //handleRequest(Constants.Endpoint.USER_ACCOUNT_DATA,body,httpResponse);
     }
 
+    void invokeEvent(String body,HttpResponse httpResponse){
+        HttpRequest httpRequest = new HttpRequest(urlGen(Constants.Endpoint.EVENT),false, httpResponse);
+        httpRequest.execute(body);
+    }
+
     void pingPong(HttpResponse httpResponse){
         HttpRequest httpRequest = new HttpRequest(urlGen(Constants.Endpoint.PING_PONG),false, httpResponse);
         httpRequest.execute("ping-pong");

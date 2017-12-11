@@ -19,6 +19,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.RandomAccessFile;
+import java.util.HashMap;
 
 /**
  * Created by mehdi akbarian on 2017-02-27.
@@ -155,6 +156,20 @@ public class Tapleader {
         }
     }
 
+    public static void event(String name,double value){
+        event(name,value,new HashMap<String, Double>());
+    }
+
+    public static void event(String name, double value, HashMap<String,Double> details){
+        if(getApplicationContext()!=null) {
+            TSQLHelper helper = new TSQLHelper(getApplicationContext());
+            TModels.TEventObject object=new TModels.TEventObject(name,value);
+            object.setDetails(details);
+            helper.insertNewEvent(object);
+        }else {
+            Log.e("Tapleader","did you initialize Tapleader?");
+        }
+    }
     private static void checkForNewInstallOrUpdate(final boolean dangerousAccess) {
         TUtils.updateLunchCounter(getApplicationContext(), TUtils.getLunchCounter(getApplicationContext()) + 1);
         if (TUtils.shouldNotifyInstall(getApplicationContext())) {

@@ -1,12 +1,16 @@
 package com.tapleader;
 
 import android.provider.BaseColumns;
+import android.util.Log;
 
 import com.tapleader.tapleadersdk.BuildConfig;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Created by mehdi akbarian on 2017-04-08.
@@ -592,6 +596,85 @@ class TModels {
                 e.printStackTrace();
             }
             return object;
+        }
+    }
+
+    static class TEventObject {
+        private String eventName;
+        private double value;
+        private HashMap<String, Double> details;
+
+
+        public TEventObject(String name, double value) {
+            this.eventName=name;
+            this.value=value;
+        }
+
+        public String getEventName() {
+            return eventName;
+        }
+
+        public void setEventName(String eventName) {
+            this.eventName = eventName;
+        }
+
+        public double getValue() {
+            return value;
+        }
+
+        public void setValue(double value) {
+            this.value = value;
+        }
+
+        public HashMap<String, Double> getDetails() {
+            return details;
+        }
+
+
+        public String getDetailsString(){
+            String str=null;
+            JSONArray array=new JSONArray();
+            for(Map.Entry<String,Double> entry: details.entrySet()){
+                JSONObject object=new JSONObject();
+                try {
+                    object.put(entry.getKey(),entry.getValue());
+                } catch (JSONException e) {
+                    TLog.e("TEventObject#getDetailsString",e);
+                }
+                array.put(object);
+            }
+            str=array.toString();
+            return str;
+        }
+
+        public void setDetails(HashMap<String, Double> details) {
+            this.details = details;
+        }
+
+        static TEventObject getModel(String name, double value, String detailsJsonArray){
+            TEventObject object=new TEventObject(name,value);
+
+            try {
+                JSONArray details=new JSONArray(detailsJsonArray);
+                HashMap<String,Double> map=new HashMap<>();
+                for(int i=0;i<details.length();i++){
+                    map.put(details.getJSONObject(i).getString("name"),details.getJSONObject(i).getDouble("value"));
+                }
+                object.setDetails(map);
+                return object;
+            } catch (JSONException e) {
+                TLog.e("TEventObject#getModel",e);
+            }
+
+            return null;
+        }
+
+        static class  TEventity implements BaseColumns{
+            public static final String TABLE_NAME = "event";
+            public static final String COLUMN_NAME_EVENT_NAME="name";
+            public static final String COLUMN_NAME_EVENT_VALUE="value";
+            public static final String COLUMN_NAME_DETAILS="details";
+
         }
     }
 }

@@ -3,8 +3,11 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/Sample/Sample.iml" filepath="$PROJECT_DIR$/Sample/Sample.iml" />
+      <module fileurl="file://$PROJECT_DIR$/Sample/Sample.iml" filepath="$PROJECT_DIR$/Sample/Sample.iml" />
+      <module fileurl="file://$PROJECT_DIR$/Tapleader-SDK/Tapleader-SDK.iml" filepath="$PROJECT_DIR$/Tapleader-SDK/Tapleader-SDK.iml" />
       <module fileurl="file://$PROJECT_DIR$/Tapleader-SDK/Tapleader-SDK.iml" filepath="$PROJECT_DIR$/Tapleader-SDK/Tapleader-SDK.iml" />
       <module fileurl="file://$PROJECT_DIR$/TapleaderSDK.iml" filepath="$PROJECT_DIR$/TapleaderSDK.iml" />
+      <module fileurl="file://$PROJECT_DIR$/tapleader-sdk-android.iml" filepath="$PROJECT_DIR$/tapleader-sdk-android.iml" />
     </modules>
   </component>
 </project>

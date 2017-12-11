@@ -23,7 +23,7 @@ import java.util.Date;
 class TSQLHelper extends SQLiteOpenHelper {
     static final String DATABASE_NAME = "tapleader_offline.db";
     static final String TAG = "TSQLHelper";
-    static final int DATABASE_VERSION = 3;
+    static final int DATABASE_VERSION = 4;
 
     private static final String SQL_CREATE_OFFLINE_RECORD_TABLE =
             "CREATE TABLE IF NOT EXISTS " + TModels.TOfflineRecord.TOfflineRecordEntity.TABLE_NAME + " (" +
@@ -63,6 +63,17 @@ class TSQLHelper extends SQLiteOpenHelper {
     private static final String SQL_DELETE_LIFECYCLE_TABLE =
             "DROP TABLE IF EXISTS " + TModels.TLifeCycleObject.TLifeCycleEntity.TABLE_NAME;
 
+
+    private static final String SQL_CREATE_EVENT_TABLE=
+            "CREATE TABLE IF NOT EXISTS "+TModels.TEventObject.TEventity.TABLE_NAME + " ("+
+                    TModels.TEventObject.TEventity._ID + " INTEGER PRIMARY KEY," +
+                    TModels.TEventObject.TEventity.COLUMN_NAME_EVENT_NAME + " TEXT," +
+                    TModels.TEventObject.TEventity.COLUMN_NAME_EVENT_VALUE+ " REAL,"+
+                    TModels.TEventObject.TEventity.COLUMN_NAME_DETAILS+ " TEXT)";
+    private static final String SQL_DELETE_EVENT_TABLE =
+            "DROP TABLE IF EXISTS " + TModels.TEventObject.TEventity.TABLE_NAME;
+
+
     TSQLHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
     }
@@ -80,6 +91,7 @@ class TSQLHelper extends SQLiteOpenHelper {
         db.execSQL(SQL_CREATE_SETTINGS_TABLE);
         db.execSQL(SQL_CREATE_OFFLINE_RECORD_TABLE);
         db.execSQL(SQL_CREATE_LIFECYCLE_TABLE);
+        db.execSQL(SQL_CREATE_EVENT_TABLE);
     }
 
     @Override
@@ -87,6 +99,7 @@ class TSQLHelper extends SQLiteOpenHelper {
         db.execSQL(SQL_DELETE_OFFLINE_RECORD_TABLE);
         db.execSQL(SQL_DELETE_SETTINGS_TABLE);
         db.execSQL(SQL_DELETE_LIFECYCLE_TABLE);
+        db.execSQL(SQL_DELETE_EVENT_TABLE);
         onCreate(db);
     }
 
@@ -113,6 +126,63 @@ class TSQLHelper extends SQLiteOpenHelper {
         }
     }
 
+
+    boolean insertNewEvent(TModels.TEventObject eventObject){
+        SQLiteDatabase db = null;
+
+        try {
+            db = this.getWritableDatabase();
+            ContentValues values = new ContentValues();
+            values.put(TModels.TEventObject.TEventity.COLUMN_NAME_EVENT_NAME,eventObject.getEventName());
+            values.put(TModels.TEventObject.TEventity.COLUMN_NAME_EVENT_VALUE,eventObject.getValue());
+            values.put(TModels.TEventObject.TEventity.COLUMN_NAME_DETAILS,eventObject.getDetailsString());
+            db.insert(TModels.TEventObject.TEventity.TABLE_NAME, null, values);
+        } catch (SQLException e) {
+            TLog.e(TAG, e);
+            return false;
+        } finally {
+            db.close();
+            return true;
+        }
+    }
+
+
+    ArrayList<TModels.TEventObject> getEventObjects(){
+        ArrayList<TModels.TEventObject> list = new ArrayList<>();
+
+        Cursor cursor = null;
+        SQLiteDatabase db = null;
+        try {
+            db = this.getReadableDatabase();
+        } catch (SQLException e) {
+            TLog.e(TAG, e);
+            return list;
+        }
+
+        try {
+            cursor = db.query(
+                    TModels.TEventObject.TEventity.TABLE_NAME, null, null, null, null, null, null);
+            while (cursor.moveToNext()) {
+                TModels.TEventObject eventObject=null;
+                int nameIndex = cursor.getColumnIndexOrThrow(TModels.TOfflineRecord.TOfflineRecordEntity.COLUMN_NAME_PATH);
+                int valueIndex = cursor.getColumnIndexOrThrow(TModels.TOfflineRecord.TOfflineRecordEntity.COLUMN_NAME_BODY);
+                int detailsIndex = cursor.getColumnIndexOrThrow(TModels.TOfflineRecord.TOfflineRecordEntity.COLUMN_NAME_DATE);
+                String name= cursor.getString(nameIndex);
+                double value= cursor.getDouble(valueIndex);
+                String details=cursor.getString(detailsIndex);
+                eventObject= TModels.TEventObject.getModel(name,value,details);
+                list.add(eventObject);
+            }
+            cursor.close();
+            if(db.isOpen())
+                db.close();
+        } catch (Exception e) {
+            TLog.e(TAG, e);
+        } finally {
+            return list;
+        }
+    }
+
     boolean deleteOfflineRecord(long id) {
         SQLiteDatabase db = null;
         int result = -1;
@@ -129,6 +199,8 @@ class TSQLHelper extends SQLiteOpenHelper {
             return result > 0;
         }
     }
+
+
 
     ArrayList<TModels.TOfflineRecord> getOfflineRecords(String path) {
         ArrayList<TModels.TOfflineRecord> list = new ArrayList<>();

@@ -164,16 +164,18 @@ class TSQLHelper extends SQLiteOpenHelper {
                     TModels.TEventObject.TEventity.TABLE_NAME, null, null, null, null, null, null);
             while (cursor.moveToNext()) {
                 TModels.TEventObject eventObject=null;
-                int nameIndex = cursor.getColumnIndexOrThrow(TModels.TOfflineRecord.TOfflineRecordEntity.COLUMN_NAME_PATH);
-                int valueIndex = cursor.getColumnIndexOrThrow(TModels.TOfflineRecord.TOfflineRecordEntity.COLUMN_NAME_BODY);
-                int detailsIndex = cursor.getColumnIndexOrThrow(TModels.TOfflineRecord.TOfflineRecordEntity.COLUMN_NAME_DATE);
+                int nameIndex = cursor.getColumnIndexOrThrow(TModels.TEventObject.TEventity.COLUMN_NAME_EVENT_NAME);
+                int valueIndex = cursor.getColumnIndexOrThrow(TModels.TEventObject.TEventity.COLUMN_NAME_EVENT_VALUE);
+                int detailsIndex = cursor.getColumnIndexOrThrow(TModels.TEventObject.TEventity.COLUMN_NAME_DETAILS);
                 String name= cursor.getString(nameIndex);
                 double value= cursor.getDouble(valueIndex);
                 String details=cursor.getString(detailsIndex);
                 eventObject= TModels.TEventObject.getModel(name,value,details);
                 list.add(eventObject);
             }
-            cursor.close();
+            if(cursor != null && !cursor.isClosed()) {
+                cursor.close();
+            }
             if(db.isOpen())
                 db.close();
         } catch (Exception e) {
@@ -237,7 +239,9 @@ class TSQLHelper extends SQLiteOpenHelper {
                 record.setId(cursor.getLong(idIndex));
                 list.add(record);
             }
-            cursor.close();
+            if(cursor != null && !cursor.isClosed()) {
+                cursor.close();
+            }
             if(db.isOpen())
                 db.close();
         } catch (Exception e) {
@@ -307,7 +311,9 @@ class TSQLHelper extends SQLiteOpenHelper {
             while (cursor.moveToNext()) {
                 result = cursor.getString(cursor.getColumnIndex(colName));
             }
-            cursor.close();
+            if(cursor != null && !cursor.isClosed()) {
+                cursor.close();
+            }
             if(db.isOpen())
                 db.close();
         } catch (SQLException e) {
@@ -356,7 +362,9 @@ class TSQLHelper extends SQLiteOpenHelper {
             values.put(TModels.TLifeCycleObject.TLifeCycleEntity.COLUMN_NAME_DURATION, duration);
             values.put(TModels.TLifeCycleObject.TLifeCycleEntity.COLUMN_NAME_COUNT, 1);
             newRowId = db.insert(TModels.TLifeCycleObject.TLifeCycleEntity.TABLE_NAME, null, values);
-            cursor.close();
+            if(cursor != null && !cursor.isClosed()) {
+                cursor.close();
+            }
             if(db.isOpen())
                 db.close();
         } catch (SQLException e) {
@@ -396,7 +404,9 @@ class TSQLHelper extends SQLiteOpenHelper {
                         + ") FROM " + TModels.TLifeCycleObject.TLifeCycleEntity.TABLE_NAME, null);
                 cursor.moveToFirst();
                 cnt = cursor.getInt(0);
-                cursor.close();
+                if(cursor != null && !cursor.isClosed()) {
+                    cursor.close();
+                }
                 if (db != null && db.isOpen())
                     db.close();
             }
@@ -413,7 +423,9 @@ class TSQLHelper extends SQLiteOpenHelper {
         try {
             Cursor cursor = db.rawQuery("DELETE FROM " + TModels.TLifeCycleObject.TLifeCycleEntity.TABLE_NAME, null);
             count = cursor.getCount();
-            cursor.close();
+            if(cursor != null && !cursor.isClosed()) {
+                cursor.close();
+            }
             if (db.isOpen())
                 db.close();
         } catch (Exception e) {
@@ -451,7 +463,9 @@ class TSQLHelper extends SQLiteOpenHelper {
                 object.put(TModels.TLifeCycleObject.TLifeCycleEntity.COLUMN_NAME_COUNT, cursor.getInt(count));
                 array.put(object);
             }
-            cursor.close();
+            if(cursor != null && !cursor.isClosed()) {
+                cursor.close();
+            }
             if (db.isOpen())
                 db.close();
         } catch (SQLException e) {
@@ -459,6 +473,22 @@ class TSQLHelper extends SQLiteOpenHelper {
         } finally {
 
             return array;
+        }
+    }
+
+    public void deleteEvents() {
+        SQLiteDatabase db = this.getWritableDatabase();
+        int count = 0;
+        try {
+            Cursor cursor = db.rawQuery("DELETE FROM " + TModels.TEventObject.TEventity.TABLE_NAME, null);
+            count = cursor.getCount();
+            if(cursor != null && !cursor.isClosed()) {
+                cursor.close();
+            }
+            if (db.isOpen())
+                db.close();
+        } catch (Exception e) {
+            TLog.e(TAG+" truncateActivityLifeCycle.", e);
         }
     }
 }

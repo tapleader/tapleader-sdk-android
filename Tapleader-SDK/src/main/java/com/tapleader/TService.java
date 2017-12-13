@@ -9,6 +9,7 @@ import android.os.Binder;
 import android.os.IBinder;
 import android.util.Log;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -147,6 +148,37 @@ public class TService extends Service implements NetworkObserver {
             if(isConnectedToNet.get()){
                 commitActivityLog();
                 commitMoreInfo();
+                commitEvents();
+            }
+        }
+
+        private void commitEvents() {
+            final TSQLHelper helper=new TSQLHelper(TService.this);
+            ArrayList<TModels.TEventObject> events=helper.getEventObjects();
+            if(events!=null && events.size()>0){
+                try{
+                    String appId=null;
+                    String deviceId=null;
+                    String installationId=null;
+                    if(TPlugins.get()!=null) {
+                        appId = TPlugins.get().getApplicationId();
+                        deviceId = TPlugins.get().getDeviceId();
+                    }
+                    installationId=TUtils.getInstallationId(TService.this);
+                    JSONObject object=new JSONObject();
+                    object.put("AppId",appId);
+                    object.put("InstallationId",installationId);
+                    object.put("DeviceId",deviceId);
+                    JSONArray items=new JSONArray();
+                    for(TModels.TEventObject event:events){
+                        items.put(event.getJsonObject());
+                    }
+                    object.put("Items",items);
+
+                }catch (Exception e){
+                    TLog.e("TService#commitEvents",e);
+                }
+
             }
         }
 

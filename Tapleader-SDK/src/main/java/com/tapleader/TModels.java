@@ -658,7 +658,9 @@ class TModels {
                 JSONArray details=new JSONArray(detailsJsonArray);
                 HashMap<String,Double> map=new HashMap<>();
                 for(int i=0;i<details.length();i++){
-                    map.put(details.getJSONObject(i).getString("name"),details.getJSONObject(i).getDouble("value"));
+                    String nameKey=details.getJSONObject(i).keys().next();
+                    String valueKey=details.getJSONObject(i).keys().next();
+                    map.put(nameKey,details.getJSONObject(i).getDouble(valueKey));
                 }
                 object.setDetails(map);
                 return object;
@@ -667,6 +669,31 @@ class TModels {
             }
 
             return null;
+        }
+
+        public JSONObject getJsonObject(){
+            JSONObject object=new JSONObject();
+            try {
+                object.put("EventName", getEventName());
+                object.put("Value", getValue());
+                JSONArray array = new JSONArray();
+                for (Map.Entry<String, Double> d : details.entrySet()) {
+                    JSONObject detail = new JSONObject();
+                    detail.put("Key", d.getKey());
+                    detail.put("Value", d.getValue());
+                    array.put(detail);
+                }
+                object.put("Details", array);
+                return object;
+            }catch (Exception e){
+                TLog.e("TEventObject#getJsonObject",e);
+            }
+            return null;
+        }
+        @Override
+        public String toString() {
+
+            return super.toString();
         }
 
         static class  TEventity implements BaseColumns{

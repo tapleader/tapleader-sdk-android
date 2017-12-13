@@ -139,6 +139,7 @@ class HttpRequest extends AsyncTask<Object, Void, JSONObject> {
         try {
             result.put("Status", Constants.Code.REQUEST_ERROR);
             result.put("Message", message);
+            result.put("accept",false);
             result.put("InstallationId",-1);
         } catch (JSONException e1) {
             //

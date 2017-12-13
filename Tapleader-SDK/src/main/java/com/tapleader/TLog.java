@@ -100,6 +100,7 @@ class TLog {
     static void e(String tag, Exception e) {
         if(TUtils.getContext()!=null)
             e(tag,e,TUtils.getContext());
+        e.printStackTrace();
     }
 
     static void e(String tag, Exception e, Context context){

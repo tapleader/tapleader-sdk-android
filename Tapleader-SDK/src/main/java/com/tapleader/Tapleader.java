@@ -165,6 +165,10 @@ public class Tapleader {
     }
 
     public static void event(String name, double value, HashMap<String,Double> details){
+        if(name==null) {
+            TLog.d(TAG,"name field of an event can't be null!");
+            return;
+        }
         if(getApplicationContext()!=null) {
             TSQLHelper helper = new TSQLHelper(getApplicationContext());
             TModels.TEventObject object=new TModels.TEventObject(name,value);

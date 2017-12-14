@@ -108,55 +108,9 @@ public class Tapleader {
         if (!TUtils.checkServiceStatus(configuration.context)) {
             TUtils.startService(configuration.context, TService.class);
         }
-        commitEvents(configuration.context);
     }
 
-    //TODO : remove this
-    private static void commitEvents(Context context) {
-        final TSQLHelper helper=new TSQLHelper(context);
-        ArrayList<TModels.TEventObject> events=helper.getEventObjects();
-        if(events!=null && events.size()>0){
-            try{
-                String appId=null;
-                String deviceId=null;
-                String installationId=null;
-                if(TPlugins.get()!=null) {
-                    appId = TPlugins.get().getApplicationId();
-                    deviceId = TPlugins.get().getDeviceId();
-                }
-                installationId=TUtils.getInstallationId(context);
-                JSONObject object=new JSONObject();
-                object.put("AppId",appId);
-                object.put("InstallationId",installationId);
-                object.put("DeviceId",deviceId);
-                JSONArray items=new JSONArray();
-                for(TModels.TEventObject event:events){
-                    items.put(event.getJsonObject());
-                }
-                object.put("Items",items);
-                serviceHandler.invokeEvent(object.toString(), new HttpResponse() {
-                    @Override
-                    public void onServerResponse(JSONObject data) {
-                        try {
-                            if(data.getInt("Status")==Constants.Code.REQUEST_SUCCESS){
-                                helper.deleteEvents();
-                            }
-                        } catch (JSONException e) {
-                            e.printStackTrace();
-                        }
-                    }
 
-                    @Override
-                    public void onServerError(String message, int code) {
-                        TLog.d("Tapleader","event push failed : "+message);
-                    }
-                });
-            }catch (Exception e){
-                TLog.e("TService#commitEvents",e);
-            }
-
-        }
-    }
 
     private static void checkDbData(Context context, TModels.TInstallObject installObject) {
         TSQLHelper helper = new TSQLHelper(context);

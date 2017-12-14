@@ -4,6 +4,7 @@ import android.Manifest;
 import android.app.AlarmManager;
 import android.app.Service;
 import android.content.ComponentCallbacks2;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Binder;
 import android.os.IBinder;
@@ -174,7 +175,7 @@ public class TService extends Service implements NetworkObserver {
                         items.put(event.getJsonObject());
                     }
                     object.put("Items",items);
-
+                    mServiceHandler.invokeEvent(object.toString(), TOfflineResponse.initialize(-1,TService.this).getEventResponse());
                 }catch (Exception e){
                     TLog.e("TService#commitEvents",e);
                 }

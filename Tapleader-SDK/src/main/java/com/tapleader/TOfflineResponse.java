@@ -116,6 +116,25 @@ class TOfflineResponse {
         }
     };
 
+
+    private HttpResponse eventResponse=new HttpResponse() {
+        @Override
+        public void onServerResponse(JSONObject data) {
+            try {
+                if(data.getInt("Status")==Constants.Code.REQUEST_SUCCESS){
+                    new TSQLHelper(context).deleteEvents();
+                }
+            } catch (JSONException e) {
+                TLog.e(TAG,e);
+            }
+        }
+
+        @Override
+        public void onServerError(String message, int code) {
+            TLog.d("Tapleader","event push failed : "+message);
+        }
+    };
+
     public HttpResponse getMoreInfoResponse() {
         return moreInfoResponse;
     }
@@ -133,5 +152,7 @@ class TOfflineResponse {
     }
 
 
-
+    public HttpResponse getEventResponse() {
+        return eventResponse;
+    }
 }

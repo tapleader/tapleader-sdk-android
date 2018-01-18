@@ -96,15 +96,15 @@ public class ManiActivity extends AppCompatActivity {
 }
 ```
 
-### How to send event
+## How to send event
 
-each event have three main part :
+Each event have three main part :
 * Name
-** name or key for event
+  * name or key for event
 * value
-** value of event!type of value is double
+  * value of event!type of value is double
 * details
-** a key-value array to pass more information about this event! type of details is HashMap<String,Double>
+  * a key-value array to pass more information about this event! type of details is HashMap<String,Double>
 
 ```java
 HashMap<String,Double> details=new HashMap<>();

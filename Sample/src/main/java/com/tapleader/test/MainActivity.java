@@ -11,7 +11,6 @@ import android.view.View;
 import android.widget.EditText;
 import android.widget.Toast;
 
-import com.tapleader.Tapleader;
 
 import java.util.HashMap;
 import java.util.Random;
@@ -37,26 +36,26 @@ public class MainActivity extends AppCompatActivity{
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_PHONE_STATE, Manifest.permission.GET_ACCOUNTS}, REQUEST_READ_PHONE_STATE);
         }
 
-
-
         findViewById(R.id.btn_event).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                try {
+                    String name = ((EditText) findViewById(R.id.eventName)).getText().toString();
+                    Double value = Double.valueOf(((EditText) findViewById(R.id.eventValue)).getText().toString());
+                    int count = Integer.valueOf(((EditText) findViewById(R.id.eventValue)).getText().toString());
 
-                String name=((EditText)findViewById(R.id.eventName)).getText().toString();
-                Double value=Double.valueOf(((EditText)findViewById(R.id.eventValue)).getText().toString());
-                int count=Integer.valueOf(((EditText)findViewById(R.id.eventValue)).getText().toString());
-
-
-                HashMap<String,Double> d=new HashMap<>();
-                for(int i=0;i<count;i++){
-                    d.put("My details key "+i,new Random().nextDouble());
+                    HashMap<String, Double> d = new HashMap<>();
+                    for (int i = 0; i < count; i++) {
+                        d.put("My details key " + i, new Random().nextDouble());
+                    }
+                    com.tapleader.Tapleader.event(name, value, d);
+                    Toast.makeText(getBaseContext(), "Event saved!", Toast.LENGTH_SHORT).show();
+                    ((EditText) findViewById(R.id.eventName)).setText("");
+                    ((EditText) findViewById(R.id.eventValue)).setText("");
+                    ((EditText) findViewById(R.id.count)).setText("");
+                }catch (Exception e){
+                    e.printStackTrace();
                 }
-                Tapleader.event(name,value,d);
-                Toast.makeText(getBaseContext(),"Event saved!",Toast.LENGTH_SHORT).show();
-                ((EditText)findViewById(R.id.eventName)).setText("");
-                ((EditText)findViewById(R.id.eventValue)).setText("");
-                ((EditText)findViewById(R.id.count)).setText("");
             }
         });
 

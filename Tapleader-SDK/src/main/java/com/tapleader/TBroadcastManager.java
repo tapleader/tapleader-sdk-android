@@ -41,7 +41,7 @@ public class TBroadcastManager extends BroadcastReceiver {
     private static Object MUTEX = new Object();
     private static final long MAX_LAT = 120000;
     private static final long MIN_LAT = 60000;
-    private static final long INTERVAL= 10 * 60 * 1000;
+    private static final long INTERVAL= 5 * 60 * 1000;
     private static Context context;
     private AlarmManager alarmMgr;
 
@@ -109,7 +109,7 @@ public class TBroadcastManager extends BroadcastReceiver {
      * @param context
      */
     private void notifyTService(final Context context) {
-        synchronized (MUTEX) {
+        try {
             ServiceConnection mConnection = new ServiceConnection() {
                 @Override
                 public void onServiceConnected(ComponentName name, IBinder service) {
@@ -124,6 +124,8 @@ public class TBroadcastManager extends BroadcastReceiver {
                 }
             };
             context.bindService(new Intent(context, TService.class), mConnection, Context.BIND_AUTO_CREATE);
+        }catch (Exception e){
+            TLog.e("TBroadcastManager#notifyService",e);
         }
     }
 

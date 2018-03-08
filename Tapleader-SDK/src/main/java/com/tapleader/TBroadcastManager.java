@@ -11,6 +11,7 @@ import android.content.pm.PackageManager;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.IBinder;
+import android.os.SystemClock;
 import android.util.Log;
 
 import org.json.JSONException;
@@ -234,8 +235,8 @@ public class TBroadcastManager extends BroadcastReceiver {
         intent.setAction(Constants.Action.ACTION_ALARM_MANAGER);
         PendingIntent alarmIntent = PendingIntent.getBroadcast(context, 0, intent, 0);
 
-        alarmMgr.setRepeating(AlarmManager.RTC_WAKEUP,
-                System.currentTimeMillis()+INTERVAL,INTERVAL, alarmIntent);
+        alarmMgr.setRepeating(AlarmManager.ELAPSED_REALTIME_WAKEUP,
+                SystemClock.elapsedRealtime()+INTERVAL,INTERVAL, alarmIntent);
         ComponentName receiver = new ComponentName(context, TBroadcastManager.class);
         PackageManager pm = context.getPackageManager();
 

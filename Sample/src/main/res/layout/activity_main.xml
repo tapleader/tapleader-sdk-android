@@ -25,31 +25,35 @@
         android:layout_below="@+id/button"
         android:gravity="center"
         android:orientation="vertical">
+
         <EditText
             android:id="@+id/eventName"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="EVENT NAME"/>
+            android:hint="EVENT NAME"
+            android:text="Sample name" />
 
         <EditText
             android:id="@+id/eventValue"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:hint="EVENT Value"
             android:inputType="number"
-            android:hint="EVENT Value"/>
+            android:text="1.4" />
 
         <EditText
             android:id="@+id/count"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:hint="Count of Random Details"
-            android:inputType="number" />
+            android:inputType="number"
+            android:text="0" />
 
         <Button
             android:id="@+id/btn_event"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="send event"/>
-        
+
     </LinearLayout>
 </RelativeLayout>

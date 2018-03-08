@@ -39,20 +39,36 @@ public class MainActivity extends AppCompatActivity{
         findViewById(R.id.btn_event).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                Double value=null;
+                int count=0;
                 try {
                     String name = ((EditText) findViewById(R.id.eventName)).getText().toString();
-                    Double value = Double.valueOf(((EditText) findViewById(R.id.eventValue)).getText().toString());
-                    int count = Integer.valueOf(((EditText) findViewById(R.id.eventValue)).getText().toString());
-
+                    try {
+                        value = Double.valueOf(((EditText) findViewById(R.id.eventValue)).getText().toString());
+                    }catch (Exception e){
+                        Toast.makeText(MainActivity.this,"مقدار value باید عددی باشد",Toast.LENGTH_SHORT).show();
+                        e.printStackTrace();
+                    }
+                    try {
+                        if(!((EditText) findViewById(R.id.eventValue)).getText().toString().isEmpty())
+                            count = Integer.valueOf(((EditText) findViewById(R.id.count)).getText().toString());
+                    }catch (Exception e){
+                        Toast.makeText(MainActivity.this,"مقدار count باید عددی باشد",Toast.LENGTH_SHORT).show();
+                        e.printStackTrace();
+                    }
                     HashMap<String, Double> d = new HashMap<>();
                     for (int i = 0; i < count; i++) {
                         d.put("My details key " + i, new Random().nextDouble());
                     }
-                    com.tapleader.Tapleader.event(name, value, d);
+                    if(name!=null && value!=null)
+                        com.tapleader.Tapleader.event(name, value, d);
+                    else
+                        Toast.makeText(MainActivity.this,"فیلد name و value اجباریست!",Toast.LENGTH_SHORT).show();
+
                     Toast.makeText(getBaseContext(), "Event saved!", Toast.LENGTH_SHORT).show();
-                    ((EditText) findViewById(R.id.eventName)).setText("");
-                    ((EditText) findViewById(R.id.eventValue)).setText("");
-                    ((EditText) findViewById(R.id.count)).setText("");
+                    ((EditText) findViewById(R.id.eventName)).setText("Sample Name");
+                    ((EditText) findViewById(R.id.eventValue)).setText("1.4");
+                    ((EditText) findViewById(R.id.count)).setText("0");
                 }catch (Exception e){
                     e.printStackTrace();
                 }

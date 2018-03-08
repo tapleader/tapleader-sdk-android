@@ -10,6 +10,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 
 /**
@@ -658,9 +659,19 @@ class TModels {
                 JSONArray details=new JSONArray(detailsJsonArray);
                 HashMap<String,Double> map=new HashMap<>();
                 for(int i=0;i<details.length();i++){
-                    String nameKey=details.getJSONObject(i).keys().next();
-                    String valueKey=details.getJSONObject(i).keys().next();
-                    map.put(nameKey,details.getJSONObject(i).getDouble(valueKey));
+                    String nameKey=null;
+                    String valueKey=null;
+                    Iterator<String> keys= details.getJSONObject(i).keys();
+                    try {
+                        if(keys.hasNext())
+                            nameKey = keys.next();
+                        if(keys.hasNext())
+                            valueKey = keys.next();
+                    }catch (Exception e){
+                        TLog.e("TEventObject#getModel#getKeys",e);
+                    }
+                    if(nameKey!=null)
+                        map.put(nameKey,details.getJSONObject(i).getDouble(nameKey));
                 }
                 object.setDetails(map);
                 return object;
@@ -677,13 +688,15 @@ class TModels {
                 object.put("EventName", getEventName());
                 object.put("Value", getValue());
                 JSONArray array = new JSONArray();
-                for (Map.Entry<String, Double> d : details.entrySet()) {
-                    JSONObject detail = new JSONObject();
-                    detail.put("Key", d.getKey());
-                    detail.put("Value", d.getValue());
-                    array.put(detail);
+                if(details!=null && details.size()>0) {
+                    for (Map.Entry<String, Double> d : details.entrySet()) {
+                        JSONObject detail = new JSONObject();
+                        detail.put("Key", d.getKey());
+                        detail.put("Value", d.getValue());
+                        array.put(detail);
+                    }
+                    object.put("Details", array);
                 }
-                object.put("Details", array);
                 return object;
             }catch (Exception e){
                 TLog.e("TEventObject#getJsonObject",e);
@@ -692,7 +705,6 @@ class TModels {
         }
         @Override
         public String toString() {
-
             return super.toString();
         }
 

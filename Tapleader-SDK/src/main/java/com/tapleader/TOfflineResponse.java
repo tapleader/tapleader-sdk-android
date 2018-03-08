@@ -38,7 +38,7 @@ class TOfflineResponse {
 
         @Override
         public void onServerError(String message, int code) {
-
+            TLog.d("TOfflineResponse#installResponse","on server error: "+message+" code"+code);
         }
     };
 
@@ -49,6 +49,8 @@ class TOfflineResponse {
                 int status=data.getInt("Status");
                 if (status == Constants.Code.REQUEST_SUCCESS) {
                     OfflineStore.initialize(context).deleteRequest(id);
+                    TUtils.updateLastPushActivityLogTime(context,System.currentTimeMillis());
+
                 } else {
                     //do nothing
                 }
@@ -59,7 +61,7 @@ class TOfflineResponse {
 
         @Override
         public void onServerError(String message, int code) {
-
+            TLog.d("TOfflineResponse#activityTrackingResponse","on server error: "+message+" code"+code);
         }
     };
 

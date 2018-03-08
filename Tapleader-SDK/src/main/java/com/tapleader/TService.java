@@ -66,7 +66,7 @@ public class TService extends Service implements NetworkObserver {
             case ComponentCallbacks2.TRIM_MEMORY_RUNNING_MODERATE:
             case ComponentCallbacks2.TRIM_MEMORY_RUNNING_LOW:
             case ComponentCallbacks2.TRIM_MEMORY_RUNNING_CRITICAL:
-                INTERVAL=2*AlarmManager.INTERVAL_HOUR;
+                INTERVAL=AlarmManager.INTERVAL_HOUR;
                 break;
             case ComponentCallbacks2.TRIM_MEMORY_BACKGROUND:
             case ComponentCallbacks2.TRIM_MEMORY_MODERATE:
@@ -98,6 +98,7 @@ public class TService extends Service implements NetworkObserver {
         isConnectedToNet.set(isConnected);
         if(isConnected && mOfflineStore!=null){
             binder.handleRequests(mOfflineStore.getAllRequests());
+            binder.commitEvents();
         }
     }
 

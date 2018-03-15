@@ -20,15 +20,10 @@ android {
     }
 }
 
-repositories {
-
-    maven { url 'https://jitpack.io' }
-}
 
 dependencies {
     compile fileTree(include: ['*.jar'], dir: 'libs')
     compile 'com.android.support:appcompat-v7:26.0.0-alpha1'
-    compile project(':Tapleader-SDK')
-
-    //compile 'com.github.tapleader:tapleader-sdk-android:v1.4.1'
+   // compile project(':Tapleader-SDK')
+    compile 'com.github.tapleader:tapleader-sdk-android:1.4.2'
 }

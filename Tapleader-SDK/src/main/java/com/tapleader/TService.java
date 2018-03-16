@@ -8,6 +8,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Binder;
 import android.os.IBinder;
+import android.support.annotation.Keep;
+import android.support.annotation.RestrictTo;
 import android.util.Log;
 
 import org.json.JSONArray;
@@ -16,7 +18,8 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
-
+@Keep
+@RestrictTo(RestrictTo.Scope.LIBRARY)
 public class TService extends Service implements NetworkObserver {
 
     private static AtomicBoolean isConnectedToNet=new AtomicBoolean(false);

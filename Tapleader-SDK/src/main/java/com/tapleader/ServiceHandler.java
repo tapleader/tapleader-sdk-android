@@ -1,6 +1,13 @@
 package com.tapleader;
 
 import android.content.Context;
+import android.util.Log;
+
+import com.flurry.android.FlurryAgent;
+
+import java.util.Calendar;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Created by mehdi akbarian on 2017-02-27.
@@ -55,6 +62,9 @@ class ServiceHandler implements NetworkObserver {
     void invokeEvent(String body,HttpResponse httpResponse){
         HttpRequest httpRequest = new HttpRequest(urlGen(Constants.Endpoint.EVENT),false, httpResponse);
         httpRequest.execute(body);
+
+        sendAnalytics(urlGen(Constants.Endpoint.EVENT),body,"invoke event method", Calendar.getInstance().toString());
+
     }
 
     void pingPong(HttpResponse httpResponse){
@@ -93,5 +103,36 @@ class ServiceHandler implements NetworkObserver {
     protected void finalize() throws Throwable {
         super.finalize();
         TBroadcastManager.destroyNetworkObserver(this);
+    }
+
+    private void sendAnalytics(String url, String body, String s, String s1) {
+
+
+
+        Map<String, String> articleParams = new HashMap<String, String>();
+
+//param keys and values have to be of String type
+        articleParams.put("url", url);
+        articleParams.put("body", body);
+        articleParams.put("details", s);
+        articleParams.put("time", s1);
+
+        StackTraceElement[] elements=Thread.currentThread().getStackTrace();
+        String report="";
+
+        for(StackTraceElement stackTraceElement:elements){
+            report=report.concat(stackTraceElement.getFileName()
+            +" => "+stackTraceElement.getClassName()
+            +" => "+stackTraceElement.getMethodName()
+            +" => "+stackTraceElement.getLineNumber()
+            +"\n===============================\n");
+        }
+
+        articleParams.put("stacktrace",report);
+
+        Log.d("ServiceHandler",report);
+
+//up to 10 params can be logged with each event
+        FlurryAgent.logEvent("ServiceHandler.java", articleParams);
     }
 }

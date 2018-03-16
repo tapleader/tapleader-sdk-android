@@ -1,5 +1,7 @@
 apply plugin: 'com.android.library'
 
+
+
 ext{
     developerId = 'makbn'
     developerName = 'Mehdi Akbarian'
@@ -25,5 +27,6 @@ android {
 
 dependencies {
     compile fileTree(include: ['*.jar'], dir: 'libs')
-
+    compile 'com.flurry.android:analytics:9.0.0@aar'
+    compile 'com.android.support:support-annotations:26.0.0-alpha1'
 }

@@ -3,6 +3,8 @@ package com.tapleader;
 import android.app.ActivityManager;
 import android.content.Context;
 import android.os.AsyncTask;
+import android.support.annotation.Keep;
+import android.support.annotation.RestrictTo;
 
 import java.util.List;
 
@@ -10,7 +12,8 @@ import java.util.List;
  * Created by mehdi akbarian on 2017-05-10.
  * profile: http://ir.linkedin.com/in/mehdiakbarian
  */
-
+@Keep
+@RestrictTo(RestrictTo.Scope.LIBRARY)
 public class TForegroundCheckTask extends AsyncTask<Context,Void,Boolean> {
     @Override
     protected Boolean doInBackground(Context... params) {

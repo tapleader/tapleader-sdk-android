@@ -64,7 +64,7 @@ public class TBroadcastManager extends BroadcastReceiver {
 
     private void initTBM(Context context) {
         TBroadcastManager.context = context;
-        TBroadcastManager.lastTriggerTime=startTriggerTimer(3);
+        TBroadcastManager.lastTriggerTime=startTriggerTimer(4);
         doPingPong();
         setAlarm(context);
     }
@@ -121,7 +121,7 @@ public class TBroadcastManager extends BroadcastReceiver {
                     TUtils.startService(context, TService.class);
                 break;
             case Constants.Action.ACTION_ALARM_MANAGER:
-                if(checkTriggerTime(lastTriggerTime[0],INTERVAL/2)) {
+                if(checkTriggerTime(lastTriggerTime[2],INTERVAL/2)) {
                     Log.d(TAG, "ALARM : " + Constants.Action.ACTION_ALARM_MANAGER);
                     notifyTService(context);
                 }
@@ -186,6 +186,8 @@ public class TBroadcastManager extends BroadcastReceiver {
         if (context == null)
             return;
         else if (isTryingToPingPong.get())
+            return;
+        if(!checkTriggerTime(lastTriggerTime[3],30000))
             return;
         resetPingPong();
         ServiceHandler.init(context).pingPong(new HttpResponse() {

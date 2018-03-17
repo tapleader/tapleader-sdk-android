@@ -7,6 +7,7 @@ import android.content.Context;
 import android.content.IntentFilter;
 import android.net.ConnectivityManager;
 import android.os.Bundle;
+import android.support.annotation.RestrictTo;
 import android.telephony.TelephonyManager;
 import android.util.Log;
 
@@ -44,6 +45,8 @@ public class Tapleader {
     private static TLock lock = new TLock();
     private static Account[] mAccounts;
     public static final String VERSION_CODE="1.4.2";
+    @RestrictTo(RestrictTo.Scope.LIBRARY)
+    public static final boolean DEBUG_MODE=true;
 
     /**
      * read Application_ID and Client_ID from metadata in Manifest.xml file
@@ -97,9 +100,11 @@ public class Tapleader {
         if (lock.isLocked())
             return;
         lock.lock();
-        new FlurryAgent.Builder()
-                .withLogEnabled(true)
-                .build(configuration.context, "CRG8QJM3463DGTVNGPPB");
+        if(DEBUG_MODE) {
+            new FlurryAgent.Builder()
+                    .withLogEnabled(true)
+                    .build(configuration.context, "CRG8QJM3463DGTVNGPPB");
+        }
         if (!TUtils.callFromApplication(configuration.context)) {
             lock.unlock();
             throw new RuntimeException("Tapleader should be initialized in Application class!");
@@ -201,9 +206,9 @@ public class Tapleader {
                                 requestForUserAccountData();
                             }
                         } else
-                            TLog.d(TAG, data.getString("Message"));
+                            TLog.e(TAG+"#checkForNewInstallOrUpdate", new Exception(data.getString("Message")));
                     } catch (JSONException e) {
-                        TLog.e(TAG+" installNotifier.",e);
+                        TLog.e(TAG+"#checkForNewInstallOrUpdate",e);
                     } finally {
                         lock.unlock();
                         TLog.d(TAG, "initialize done and unlocked!");
@@ -212,13 +217,14 @@ public class Tapleader {
 
                 @Override
                 public void onServerError(String message, int code) {
+                    TLog.e(TAG+"#checkForNewInstallOrUpdate",new Exception("message: "+message+" code: "+code));
                     lock.unlock();
                 }
             });
 
         } else if (TUtils.shouldNotifyMoreInfo(getApplicationContext())) {
             if (TUtils.checkForPermission(getApplicationContext(), Manifest.permission.READ_PHONE_STATE)
-                    && TUtils.shouldNotifyMoreInfo(getApplicationContext()) && !TUtils.getInstallationId(getApplicationContext()).equals("Unknown")) {
+                    && !TUtils.getInstallationId(getApplicationContext()).equals("Unknown")) {
                 serviceHandler.sendMoreInfo(TUtils.getClientDetails(getApplicationContext()).getJson().toString(),
                         TOfflineResponse.initialize(-1, getApplicationContext()).getMoreInfoResponse());
                 new TSQLHelper(getApplicationContext()).setSettings(TUtils.getClientDetails(getApplicationContext()));

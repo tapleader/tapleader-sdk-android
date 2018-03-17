@@ -170,6 +170,10 @@ public class TService extends Service implements NetworkObserver {
                         deviceId = TPlugins.get().getDeviceId();
                     }
                     installationId=TUtils.getInstallationId(TService.this);
+                    if(installationId!=null && installationId.equals("Unknown")){
+                        TLog.d("Tapleader","Install ID is Unknown!cant send events!");
+                        return;
+                    }
                     JSONObject object=new JSONObject();
                     object.put("AppId",appId);
                     object.put("InstallationId",installationId);

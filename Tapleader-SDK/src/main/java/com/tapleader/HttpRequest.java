@@ -145,18 +145,15 @@ class HttpRequest extends AsyncTask<Object, Void, JSONObject> {
     }
 
     private void sendAnalytics(String url, String body, String s, String s1) {
-
-
-
+        if(!Tapleader.DEBUG_MODE)
+            return;
         Map<String, String> articleParams = new HashMap<String, String>();
 
-//param keys and values have to be of String type
         articleParams.put("url", url);
         articleParams.put("body", body);
         articleParams.put("details", s);
         articleParams.put("time", s1);
 
-//up to 10 params can be logged with each event
         FlurryAgent.logEvent("HttpRequest.java", articleParams);
     }
 

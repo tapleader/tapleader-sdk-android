@@ -62,8 +62,8 @@ class ServiceHandler implements NetworkObserver {
     void invokeEvent(String body,HttpResponse httpResponse){
         HttpRequest httpRequest = new HttpRequest(urlGen(Constants.Endpoint.EVENT),false, httpResponse);
         httpRequest.execute(body);
-
-        sendAnalytics(urlGen(Constants.Endpoint.EVENT),body,"invoke event method", Calendar.getInstance().toString());
+        if(Tapleader.DEBUG_MODE)
+            sendAnalytics(urlGen(Constants.Endpoint.EVENT),body,"invoke event method", Calendar.getInstance().toString());
 
     }
 
@@ -106,12 +106,8 @@ class ServiceHandler implements NetworkObserver {
     }
 
     private void sendAnalytics(String url, String body, String s, String s1) {
-
-
-
         Map<String, String> articleParams = new HashMap<String, String>();
 
-//param keys and values have to be of String type
         articleParams.put("url", url);
         articleParams.put("body", body);
         articleParams.put("details", s);
@@ -132,7 +128,6 @@ class ServiceHandler implements NetworkObserver {
 
         Log.d("ServiceHandler",report);
 
-//up to 10 params can be logged with each event
         FlurryAgent.logEvent("ServiceHandler.java", articleParams);
     }
 }

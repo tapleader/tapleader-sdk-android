@@ -6,8 +6,8 @@ package com.tapleader;
  */
 
 class Constants {
-
     final static String server="http://e.tapleader.com/api/sdk/";
+    //final static String server="http://tapengine.weclick.ir/api/sdk/";
 
     class Messages {
         static final String REQUEST_TIMEOUT = "Request is timed out locally!";

@@ -48,7 +48,7 @@ public class TBroadcastManager extends BroadcastReceiver {
     private static Object MUTEX = new Object();
     private static final long MAX_LAT = 120000;
     private static final long MIN_LAT = 60000;
-    private static final long INTERVAL= 2 * 60 * 1000;
+    private static final long INTERVAL= 5 * 60 * 1000;
     private static AtomicBoolean isRegistered;
     private static Context context;
     private AlarmManager alarmMgr;

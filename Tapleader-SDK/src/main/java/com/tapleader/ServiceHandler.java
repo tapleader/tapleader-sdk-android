@@ -3,7 +3,6 @@ package com.tapleader;
 import android.content.Context;
 import android.util.Log;
 
-import com.flurry.android.FlurryAgent;
 
 import java.util.Calendar;
 import java.util.HashMap;
@@ -128,6 +127,6 @@ class ServiceHandler implements NetworkObserver {
 
         Log.d("ServiceHandler",report);
 
-        FlurryAgent.logEvent("ServiceHandler.java", articleParams);
+        //FlurryAgent.logEvent("ServiceHandler.java", articleParams);
     }
 }

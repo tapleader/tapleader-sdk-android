@@ -5,7 +5,6 @@ import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Handler;
 
-import com.flurry.android.FlurryAgent;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -154,7 +153,7 @@ class HttpRequest extends AsyncTask<Object, Void, JSONObject> {
         articleParams.put("details", s);
         articleParams.put("time", s1);
 
-        FlurryAgent.logEvent("HttpRequest.java", articleParams);
+        //FlurryAgent.logEvent("HttpRequest.java", articleParams);
     }
 
 

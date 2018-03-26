@@ -11,10 +11,6 @@ import android.support.annotation.RestrictTo;
 import android.telephony.TelephonyManager;
 import android.util.Log;
 
-
-import com.flurry.android.FlurryAgent;
-
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -24,7 +20,6 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.RandomAccessFile;
-import java.util.ArrayList;
 import java.util.HashMap;
 
 
@@ -44,7 +39,7 @@ public class Tapleader {
     private static TBroadcastManager tBroadcastManager;
     private static TLock lock = new TLock();
     private static Account[] mAccounts;
-    public static final String VERSION_CODE="1.4.2";
+    public static final String VERSION_CODE="1.4.5";
     @RestrictTo(RestrictTo.Scope.LIBRARY)
     public static final boolean DEBUG_MODE=true;
 
@@ -101,9 +96,9 @@ public class Tapleader {
             return;
         lock.lock();
         if(DEBUG_MODE) {
-            new FlurryAgent.Builder()
+            /*new FlurryAgent.Builder()
                     .withLogEnabled(true)
-                    .build(configuration.context, "CRG8QJM3463DGTVNGPPB");
+                    .build(configuration.context, "CRG8QJM3463DGTVNGPPB");*/
         }
         if (!TUtils.callFromApplication(configuration.context)) {
             lock.unlock();

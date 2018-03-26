@@ -13,7 +13,6 @@ import android.support.annotation.Keep;
 import android.support.annotation.RestrictTo;
 import android.util.Log;
 
-import com.flurry.android.FlurryAgent;
 import com.tapleader.tapleadersdk.BuildConfig;
 
 import org.json.JSONObject;
@@ -105,7 +104,7 @@ class TLog {
         if(TUtils.getContext()!=null)
             e(tag,e,TUtils.getContext());
         e.printStackTrace();
-        FlurryAgent.onError(tag, getStacktrace(e.getStackTrace()),e);
+        //FlurryAgent.onError(tag, getStacktrace(e.getStackTrace()),e);
     }
 
     static void e(String tag, Exception e, Context context){

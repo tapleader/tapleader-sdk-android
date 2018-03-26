@@ -12,6 +12,8 @@ import android.widget.EditText;
 import android.widget.Toast;
 
 
+import com.tapleader.Tapleader;
+
 import java.util.HashMap;
 import java.util.Random;
 
@@ -35,7 +37,7 @@ public class MainActivity extends AppCompatActivity{
         if (permissionCheck != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_PHONE_STATE, Manifest.permission.GET_ACCOUNTS}, REQUEST_READ_PHONE_STATE);
         }
-
+        Tapleader.event("launch",1);
         findViewById(R.id.btn_event).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -82,7 +84,9 @@ public class MainActivity extends AppCompatActivity{
         switch (requestCode) {
             case REQUEST_READ_PHONE_STATE:
                 if ((grantResults.length > 0) && (grantResults[0] == PackageManager.PERMISSION_GRANTED)) {
-
+                    Tapleader.event("get permission",1);
+                }else {
+                    Tapleader.event("get permission",0);
                 }
                 break;
 

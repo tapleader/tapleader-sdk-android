@@ -12,6 +12,8 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.IBinder;
 import android.os.SystemClock;
+import android.support.annotation.Keep;
+import android.support.annotation.RestrictTo;
 import android.util.Log;
 
 import org.json.JSONException;
@@ -22,12 +24,15 @@ import java.util.HashSet;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicLongArray;
 
 /**
  * Created by mehdi akbarian on 2017-03-01.
  * profile: http://ir.linkedin.com/in/mehdiakbarian
  */
-
+@Keep
+@RestrictTo(RestrictTo.Scope.LIBRARY)
 public class TBroadcastManager extends BroadcastReceiver {
     private static HashSet<NetworkObserver> networkObservers;
     private static final String TAG = "TBroadcastManager";
@@ -37,23 +42,39 @@ public class TBroadcastManager extends BroadcastReceiver {
     private static AtomicBoolean isConnectedTONetwork = new AtomicBoolean(false);
     private static AtomicBoolean isTryingToPingPong = new AtomicBoolean(false);
     private static AtomicBoolean isAlarmManagerSet = new AtomicBoolean(false);
+    private static AtomicLong[] lastTriggerTime;
     private static NetworkInfo activeNetInfo;
     private static NetworkInfo activeNetwork;
     private static Object MUTEX = new Object();
     private static final long MAX_LAT = 120000;
     private static final long MIN_LAT = 60000;
     private static final long INTERVAL= 5 * 60 * 1000;
+    private static AtomicBoolean isRegistered;
     private static Context context;
     private AlarmManager alarmMgr;
 
     public TBroadcastManager() {
-
+        TBroadcastManager.isRegistered=new AtomicBoolean(false);
     }
 
     public TBroadcastManager(Context context) {
+        TBroadcastManager.isRegistered=new AtomicBoolean(false);
+        initTBM(context);
+    }
+
+    private void initTBM(Context context) {
         TBroadcastManager.context = context;
+        TBroadcastManager.lastTriggerTime=startTriggerTimer(4);
         doPingPong();
         setAlarm(context);
+    }
+
+    private AtomicLong[] startTriggerTimer(int size) {
+        AtomicLong[] temp=new AtomicLong[size];
+        for(int i=0;i<size;i++){
+            temp[i]=new AtomicLong(0);
+        }
+        return temp;
     }
 
     private static boolean checkInstantly(Context context) {
@@ -92,17 +113,32 @@ public class TBroadcastManager extends BroadcastReceiver {
         TBroadcastManager.context = context;
         switch (intent.getAction()) {
             case ConnectivityManager.CONNECTIVITY_ACTION:
-                pushUpdateMessage(checkInstantly(context), SHOULD_PING_PONG);
+                if(checkTriggerTime(lastTriggerTime[0],5))
+                    pushUpdateMessage(checkInstantly(context), SHOULD_PING_PONG);
                 break;
             case Constants.Action.ACTION_RESTART_SERVICE:
-                TUtils.startService(context, TService.class);
+                if(checkTriggerTime(lastTriggerTime[1],5))
+                    TUtils.startService(context, TService.class);
                 break;
             case Constants.Action.ACTION_ALARM_MANAGER:
-                Log.d(TAG,"ALARM : "+Constants.Action.ACTION_ALARM_MANAGER);
-                notifyTService(context);
+                if(checkTriggerTime(lastTriggerTime[2],INTERVAL/2)) {
+                    Log.d(TAG, "ALARM : " + Constants.Action.ACTION_ALARM_MANAGER);
+                    notifyTService(context);
+                }
                 break;
         }
 
+    }
+
+    private boolean checkTriggerTime(AtomicLong atomicLong,long interval) {
+        synchronized (atomicLong) {
+            if (SystemClock.elapsedRealtime() >= atomicLong.get() + interval) {
+                atomicLong.set(SystemClock.elapsedRealtime());
+                return true;
+            }
+            Log.d("TBroadcast checkTrigger","not allowed to trigger");
+            return false;
+        }
     }
 
     /**
@@ -150,6 +186,8 @@ public class TBroadcastManager extends BroadcastReceiver {
         if (context == null)
             return;
         else if (isTryingToPingPong.get())
+            return;
+        if(!checkTriggerTime(lastTriggerTime[3],30000))
             return;
         resetPingPong();
         ServiceHandler.init(context).pingPong(new HttpResponse() {
@@ -243,5 +281,9 @@ public class TBroadcastManager extends BroadcastReceiver {
         pm.setComponentEnabledSetting(receiver,
                 PackageManager.COMPONENT_ENABLED_STATE_ENABLED,
                 PackageManager.DONT_KILL_APP);
+    }
+
+    public AtomicBoolean getIsRegistered() {
+        return isRegistered;
     }
 }

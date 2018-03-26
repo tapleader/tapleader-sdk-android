@@ -1,5 +1,7 @@
 apply plugin: 'com.android.library'
 
+
+
 ext{
     developerId = 'makbn'
     developerName = 'Mehdi Akbarian'
@@ -11,8 +13,8 @@ android {
     defaultConfig {
         minSdkVersion 15
         targetSdkVersion 26
-        versionCode 16
-        versionName "1.4.2"
+        versionCode 17
+        versionName "1.4.5"
 
     }
     buildTypes {
@@ -25,5 +27,5 @@ android {
 
 dependencies {
     compile fileTree(include: ['*.jar'], dir: 'libs')
-
+    compile 'com.android.support:support-annotations:26.0.0-alpha1'
 }

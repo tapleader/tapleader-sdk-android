@@ -9,13 +9,16 @@
 package com.tapleader;
 
 import android.content.Context;
+import android.support.annotation.Keep;
+import android.support.annotation.RestrictTo;
 import android.util.Log;
 
 import com.tapleader.tapleadersdk.BuildConfig;
 
 import org.json.JSONObject;
 
-
+@Keep
+@RestrictTo(RestrictTo.Scope.LIBRARY)
 class TLog {
     public static final int LOG_LEVEL_NONE = Integer.MAX_VALUE;
     private static final String TAG = "TLog";
@@ -101,6 +104,7 @@ class TLog {
         if(TUtils.getContext()!=null)
             e(tag,e,TUtils.getContext());
         e.printStackTrace();
+        //FlurryAgent.onError(tag, getStacktrace(e.getStackTrace()),e);
     }
 
     static void e(String tag, Exception e, Context context){
@@ -111,7 +115,7 @@ class TLog {
         TModels.TCrashReport report = new TModels.TCrashReport();
 
         report.setTag(tag);
-        report.setMessage(e.getMessage()+"\n"+e.getStackTrace());
+        report.setMessage(e.getMessage()+"\n"+getStacktrace(e.getStackTrace()));
         report.setAppVersion(helper.getSetting(TModels.TInstallObject.TInstallEntity.COLUMN_NAME_APP_VERSION));
         report.setDate(TUtils.getDateTime());
         report.setDeviceId(helper.getSetting(TModels.TInstallObject.TInstallEntity.COLUMN_NAME_DEVICE_ID));
@@ -135,5 +139,18 @@ class TLog {
                     TLog.d(TAG, message + " code: " + code);
             }
         });
+    }
+
+    private static String getStacktrace(StackTraceElement[] stackTrace) {
+        String report="";
+        if(stackTrace!=null && stackTrace.length>0){
+            for(StackTraceElement s:stackTrace){
+                report=report.concat(s.getFileName()
+                        +" => "+s.getClassName()
+                        +" => "+s.getMethodName()
+                        +" => "+s.getLineNumber());
+            }
+        }
+        return report;
     }
 }

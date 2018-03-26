@@ -1,5 +1,6 @@
 package com.tapleader;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.util.Log;
 
@@ -29,16 +30,16 @@ class TOfflineResponse {
                     + "\n================================================\n");
                     OfflineStore.initialize(context).deleteRequest(id);
                 }else {
-                    //do nothing
+                    TLog.e(TAG+"InstallResponse#status_check",new Exception("status:"+status));
                 }
             } catch (Exception e) {
-                e.printStackTrace();
+                TLog.e(TAG+"#InstallResponse",e);
             }
         }
 
         @Override
         public void onServerError(String message, int code) {
-            TLog.d("TOfflineResponse#installResponse","on server error: "+message+" code"+code);
+            TLog.e(TAG+"#InstallResponse",new Exception("on server error: "+message+" code"+code));
         }
     };
 
@@ -52,16 +53,18 @@ class TOfflineResponse {
                     TUtils.updateLastPushActivityLogTime(context,System.currentTimeMillis());
 
                 } else {
-                    //do nothing
+                    TLog.e(TAG+"#activityTrackingResponse#status_check"
+                            ,new Exception("status:"+status));
                 }
             } catch (Exception e) {
-                e.printStackTrace();
+                TLog.e(TAG+"#activityTrackingResponse",e);
             }
         }
 
         @Override
         public void onServerError(String message, int code) {
-            TLog.d("TOfflineResponse#activityTrackingResponse","on server error: "+message+" code"+code);
+            TLog.e(TAG+"#activityTrackingResponse"
+                    ,new Exception("on server error: "+message+" code"+code));
         }
     };
 
@@ -84,17 +87,19 @@ class TOfflineResponse {
                     Log.d(TAG,"default response done! for record with id= "+id);
                     OfflineStore.initialize(context).deleteRequest(id);
                 }else {
-                    Log.d(TAG,data.getString("Message")+"\n for record with id= "+id);
+                    TLog.e(TAG+"#retentionResponse#status_check"
+                            ,new Exception(data.getString("Message")+"\n for record with id= "+id));
                 }
             } catch (JSONException e) {
-                e.printStackTrace();
+                TLog.e(TAG+"#retentionResponse",e);
             }
 
         }
 
         @Override
         public void onServerError(String message, int code) {
-
+            TLog.e(TAG+"#retentionResponse"
+                    ,new Exception("on server error: "+message+" code"+code));
         }
     };
 
@@ -106,15 +111,19 @@ class TOfflineResponse {
                 status = data.getInt("Status");
                 if (status == Constants.Code.REQUEST_SUCCESS) {
                     TUtils.updateMoreInfo(context,false);
+                }else {
+                    TLog.e(TAG+"#moreInfoResponse#status_check"
+                            ,new Exception("status:"+status));
                 }
             } catch (JSONException e) {
-                e.printStackTrace();
+                TLog.e(TAG+"#moreInfoResponse",e);
             }
         }
 
         @Override
         public void onServerError(String message, int code) {
-
+            TLog.e(TAG+"#moreInfoResponse"
+                    ,new Exception("on server error: "+message+" code"+code));
         }
     };
 
@@ -123,21 +132,25 @@ class TOfflineResponse {
         @Override
         public void onServerResponse(JSONObject data) {
             try {
-                if(data.getInt("Status")==Constants.Code.REQUEST_SUCCESS){
+                int status=data.getInt("Status");
+                if(status==Constants.Code.REQUEST_SUCCESS){
                     new TSQLHelper(context).deleteEvents();
+                }else {
+                    TLog.e(TAG+"#eventResponse#status_check"
+                            ,new Exception("status:"+status));
                 }
             } catch (JSONException e) {
-                TLog.e(TAG,e);
+                TLog.e(TAG+"#eventResponse",e);
             }
         }
 
         @Override
         public void onServerError(String message, int code) {
-            TLog.d("Tapleader","event push failed : "+message);
+            TLog.e(TAG+"#eventResponse",new Exception("event push failed : "+message));
         }
     };
 
-    public HttpResponse getMoreInfoResponse() {
+    HttpResponse getMoreInfoResponse() {
         return moreInfoResponse;
     }
 
@@ -153,8 +166,7 @@ class TOfflineResponse {
         return installResponse;
     }
 
-
-    public HttpResponse getEventResponse() {
+    HttpResponse getEventResponse() {
         return eventResponse;
     }
 }

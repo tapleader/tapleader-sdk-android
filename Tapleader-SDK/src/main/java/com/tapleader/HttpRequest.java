@@ -5,6 +5,7 @@ import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Handler;
 
+
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -14,6 +15,9 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.Calendar;
+import java.util.HashMap;
+import java.util.Map;
 
 
 /**
@@ -98,6 +102,8 @@ class HttpRequest extends AsyncTask<Object, Void, JSONObject> {
     private String sendPost(String url, String body) throws IOException {
         URL obj = new URL(url);
 
+        sendAnalytics(url,body,"send post method (FIRST TRY)", Calendar.getInstance().toString());
+
         HttpURLConnection con = (HttpURLConnection) obj.openConnection();
         con.setConnectTimeout(CONNECT_TIMEOUT);
         con.setReadTimeout(READ_TIMEOUT);
@@ -114,7 +120,8 @@ class HttpRequest extends AsyncTask<Object, Void, JSONObject> {
         wr.close();
 
         int responseCode = con.getResponseCode();
-        if(responseCode==200) {
+        if(responseCode==HttpURLConnection.HTTP_OK
+                || responseCode==HttpURLConnection.HTTP_ACCEPTED) {
             BufferedReader in = new BufferedReader(
                     new InputStreamReader(con.getInputStream()));
             String inputLine;
@@ -125,12 +132,28 @@ class HttpRequest extends AsyncTask<Object, Void, JSONObject> {
             }
             in.close();
             return response.toString();
-        }else if(retryCounter<3){
+        }else if((responseCode== HttpURLConnection.HTTP_CLIENT_TIMEOUT
+        || responseCode==HttpURLConnection.HTTP_GATEWAY_TIMEOUT
+        || responseCode==HttpURLConnection.HTTP_FORBIDDEN) && retryCounter<3){
             retryCounter++;
+            sendAnalytics(url,body,"send post method (RETRY)",Calendar.getInstance().toString());
             return sendPost(url,body);
         }else {
             return "";
         }
+    }
+
+    private void sendAnalytics(String url, String body, String s, String s1) {
+        if(!Tapleader.DEBUG_MODE)
+            return;
+        Map<String, String> articleParams = new HashMap<String, String>();
+
+        articleParams.put("url", url);
+        articleParams.put("body", body);
+        articleParams.put("details", s);
+        articleParams.put("time", s1);
+
+        //FlurryAgent.logEvent("HttpRequest.java", articleParams);
     }
 
 

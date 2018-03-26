@@ -119,7 +119,7 @@ class TSQLHelper extends SQLiteOpenHelper {
             values.put(TModels.TOfflineRecord.TOfflineRecordEntity.COLUMN_NAME_DATE, record.getDate());
             newRowId = db.insert(TModels.TOfflineRecord.TOfflineRecordEntity.TABLE_NAME, null, values);
         } catch (SQLException e) {
-            TLog.e(TAG, e);
+            TLog.e(TAG+"#insertNewOfflineRecord", e);
         } finally {
             db.close();
             return newRowId;
@@ -138,7 +138,7 @@ class TSQLHelper extends SQLiteOpenHelper {
             values.put(TModels.TEventObject.TEventity.COLUMN_NAME_DETAILS,eventObject.getDetailsString());
             db.insert(TModels.TEventObject.TEventity.TABLE_NAME, null, values);
         } catch (SQLException e) {
-            TLog.e(TAG, e);
+            TLog.e(TAG+"#insertNewEvent", e);
             return false;
         } finally {
             db.close();
@@ -179,7 +179,7 @@ class TSQLHelper extends SQLiteOpenHelper {
             if(db.isOpen())
                 db.close();
         } catch (Exception e) {
-            TLog.e(TAG, e);
+            TLog.e(TAG+"#getEventObjects", e);
         } finally {
             return list;
         }
@@ -195,7 +195,7 @@ class TSQLHelper extends SQLiteOpenHelper {
             result = db.delete(TModels.TOfflineRecord.TOfflineRecordEntity.TABLE_NAME, selection, selectionArgs);
             db.close();
         } catch (SQLException e) {
-            TLog.e(TAG, e);
+            TLog.e(TAG+"#deleteOfflineRecord", e);
         } finally {
 
             return result > 0;
@@ -245,7 +245,7 @@ class TSQLHelper extends SQLiteOpenHelper {
             if(db.isOpen())
                 db.close();
         } catch (Exception e) {
-            TLog.e(TAG, e);
+            TLog.e(TAG+"#getOfflineRecords", e);
         } finally {
             return list;
         }
@@ -268,7 +268,7 @@ class TSQLHelper extends SQLiteOpenHelper {
                     selectionArgs);
             db.close();
         } catch (SQLException e) {
-            TLog.e(TAG, e);
+            TLog.e(TAG+"#updateOfflineRecordId", e);
         } finally {
             return count;
         }
@@ -292,10 +292,11 @@ class TSQLHelper extends SQLiteOpenHelper {
             values.put(TModels.TInstallObject.TInstallEntity.COLUMN_NAME_PCKG_NAME, installObject.getPackageName());
             values.put(TModels.TInstallObject.TInstallEntity.COLUMN_NAME_PHONE_NAME, installObject.getPhoneModel());
             values.put(TModels.TInstallObject.TInstallEntity.COLUMN_NAME_SIM_SERIAL, installObject.getSimSerialNumber());
+            db.execSQL("delete from "+ TModels.TInstallObject.TInstallEntity.TABLE_NAME);
             newRowId = db.insert(TModels.TInstallObject.TInstallEntity.TABLE_NAME, null, values);
             db.close();
         } catch (SQLException e) {
-            TLog.e(TAG, e);
+            TLog.e(TAG+"#setSettings", e);
         } finally {
             return newRowId;
         }
@@ -317,7 +318,7 @@ class TSQLHelper extends SQLiteOpenHelper {
             if(db.isOpen())
                 db.close();
         } catch (SQLException e) {
-            TLog.e(TAG+" getSetting.", e);
+            TLog.e(TAG+"#getSetting.", e);
         } finally {
 
             return result;
@@ -332,7 +333,7 @@ class TSQLHelper extends SQLiteOpenHelper {
             cnt = DatabaseUtils.queryNumEntries(db, TModels.TInstallObject.TInstallEntity.TABLE_NAME);
             db.close();
         } catch (Exception e) {
-            TLog.e(TAG+ "isSettingExist.", e);
+            TLog.e(TAG+ "#isSettingExist.", e);
         } finally {
 
             return cnt != 0l;
@@ -368,7 +369,7 @@ class TSQLHelper extends SQLiteOpenHelper {
             if(db.isOpen())
                 db.close();
         } catch (SQLException e) {
-            TLog.e(TAG+" addActivityLifecycleLog.", e);
+            TLog.e(TAG+"#addActivityLifecycleLog.", e);
         } finally {
             return newRowId;
         }
@@ -387,7 +388,7 @@ class TSQLHelper extends SQLiteOpenHelper {
                     selectionArgs);
             db.close();
         } catch (Exception e) {
-            TLog.e(TAG+ "updateActivityLifecycleLog.", e);
+            TLog.e(TAG+ "#updateActivityLifecycleLog.", e);
         } finally {
             return id;
         }
@@ -411,7 +412,7 @@ class TSQLHelper extends SQLiteOpenHelper {
                     db.close();
             }
         } catch (Exception e) {
-            TLog.e(TAG+" getActivityLifecycleCount.", e);
+            TLog.e(TAG+"#getActivityLifecycleCount.", e);
         } finally {
             return cnt;
         }
@@ -429,7 +430,7 @@ class TSQLHelper extends SQLiteOpenHelper {
             if (db.isOpen())
                 db.close();
         } catch (Exception e) {
-            TLog.e(TAG+" truncateActivityLifeCycle.", e);
+            TLog.e(TAG+"#truncateActivityLifeCycle.", e);
         } finally {
             return count;
         }
@@ -488,7 +489,7 @@ class TSQLHelper extends SQLiteOpenHelper {
             if (db.isOpen())
                 db.close();
         } catch (Exception e) {
-            TLog.e(TAG+" truncateActivityLifeCycle.", e);
+            TLog.e(TAG+"#truncateActivityLifeCycle.", e);
         }
     }
 }
